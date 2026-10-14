@@ -12,13 +12,14 @@ KPI_LABELS = {
     "new_return_rate": "新規再来率",
     "nomination_rate": "指名率",
     "spa_rate": "スパ付帯率",
+    "visit_cycle_days": "来店周期（日・中央値）",
     "labor_cost_ratio": "人件費率",
     "hpb_cost_per_new": "新規1人あたりHPB費",
 }
 
 
 def _div(a, b):
-    return (a / b).where(b > 0)
+    return a / b.where(b > 0).astype(float)
 
 
 def new_return_flags(visits: pd.DataFrame, window_days: int) -> pd.DataFrame:
@@ -37,6 +38,14 @@ def new_return_flags(visits: pd.DataFrame, window_days: int) -> pd.DataFrame:
     return new
 
 
+def add_visit_interval(visits: pd.DataFrame) -> pd.DataFrame:
+    """各来店に「同じ店での前回来店からの日数」を付ける（初来店・お客様番号なしは空欄）。"""
+    v = visits.sort_values("date", kind="stable").copy()
+    prev = v[v["customer_key"] != ""].groupby(["store", "customer_key"])["date"].shift(1)
+    v["interval_days"] = (v["date"] - prev).dt.days
+    return v.sort_index()
+
+
 def compute(visits: pd.DataFrame, costs: pd.DataFrame, airpay: pd.DataFrame, window_days: int,
             by: list[str]) -> pd.DataFrame:
     """by=["month","store"] で店舗別、["month","store","staff"] でスタイリスト別。"""
@@ -52,6 +61,8 @@ def compute(visits: pd.DataFrame, costs: pd.DataFrame, airpay: pd.DataFrame, win
     out["avg_ticket"] = _div(out["sales"], out["visits"])
     out["nomination_rate"] = _div(out["nominated"], out["visits"])
     out["spa_rate"] = _div(out["spa"], out["visits"])
+    # 来店周期：その月に再来したお客様が、前回から何日空けて来たか（中央値）。担当はその月の担当者
+    out["visit_cycle_days"] = add_visit_interval(visits).groupby(by)["interval_days"].median()
 
     # 新規再来率：その月に新規で来た人のうち、window日以内に再来した割合（担当は初回担当）
     flags = new_return_flags(visits, window_days)

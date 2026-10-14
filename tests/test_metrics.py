@@ -47,6 +47,22 @@ class NewReturnRate(unittest.TestCase):
         self.assertFalse(new_return_flags(v, 90).iloc[0]["returned"])
 
 
+class VisitCycle(unittest.TestCase):
+    def test_median_days_since_previous_visit_in_same_store(self):
+        v = visits([
+            ("2026-07-01", "s", "A", "c1", True, False, False, 1),
+            ("2026-08-15", "s", "A", "c1", False, True, False, 1),   # 45日
+            ("2026-08-01", "s", "A", "c2", True, False, False, 1),
+            ("2026-09-30", "s", "A", "c2", False, True, False, 1),   # 60日
+            ("2026-09-01", "s", "A", "c1", False, True, False, 1),   # 17日
+            ("2026-09-05", "s2", "B", "c2", True, False, False, 1),  # 別店舗なので周期に含めない
+        ])
+        k = compute(v, EMPTY_COSTS, EMPTY_PAY, 90, ["month", "store"]).set_index(["month", "store"])
+        self.assertEqual(k.loc[("2026-09", "s"), "visit_cycle_days"], 38.5)
+        self.assertEqual(k.loc[("2026-08", "s"), "visit_cycle_days"], 45)
+        self.assertTrue(pd.isna(k.loc[("2026-09", "s2"), "visit_cycle_days"]))
+
+
 class StoreKpi(unittest.TestCase):
     def test_basic_ratios_and_labor_cost(self):
         v = visits([

@@ -16,7 +16,7 @@ FORMATS = {
     "sales": YEN, "avg_ticket": YEN, "labor_cost": YEN, "hpb_cost": YEN, "hpb_cost_per_new": YEN,
     "airpay_sales": YEN, "airpay_diff": YEN, "sales_prev_year": YEN, "target_gap": YEN,
     "visits": INT, "new_customers": INT, "repeat_customers": INT, "new_cohort": INT, "new_returned": INT,
-    "new_return_rate": PCT, "nomination_rate": PCT, "spa_rate": PCT, "labor_cost_ratio": PCT,
+    "new_return_rate": PCT, "nomination_rate": PCT, "spa_rate": PCT, "visit_cycle_days": INT, "labor_cost_ratio": PCT,
     "sales_mom": PCT, "sales_yoy": PCT,
 }
 EXTRA_LABELS = {
@@ -98,14 +98,14 @@ def write_report(path: Path, month: str, config: dict, store_kpi: pd.DataFrame, 
     exec_df = executive_summary(store_kpi, month, config)
 
     staff_cols = ["store", "staff", "sales", "visits", "new_customers", "avg_ticket",
-                  "nomination_rate", "spa_rate"]
+                  "nomination_rate", "spa_rate", "visit_cycle_days"]
     staff_now = staff_kpi[staff_kpi["month"] == month][staff_cols]
     staff_now = staff_now.merge(_latest_matured(staff_kpi, month, ["store", "staff"]), on=["store", "staff"], how="left")
     staff_now = staff_now.sort_values(["store", "staff"])
     staff_now["store"] = staff_now["store"].map(stores)
 
     trend_cols = ["month", "store", "sales", "sales_mom", "sales_yoy", "visits", "new_customers",
-                  "repeat_customers", "avg_ticket", "new_return_rate", "nomination_rate", "spa_rate",
+                  "repeat_customers", "avg_ticket", "new_return_rate", "nomination_rate", "spa_rate", "visit_cycle_days",
                   "labor_cost", "labor_cost_ratio", "hpb_cost", "hpb_cost_per_new"]
     order = {sid: i for i, sid in enumerate(stores)}
     trend = store_kpi[trend_cols].sort_values(["store", "month"], key=lambda c: c.map(order) if c.name == "store" else c)
