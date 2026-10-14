@@ -1,0 +1,8 @@
+# 実データ・出力・仮名化キーはリポジトリに入れない（顧客情報保護）
+data/
+output/
+.salt
+__pycache__/
+*.pyc
+samples/data/
+samples/output/
