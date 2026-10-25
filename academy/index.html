@@ -307,9 +307,16 @@ function lessonLocked(u, cat, idx) {
   if (isLead(u) || idx === 0) return false;
   return !passed(u, cat.lessons[idx - 1]);
 }
+// 前のレッスンに合格していないとき、そのレッスン名を返す（中身は見られる。練習とチェックだけ止める）
+function blockedBy(u, id, catId) {
+  if (isLead(me())) return null;
+  const c = CATS.find(x => x.id === catId && x.lessons.includes(id)) || CATS.find(x => x.lessons.includes(id));
+  const i = c.lessons.indexOf(id);
+  return i > 0 && !passed(u, c.lessons[i - 1]) ? c.lessons[i - 1] : null;
+}
 function percent(u) { return Math.round(LESSON_IDS.filter(id => passed(u, id)).length / LESSON_IDS.length * 100); }
 function chip(u, id, locked) {
-  if (locked) return `<span class="chip lock">🔒</span>`;
+  if (locked && prog(u, id).status === "todo") return `<span class="chip lock">予習OK</span>`;
   const [label, cls] = STATUS[prog(u, id).status];
   return `<span class="chip ${cls}">${label}</span>`;
 }
@@ -538,9 +545,9 @@ function viewCat() {
   <section class="ptitle"><div class="eyebrow">${esc(c.group)}</div><h1>${esc(c.title)}</h1>
     ${c.state ? `<div class="meta"><span class="chip soon">${esc(c.state)}</span></div>` : ""}</section>
   ${c.note ? `<section class="section"><p class="note" style="font-size:13.5px;color:var(--ink)">${esc(c.note)}</p></section>` : ""}
-  ${c.lessons.length ? `<section class="group"><h2>レッスン（上から順に合格すると次が開きます）</h2><div class="list">
+  ${c.lessons.length ? `<section class="group"><h2>レッスン</h2><p class="note">中身はいつでも見られます。合格は上から順番に進みます。</p><div class="list">
     ${c.lessons.map((id, i) => { const l = L(id), locked = lessonLocked(u, c, i);
-      return `<button class="row" data-lesson="${id}" ${locked && !l.draft ? "disabled" : ""}><span class="n">${i + 1}</span><span class="t">${esc(l.title)}<small>${l.draft ? "中身を作成中" : TYPE[l.type] + (l.target ? "・" + esc(l.target) : "")}</small></span>${l.draft ? `<span class="chip soon">準備中</span>` : chip(u, id, locked)}</button>`; }).join("")}
+      return `<button class="row" data-lesson="${id}"><span class="n">${i + 1}</span><span class="t">${esc(l.title)}<small>${l.draft ? "中身を作成中" : TYPE[l.type] + (l.target ? "・" + esc(l.target) : "")}</small></span>${l.draft ? `<span class="chip soon">準備中</span>` : chip(u, id, locked)}</button>`; }).join("")}
   </div></section>`
   : `<section class="section"><h3>準備中</h3><p class="pending">この項目の中身は作成中です。${c.planned ? esc(c.planned) : ""}</p></section>`}`;
 }
@@ -568,8 +575,9 @@ function viewLesson() {
   ${l.checks && l.type === "tech" ? `<section class="section"><h3>チェックポイント</h3><p class="note">${l.stages.join("と")}でチェックし、すべて○になれば合格です。</p><div class="md"><ul>${l.checks.map(t => `<li>${inline(t)}</li>`).join("")}</ul></div></section>` : ""}
   ${l.questions ? `<section class="section"><h3>チェック（先輩が口頭で質問）</h3><p class="note">すべて自分の言葉で答えられたら合格です。</p><div class="md"><ol>${l.questions.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
   ${l.type === "shampoo" ? scoreSheetInfo(l) : ""}
-  ${progressPanel(l, st, u)}
-  ${st.status !== "ok" && ["tech", "theory", "shampoo", "roleplay"].includes(l.type) ? checkPanel(l, st, leadView) : ""}
+  ${(() => { const b = blockedBy(u, l.id, route.cat); return b && st.status !== "ok"
+    ? `<section class="section"><h3>練習とチェック</h3><p class="note" style="font-size:14px">いまは予習の時間です。前のレッスン「${esc(L(b).title)}」に合格すると、練習の記録と先輩のチェックができるようになります。</p><button class="btn ghost" data-lesson="${b}">「${esc(L(b).title)}」へ</button></section>`
+    : progressPanel(l, st, u) + (st.status !== "ok" && ["tech", "theory", "shampoo", "roleplay"].includes(l.type) ? checkPanel(l, st, leadView) : ""); })()}
   ${recordsPanel(l, st)}
   ${nextButton(l, u)}`;
 }
