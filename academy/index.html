@@ -14,52 +14,58 @@
   --ink: #1d2128;
   --muted: #69707c;
   --line: #e2e4e8;
-  --accent: #2f5d62;      /* 深いグリーン：サロンの落ち着き */
+  --accent: #2f5d62;
   --accent-soft: #e3eeee;
-  --rose: #b0656b;        /* 目標・ゴール用 */
+  --rose: #b0656b;
   --ok: #2e7d4f; --ok-soft: #e2f2e8;
   --wait: #a86b12; --wait-soft: #fbf0db;
+  --ng: #b3453f; --ng-soft: #f8e4e2;
   --lock: #9aa0a9;
+  --on-accent: #ffffff;
   --display: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
   --body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #14171b; --surface: #1d2127; --ink: #eceef1; --muted: #9aa1ad; --line: #2c3139;
   --accent: #7fb3b8; --accent-soft: #23373a; --rose: #e0959b;
-  --ok: #7cc79a; --ok-soft: #1f3528; --wait: #e2b366; --wait-soft: #3a2f1c; --lock: #5d636c;
-  color-scheme: dark } }
+  --ok: #7cc79a; --ok-soft: #1f3528; --wait: #e2b366; --wait-soft: #3a2f1c; --ng: #ec8f88; --ng-soft: #3d2322; --lock: #5d636c;
+  --on-accent: #10181a; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #14171b; --surface: #1d2127; --ink: #eceef1; --muted: #9aa1ad; --line: #2c3139;
   --accent: #7fb3b8; --accent-soft: #23373a; --rose: #e0959b;
-  --ok: #7cc79a; --ok-soft: #1f3528; --wait: #e2b366; --wait-soft: #3a2f1c; --lock: #5d636c;
-  color-scheme: dark }
+  --ok: #7cc79a; --ok-soft: #1f3528; --wait: #e2b366; --wait-soft: #3a2f1c; --ng: #ec8f88; --ng-soft: #3d2322; --lock: #5d636c;
+  --on-accent: #10181a; color-scheme: dark }
 
 * { box-sizing: border-box }
-body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.7; margin: 0 }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.75; margin: 0 }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface) }
 button, input, select, textarea { font: inherit; color: inherit }
 button { cursor: pointer }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
-h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.35 }
+h1, h2, h3, h4 { text-wrap: balance; margin: 0; line-height: 1.4 }
 
-.wrap { max-width: 560px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.wrap { max-width: 600px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
 header.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line) }
 header.bar .wrap { display: flex; align-items: center; gap: 10px; min-height: 54px; padding-block: 6px }
-.back { border: 0; background: none; color: var(--accent); padding: 6px 4px; font-weight: 700 }
-.brand { font-family: var(--display); font-size: 18px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
-.who { font-size: 12px; color: var(--muted); text-align: right; line-height: 1.3 }
+.back { border: 0; background: none; color: var(--accent); padding: 6px 4px; font-weight: 700; flex: none }
+.brand { font-family: var(--display); font-size: 17px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.who { font-size: 12px; color: var(--muted); text-align: right; line-height: 1.35; flex: none }
 .who button { border: 0; background: none; color: var(--accent); padding: 0; font-size: 12px }
 
-main .wrap { padding-block: 20px 48px; display: grid; gap: 20px }
+main .wrap { padding-block: 20px 56px; display: grid; gap: 20px }
 .eyebrow { font-size: 11px; letter-spacing: .14em; color: var(--muted); font-weight: 700 }
 .lead { color: var(--muted); margin: 0 }
+.ptitle { display: grid; gap: 6px }
+.ptitle h1 { font-family: var(--display); font-size: 24px }
+.meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center }
 
 /* 理念 */
-.philo { background: var(--accent); color: #fff; border-radius: 14px; padding: 26px 22px; display: grid; gap: 14px }
-.philo .eyebrow { color: rgba(255,255,255,.75) }
-.philo h1 { font-family: var(--display); font-size: 26px; letter-spacing: .04em }
-.philo p { margin: 0; opacity: .92 }
-.philo ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px }
+.philo { background: var(--accent); color: var(--on-accent); border-radius: 14px; padding: 26px 22px; display: grid; gap: 12px }
+.philo .eyebrow { color: inherit; opacity: .75; font-family: var(--display); letter-spacing: .2em; font-size: 12px }
+.philo h1 { font-family: var(--display); font-size: 27px; letter-spacing: .04em }
+.philo .tag { font-weight: 700; margin: 0 }
+.philo p { margin: 0 }
+.philo small { opacity: .7; font-size: 12px }
 
 .goal { display: flex; gap: 14px; align-items: center; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 14px 16px }
 .goal b { font-family: var(--display); font-size: 26px; color: var(--rose); white-space: nowrap; font-variant-numeric: tabular-nums }
@@ -77,53 +83,97 @@ main .wrap { padding-block: 20px 48px; display: grid; gap: 20px }
 .tile.ai { background: var(--ink); color: var(--bg); border-color: var(--ink) }
 .tile.ai small, .tile.ai .chev, .tile.ai .num { color: var(--bg); opacity: .75 }
 
-.meter { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 6px }
+.meter { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden }
 .meter i { display: block; height: 100%; background: var(--accent) }
 
-/* レッスン一覧 */
-.group h2 { font-size: 13px; color: var(--muted); letter-spacing: .08em; margin-bottom: 8px }
+/* 一覧 */
+.group { display: grid; gap: 8px }
+.group > h2 { font-size: 13px; color: var(--muted); letter-spacing: .08em }
 .list { display: grid; gap: 8px }
 .row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px }
 .row[disabled] { cursor: not-allowed; opacity: .55 }
 .row .n { font-size: 12px; color: var(--muted); width: 22px; flex: none; font-variant-numeric: tabular-nums }
-.row .t { flex: 1; min-width: 0; font-weight: 500 }
-.chip { font-size: 11.5px; padding: 2px 9px; border-radius: 99px; white-space: nowrap; flex: none; font-weight: 700 }
+.row .t { flex: 1; min-width: 0; font-weight: 500; line-height: 1.5 }
+.row .t small { display: block; color: var(--muted); font-weight: 400; font-size: 12.5px }
+.chip { font-size: 11.5px; padding: 2px 9px; border-radius: 99px; white-space: nowrap; flex: none; font-weight: 700; line-height: 1.6 }
 .chip.todo { background: var(--line); color: var(--muted) }
 .chip.prac { background: var(--accent-soft); color: var(--accent) }
 .chip.wait { background: var(--wait-soft); color: var(--wait) }
 .chip.ok { background: var(--ok-soft); color: var(--ok) }
-.chip.lock { background: transparent; color: var(--lock); border: 1px solid var(--line) }
+.chip.ng { background: var(--ng-soft); color: var(--ng) }
+.chip.lock, .chip.soon { background: transparent; color: var(--lock); border: 1px solid var(--line) }
+.chip.info { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 500 }
 
-/* レッスン詳細 */
+/* 本文（資料の書き方をそのまま表示） */
+.section { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0 }
+.section > h3 { font-size: 15px }
+.md { display: grid; gap: 10px; min-width: 0 }
+.md p { margin: 0 }
+.md h4 { font-size: 14.5px; color: var(--accent); margin-top: 6px }
+.md ol, .md ul { margin: 0; padding-left: 1.4em; display: grid; gap: 6px }
+.md ul.todo { list-style: none; padding-left: 0 }
+.md ul.todo li::before { content: "□ "; color: var(--muted) }
+.md blockquote { margin: 0; padding: 10px 14px; border-left: 3px solid var(--rose); background: var(--bg); border-radius: 0 8px 8px 0; font-weight: 500 }
+.md hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0 }
+.md .tablewrap { margin: 0 }
+details.fold { border-top: 1px solid var(--line); padding-top: 10px }
+details.fold:first-of-type { border-top: 0; padding-top: 0 }
+details.fold summary { font-weight: 700; cursor: pointer; padding: 4px 0; color: var(--ink) }
+details.fold[open] summary { color: var(--accent); margin-bottom: 8px }
+
 .video { aspect-ratio: 16/9; max-width: 100%; border-radius: 12px; background: var(--ink); color: var(--bg); display: grid; place-items: center; text-align: center; padding: 16px; font-size: 13px }
 .video a { color: var(--bg); font-weight: 700 }
-.section { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px }
-.section h3 { font-size: 15px }
-ol.steps, ul.checks { margin: 0; padding-left: 1.3em; display: grid; gap: 6px }
-.pending { color: var(--muted); font-size: 13px; margin: 0 }
+.chapters { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 14px }
+.chapters b { font-variant-numeric: tabular-nums; color: var(--accent); margin-right: 10px }
+
 .btns { display: flex; flex-wrap: wrap; gap: 8px }
-.btn { border: 1px solid var(--accent); background: var(--accent); color: var(--surface); border-radius: 10px; padding: 10px 16px; font-weight: 700 }
+.btn { border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); border-radius: 10px; padding: 10px 16px; font-weight: 700 }
 .btn.ghost { background: transparent; color: var(--accent) }
-.btn.warn { background: transparent; color: var(--rose); border-color: var(--rose) }
+.btn.warn { background: transparent; color: var(--ng); border-color: var(--ng) }
+.btn.wide { width: 100% }
 .btn[disabled] { opacity: .45; cursor: not-allowed }
 .note { font-size: 12.5px; color: var(--muted); margin: 0 }
+.pending { color: var(--muted); font-size: 13px; margin: 0 }
 .field { display: grid; gap: 4px }
-.field label { font-size: 12.5px; color: var(--muted) }
+.field label, .field .lbl { font-size: 12.5px; color: var(--muted) }
 .field input, .field select, .field textarea { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 12px; width: 100% }
 .toast { background: var(--ok-soft); color: var(--ok); border-radius: 10px; padding: 10px 14px; font-weight: 700; font-size: 13.5px }
-.toast.err { background: var(--wait-soft); color: var(--wait) }
+.toast.err { background: var(--ng-soft); color: var(--ng) }
+
+.count { display: flex; align-items: center; gap: 14px }
+.count b { font-family: var(--display); font-size: 30px; font-variant-numeric: tabular-nums; line-height: 1 }
+.count small { color: var(--muted) }
+
+/* ○×チェック */
+.marks { display: grid; gap: 6px }
+.mark { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--bg) }
+.mark span { flex: 1; min-width: 0; font-size: 14px; line-height: 1.5 }
+.ox { display: flex; gap: 4px; flex: none }
+.ox label { width: 38px; height: 34px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-weight: 700; color: var(--muted) }
+.ox input { position: absolute; opacity: 0; pointer-events: none }
+.ox label:has(input[value="1"]:checked) { background: var(--ok-soft); color: var(--ok); border-color: var(--ok) }
+.ox label:has(input[value="0"]:checked) { background: var(--ng-soft); color: var(--ng); border-color: var(--ng) }
+.mark select { width: 76px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px; flex: none; font-variant-numeric: tabular-nums }
+.star { color: var(--rose); font-weight: 700 }
+.total { display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; padding: 4px 2px }
+.total b { font-family: var(--display); font-size: 24px; font-variant-numeric: tabular-nums }
+
+/* 記録 */
+.rec { border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 4px; font-size: 13.5px }
+.rec:first-child { border-top: 0; padding-top: 0 }
+.rec .h { display: flex; gap: 8px; align-items: center; flex-wrap: wrap }
+.rec .h span { color: var(--muted); font-size: 12px }
+.rec .x { color: var(--ng); font-size: 13px }
 
 /* ログイン */
 .login h1 { font-family: var(--display); font-size: 30px }
-.users { display: grid; gap: 8px }
 .roles { display: flex; gap: 6px; flex-wrap: wrap }
 .roles label { flex: 1; min-width: 90px; border: 1px solid var(--line); border-radius: 10px; padding: 9px; text-align: center; background: var(--surface); font-size: 13.5px }
 .roles input { position: absolute; opacity: 0; pointer-events: none }
-.roles input:checked + span { color: var(--accent); font-weight: 700 }
-.roles label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft) }
+.roles label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700 }
 
 /* ロードマップ */
-.timeline { display: grid; gap: 0; position: relative; padding-left: 22px }
+.timeline { display: grid; position: relative; padding-left: 22px }
 .timeline::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; background: var(--line) }
 .tl { position: relative; padding: 0 0 18px }
 .tl::before { content: ""; position: absolute; left: -21px; top: 7px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent) }
@@ -137,128 +187,59 @@ ol.steps, ul.checks { margin: 0; padding-left: 1.3em; display: grid; gap: 6px }
 .q { display: grid; gap: 6px }
 .q p { margin: 0; font-weight: 500 }
 .opt { display: flex; gap: 8px; align-items: flex-start; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; background: var(--bg) }
-.opt input { margin-top: 6px }
+.opt input { margin-top: 7px; flex: none }
 
-/* 進捗表 */
-.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface) }
+/* 表 */
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface) }
 table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums }
-th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap }
-th { color: var(--muted); font-weight: 500; font-size: 12px }
+th, td { padding: 9px 11px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top }
+tr:last-child td { border-bottom: 0 }
+th { color: var(--muted); font-weight: 500; font-size: 12px; white-space: nowrap; background: var(--bg) }
+.md td { min-width: 6em }
+.md td:first-child { white-space: nowrap; font-weight: 500 }
+.nowrap td, .nowrap th { white-space: nowrap }
+
+.filters { display: flex; gap: 6px; flex-wrap: wrap }
+.filters button { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 13px }
+.filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent) }
 
 /* チャット */
 .chat { display: grid; gap: 10px }
 .msg { max-width: 85%; padding: 10px 14px; border-radius: 14px; white-space: pre-wrap }
-.msg.me { justify-self: end; background: var(--accent); color: var(--surface); border-bottom-right-radius: 4px }
+.msg.me { justify-self: end; background: var(--accent); color: var(--on-accent); border-bottom-right-radius: 4px }
 .msg.ai { justify-self: start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px }
 .chatform { display: flex; gap: 8px }
 .chatform input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 12px }
 .sugg { display: flex; flex-wrap: wrap; gap: 6px }
 .sugg button { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 12.5px }
-
-@media (prefers-reduced-motion: no-preference) { main .wrap > * { animation: in .25s ease-out both } }
-@keyframes in { from { transform: translateY(4px) } to { transform: none } }
 </style>
 
 <header class="bar"><div class="wrap">
-  <button class="back" id="backBtn" hidden aria-label="戻る">‹ 戻る</button>
+  <button class="back" id="backBtn" hidden>‹ 戻る</button>
   <div class="brand" id="brand">enu Academy</div>
   <div class="who" id="who"></div>
 </div></header>
 <main><div class="wrap" id="view"></div></main>
 
+<script src="content.js"></script>
 <script>
 /* =====================================================================
-   コンテンツ（ここを書き換えるだけで中身を増やせます）
-   video: 動画のURL（YouTube限定公開など）を入れるとボタンが出ます
-   steps: やり方（手順）  checks: 合格チェックポイント
+   enu Academy アプリ本体（中身は content.js）
    ===================================================================== */
-const PHILOSOPHY = {
-  title: "enu の理念",
-  message: "（ここに enu の理念が入ります。資料ができたら差し替えてください）",
-  values: ["お客様に一番近い存在であること", "一人ひとりが自分の言葉で提案できること", "チームで育て、チームで勝つこと"],
-};
-const GOAL = { amount: "100万円", text: "4月入社 → 12月スタイリストデビュー → 月間売上100万円。このアプリを1からクリアすれば、誰でもそこに届く。" };
-
-// 入社前プログラム：アプリで合格させる項目と、事前に動画で予習する項目
-const PRE_ENTRY = [
-  { id: "pre-phone", title: "電話対応", type: "quiz", desc: "予約電話の受け方・名乗り方・復唱", video: "",
-    quiz: [
-      { q: "電話は何コール以内に出る？", options: ["3コール以内", "5コール以内", "出られる時でよい"], answer: 0 },
-      { q: "最初に名乗る言葉として正しいのは？", options: ["もしもし", "お電話ありがとうございます、enuの〇〇です", "はい、enuです"], answer: 1 },
-      { q: "予約を受けたら最後に必ずすることは？", options: ["日時・メニュー・お名前を復唱する", "すぐ電話を切る", "スタッフに丸投げする"], answer: 0 },
-    ] },
-  { id: "pre-greet", title: "挨拶", type: "quiz", desc: "お出迎え・お見送り・スタッフ間の挨拶", video: "",
-    quiz: [
-      { q: "お客様がご来店されたら？", options: ["手を止めて目を見て「いらっしゃいませ」", "作業しながら声だけ出す", "担当者だけが挨拶する"], answer: 0 },
-      { q: "お見送りはどこまで？", options: ["レジまで", "入口の外まで出て見送る", "見送らない"], answer: 1 },
-    ] },
-  { id: "pre-shampoo", title: "シャンプー（予習動画）", type: "video", desc: "月1回の店舗レッスン前に動画で手順を覚える", video: "" },
-  { id: "pre-prep", title: "カラー剤・レジの準備（予習動画）", type: "video", desc: "4月の初日から準備に入れるように", video: "" },
-];
-const MONTHLY_LESSONS = ["11月", "12月", "1月", "2月", "3月"];
-
-// アシスタントのしごと（この順番でレッスンが進みます）
-const TASK_GROUPS = [
-  { name: "基本・お店のしごと", items: [
-    ["phone", "電話", "予約・変更・キャンセルの受け方"],
-    ["greet", "挨拶", "お出迎え・お見送り・声かけ"],
-    ["tidy", "片付け", "道具・セット面・シャンプー台"],
-    ["open", "開店作業", "掃除・準備・朝礼まで"],
-    ["close", "閉店作業", "清掃・洗濯・締め"],
-    ["cloth", "施術クロスの準備", "クロス・タオル・ケープ"],
-    ["register", "レジ", "会計・次回予約・お見送り"],
-  ]},
-  { name: "施術の技術", items: [
-    ["shampoo", "シャンプー", "姿勢・流し・すすぎ"],
-    ["treatment", "トリートメント", "選び方・塗布・流し"],
-    ["headspa", "ヘッドスパ", "手順・圧・声かけ"],
-    ["dry", "ドライ", "根元から・時間短縮"],
-    ["finish", "仕上げ", "アイロン・スタイリング剤"],
-    ["color", "カラー", "調合・塗布・放置・流し"],
-    ["straight", "縮毛矯正", "薬剤・アイロン工程"],
-    ["perm", "パーマ", "ワインディング・薬剤"],
-  ]},
-  { name: "スタイリストへの道", items: [
-    ["counsel", "カウンセリング", "聞く・提案する・決める"],
-    ["attract", "集客", "SNS・口コミ・紹介"],
-    ["repeat", "再来", "次回予約・フォロー"],
-    ["sales", "売上管理", "数字の見方・目標の立て方"],
-  ]},
-];
-// 個別の中身（資料ができたものから追記）
-const TASK_DETAIL = {
-  phone: {
-    steps: ["3コール以内に出る", "「お電話ありがとうございます、enuの〇〇です」と名乗る", "お名前・ご希望日時・メニュー・担当を伺う", "予約表を確認して空きを伝える", "日時・メニュー・お名前を復唱して確認", "「ご来店お待ちしております」で、お客様が切ってから切る"],
-    checks: ["声のトーンが明るい", "復唱ができている", "予約表への入力ミスがない"],
-  },
-};
-
-const ROADMAP = [
-  { m: "11月〜3月", t: "入社前", d: "アプリで電話・挨拶に合格。月1回お店に集まってシャンプーレッスン" },
-  { m: "4月", t: "入社", d: "シャンプー・カラー準備・レジができる状態でスタート" },
-  { m: "4月〜6月", t: "アシスタント基礎", d: "お店のしごと・シャンプー・トリートメント・ヘッドスパ・ドライ" },
-  { m: "7月〜9月", t: "技術アシスト", d: "仕上げ・カラー・縮毛矯正・パーマ" },
-  { m: "10月〜11月", t: "スタイリスト準備", d: "カウンセリング・集客・再来・売上管理" },
-  { m: "12月", t: "スタイリストデビュー", d: "" },
-  { m: "ゴール", t: "月間売上 100万円", d: "", goal: true },
-];
-
-// オーナーAIチャット：資料ができたら質問と答えを追加（キーワードで検索して答えます）
-const OWNER_QA = [
-  { keys: ["失客", "来なくな", "再来"], a: "（サンプル）お客様が来なくなった時は、まず前回の施術とカウンセリングを振り返ってみよう。次回予約の提案ができていたかもチェック。" },
-  { keys: ["売上", "100万", "目標"], a: "（サンプル）100万円は「客数 × 客単価」。今の自分がどちらを伸ばすべきか、売上管理のレッスンで一緒に数字を見よう。" },
-  { keys: ["怒", "叱", "失敗", "ミス"], a: "（サンプル）ミスはすぐに報告。隠さないことが一番大事。どうすれば次は防げるかを一緒に考えよう。" },
-  { keys: ["休み", "辞め", "つらい", "しんどい"], a: "（サンプル）一人で抱えずに、まず幹部かオーナーに話してね。話すだけで整理できることも多いよ。" },
-];
-
-/* =====================================================================
-   アプリ本体
-   ===================================================================== */
+const C = window.ENU;
 const ROLE = { owner: "オーナー", lead: "幹部（監督）", assistant: "アシスタント" };
+const TYPE = {
+  chore: "雑務：見て覚える", quiz: "アプリのテストで合格", tech: "技術：ウィッグ練習 → 先輩チェック",
+  theory: "理論：口頭で答えて合格", shampoo: "採点表：80点以上＋★必須", roleplay: "ロープレ3回", read: "読んで覚える",
+};
 const STATUS = { todo: ["未着手", "todo"], prac: ["練習中", "prac"], wait: ["チェック待ち", "wait"], ok: ["合格", "ok"] };
-const TASKS = TASK_GROUPS.flatMap(g => g.items.map(([id, title, desc]) => ({ id, title, desc, group: g.name })));
+const CATS = C.groups.flatMap(g => g.categories.map(c => ({ ...c, group: g.name, page: g.page })));
+const LESSON_IDS = [...new Set(CATS.flatMap(c => c.lessons))].filter(id => !C.lessons[id].draft);
+const L = id => ({ id, ...C.lessons[id] });
+const pageLessons = page => [...new Set(C.groups.filter(g => g.page === page).flatMap(g => g.categories.flatMap(c => c.lessons)))].filter(id => !C.lessons[id].draft);
 
-const KEY = "enu-academy-v1";
+/* ---------- 保存（いまはこの端末のブラウザ。あとでサーバーに差し替えられるようにここだけで読み書き） ---------- */
+const KEY = "enu-academy-v2";
 const store = {
   load() { try { return JSON.parse(localStorage.getItem(KEY)) || { users: {}, current: null }; } catch { return { users: {}, current: null }; } },
   save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch {} },
@@ -267,272 +248,516 @@ let db = store.load();
 let route = { name: "home" }, stack = [];
 
 const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const today = () => { const d = new Date(); return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`; };
 const me = () => db.users[db.current];
 const isLead = u => u && (u.role === "owner" || u.role === "lead");
-const prog = (u, id) => (u.progress[id] ||= { status: "todo", practice: 0 });
+const prog = (u, id) => (u.progress[id] ||= { status: "todo", practice: 0, records: [], stages: [] });
 const passed = (u, id) => u.progress[id]?.status === "ok";
+const subject = () => route.uid ? db.users[route.uid] : me();   // 幹部が他の人の記録を見る時
 
-function unlocked(u, idx) {
-  if (isLead(u)) return true;
-  return idx === 0 || passed(u, TASKS[idx - 1].id);
+function lessonLocked(u, cat, idx) {
+  if (isLead(u) || idx === 0) return false;
+  return !passed(u, cat.lessons[idx - 1]);
 }
-function percent(u) {
-  const ids = [...PRE_ENTRY.map(p => p.id), ...TASKS.map(t => t.id)];
-  return Math.round(ids.filter(id => passed(u, id)).length / ids.length * 100);
-}
-
-function go(name, params = {}) { stack.push(route); route = { name, ...params }; render(); scrollTo(0, 0); }
-function back() { route = stack.pop() || { name: "home" }; render(); scrollTo(0, 0); }
-$("#backBtn").onclick = back;
-
+function percent(u) { return Math.round(LESSON_IDS.filter(id => passed(u, id)).length / LESSON_IDS.length * 100); }
 function chip(u, id, locked) {
   if (locked) return `<span class="chip lock">🔒</span>`;
   const [label, cls] = STATUS[prog(u, id).status];
   return `<span class="chip ${cls}">${label}</span>`;
 }
 
+/* ---------- 資料の書き方を表示用に変換（####・番号・箇条書き・表・引用・太字） ---------- */
+function inline(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>"); }
+function md(src, fold) {
+  const lines = String(src || "").split("\n");
+  const top = Math.min(...lines.map(l => (l.match(/^(#{2,4})\s/) || [, "#####"])[1].length));
+  let i = 0;
+  const sections = []; let cur = { title: null, html: "" };
+  const out = s => cur.html += s;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) { i++; continue; }
+    let m;
+    if ((m = line.match(/^#{2,4}\s+(.*)/))) {
+      if (fold && line.indexOf(" ") === top) { if (cur.title || cur.html) sections.push(cur); cur = { title: m[1], html: "" }; }
+      else out(`<h4>${inline(m[1])}</h4>`);
+      i++; continue;
+    }
+    if (/^---+$/.test(line.trim())) { out("<hr>"); i++; continue; }
+    if (line.startsWith("|")) {
+      const rows = [];
+      while (i < lines.length && lines[i].startsWith("|")) { rows.push(lines[i]); i++; }
+      const cells = r => r.replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+      const head = cells(rows[0]), body = rows.slice(2).map(cells);
+      out(`<div class="tablewrap"><table><thead><tr>${head.map(h => `<th>${inline(h)}</th>`).join("")}</tr></thead><tbody>${body.map(r => `<tr>${r.map(c => `<td>${inline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+      continue;
+    }
+    if (line.startsWith(">")) {
+      const q = [];
+      while (i < lines.length && lines[i].startsWith(">")) { q.push(lines[i].replace(/^>\s?/, "")); i++; }
+      out(`<blockquote>${inline(q.join(" "))}</blockquote>`); continue;
+    }
+    if ((m = line.match(/^(\d+)\.\s/))) {
+      const start = m[1], items = [];
+      while (i < lines.length && /^\d+\.\s/.test(lines[i])) { items.push(lines[i].replace(/^\d+\.\s/, "")); i++; }
+      out(`<ol${start !== "1" ? ` start="${start}"` : ""}>${items.map(t => `<li>${inline(t)}</li>`).join("")}</ol>`); continue;
+    }
+    if (/^- /.test(line)) {
+      const items = [];
+      while (i < lines.length && /^- /.test(lines[i])) { items.push(lines[i].slice(2)); i++; }
+      const todo = items.every(t => /^(\[ \]|□)/.test(t));
+      out(`<ul${todo ? ' class="todo"' : ""}>${items.map(t => `<li>${inline(t.replace(/^(\[ \]|□)\s*/, ""))}</li>`).join("")}</ul>`); continue;
+    }
+    out(`<p>${inline(line)}</p>`); i++;
+  }
+  if (!fold) return `<div class="md">${cur.html}</div>`;
+  sections.push(cur);
+  return sections.map(s => s.title ? `<details class="fold"><summary>${inline(s.title)}</summary><div class="md">${s.html}</div></details>` : `<div class="md">${s.html}</div>`).join("");
+}
+
+/* ---------- 画面遷移 ---------- */
+function go(name, params = {}) { stack.push(route); route = { name, ...params }; render(); scrollTo(0, 0); }
+function back() { route = stack.pop() || { name: "home" }; render(); scrollTo(0, 0); }
+$("#backBtn").onclick = back;
+
 /* ---------- ログイン ---------- */
 function viewLogin(msg) {
   const users = Object.entries(db.users);
   return `
-  <section class="login" style="display:grid;gap:8px">
+  <section class="login ptitle">
     <div class="eyebrow">ENU ACADEMY</div>
     <h1>enu アカデミー</h1>
     <p class="lead">一度名前を登録すると、次からは続きから学べます。</p>
   </section>
-  ${users.length ? `<section class="group"><h2>続きから</h2><div class="users">
-    ${users.map(([id, u]) => `<button class="row" data-login="${id}"><span class="t">${esc(u.name)}</span><span class="chip prac">${ROLE[u.role]}</span></button>`).join("")}
+  ${users.length ? `<section class="group"><h2>続きから</h2><div class="list">
+    ${users.map(([id, u]) => `<button class="row" data-login="${id}"><span class="t">${esc(u.name)}<small>${esc(u.store || "")}</small></span><span class="chip prac">${ROLE[u.role]}</span></button>`).join("")}
   </div></section>` : ""}
   <form class="section" id="regForm">
     <h3>はじめての方</h3>
     ${msg ? `<div class="toast err">${esc(msg)}</div>` : ""}
     <div class="field"><label for="regName">名前</label><input id="regName" required placeholder="例：高口 なつみ" autocomplete="name"></div>
-    <div class="field"><label>立場</label><div class="roles">
-      ${Object.entries(ROLE).map(([k, v], i) => `<label><input type="radio" name="role" value="${k}" ${i === 2 ? "checked" : ""}><span>${v}</span></label>`).join("")}
+    <div class="field"><span class="lbl">立場</span><div class="roles">
+      ${Object.entries(ROLE).map(([k, v]) => `<label><input type="radio" name="role" value="${k}" ${k === "assistant" ? "checked" : ""}>${v}</label>`).join("")}
     </div></div>
-    <div class="field" id="pinField" hidden><label for="regPin">合格チェック用の暗証番号（4桁）</label><input id="regPin" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="0000"></div>
+    <div class="field"><label for="regStore">店舗</label><select id="regStore">${C.stores.map(s => `<option>${esc(s)}</option>`).join("")}</select></div>
+    <div class="field" id="pinField" hidden><label for="regPin">合格を出すときの暗証番号（数字4桁）</label><input id="regPin" type="password" inputmode="numeric" maxlength="4" placeholder="0000"></div>
     <button class="btn" type="submit">登録してはじめる</button>
   </form>`;
 }
 function bindLogin() {
-  document.querySelectorAll("[data-login]").forEach(b => b.onclick = () => { db.current = b.dataset.login; store.save(); route = { name: "home" }; stack = []; render(); });
-  const pinField = $("#pinField");
-  document.querySelectorAll("input[name=role]").forEach(r => r.onchange = () => { pinField.hidden = r.value === "assistant" && r.checked; $("#regPin").required = !pinField.hidden; });
+  $$("[data-login]").forEach(b => b.onclick = () => { db.current = b.dataset.login; store.save(); route = { name: "home" }; stack = []; render(); });
+  $$("input[name=role]").forEach(r => r.onchange = () => { $("#pinField").hidden = $("input[name=role]:checked").value === "assistant"; });
   $("#regForm").onsubmit = e => {
     e.preventDefault();
-    const name = $("#regName").value.trim();
-    const role = document.querySelector("input[name=role]:checked").value;
-    const pin = $("#regPin").value.trim();
+    const name = $("#regName").value.trim(), role = $("input[name=role]:checked").value, pin = $("#regPin").value.trim();
     if (!name) return;
-    if (role !== "assistant" && !/^\d{4}$/.test(pin)) return render(viewLogin("暗証番号は数字4桁で入れてください"));
+    if (role !== "assistant" && !/^\d{4}$/.test(pin)) { $("#view").innerHTML = viewLogin("暗証番号は数字4桁で入れてください"); return bindLogin(); }
     const id = "u" + Date.now();
-    db.users[id] = { name, role, pin: role === "assistant" ? "" : pin, progress: {}, joined: new Date().toISOString().slice(0, 10) };
+    db.users[id] = { name, role, store: $("#regStore").value, pin: role === "assistant" ? "" : pin, progress: {}, joined: today() };
     db.current = id; store.save(); route = { name: "home" }; stack = []; render();
   };
 }
 
 /* ---------- ホーム ---------- */
 function viewHome() {
-  const u = me(), pct = percent(u);
-  const preDone = PRE_ENTRY.filter(p => passed(u, p.id)).length;
-  const taskDone = TASKS.filter(t => passed(u, t.id)).length;
+  const u = me(), pct = percent(u), P = C.philosophy;
+  const preDone = C.preEntry.filter(id => passed(u, id)).length;
+  const count = page => { const ids = pageLessons(page); return `${ids.filter(id => passed(u, id)).length}/${ids.length}`; };
   const tiles = [
-    ["pre", "入社前プログラム", `電話・挨拶はアプリで合格／シャンプーは動画で予習（${preDone}/${PRE_ENTRY.length}）`],
-    ["tasks", "アシスタントのしごと", `動画とやり方 → ウィッグで練習 → 先輩チェックで合格（${taskDone}/${TASKS.length}）`],
-    ["roadmap", "ロードマップ", "4月入社から12月デビュー、売上100万円まで"],
+    ["pre", "入社前プログラム", `電話・挨拶はアプリで合格／シャンプーはレッスン全5回で合格（${preDone}/${C.preEntry.length}）`],
+    ["work", "アシスタントのしごと", `電話・開店・閉店・クロス・レジ・挨拶など、お店の仕事（${count("work")}）`],
+    ["lesson", "レッスン", `シャンプー・カラー・縮毛矯正・カウンセリング・再来。練習 → 先輩チェックで合格（${count("lesson")}）`],
+    ["roadmap", "ロードマップ", "入社前から12月デビュー、売上100万円まで"],
   ];
-  if (isLead(u)) tiles.push(["team", "みんなの進捗・合格チェック", "チェック待ちのレッスンを確認して合格をつける"]);
+  if (isLead(u)) tiles.push(["team", "みんなの進み具合", "チェック待ちの確認・合格を出す"]);
   return `
   <section class="philo">
-    <div class="eyebrow">PHILOSOPHY</div>
-    <h1>${esc(PHILOSOPHY.title)}</h1>
-    <p>${esc(PHILOSOPHY.message)}</p>
-    <ul>${PHILOSOPHY.values.map(v => `<li>${esc(v)}</li>`).join("")}</ul>
+    <div class="eyebrow">${esc(P.eyebrow)}</div>
+    <h1>${esc(P.title)}</h1>
+    <p class="tag">${esc(P.lead)}</p>
+    <p>${esc(P.message)}</p>
+    ${P.note ? `<small>${esc(P.note)}</small>` : ""}
   </section>
-  <div class="goal"><b>${esc(GOAL.amount)}</b><span>${esc(GOAL.text)}</span></div>
+  <div class="goal"><b>${esc(C.goal.amount)}</b><span>${esc(C.goal.text)}</span></div>
   <section class="section">
-    <div style="display:flex;justify-content:space-between;align-items:baseline"><h3>${esc(u.name)}さんの進み具合</h3><b style="font-variant-numeric:tabular-nums">${pct}%</b></div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h3>${esc(u.name)}さんの進み具合</h3><b style="font-variant-numeric:tabular-nums">${pct}%</b></div>
     <div class="meter"><i style="width:${pct}%"></i></div>
   </section>
   <nav class="menu">
-    ${tiles.map(([k, t, s], i) => `<button class="tile" data-go="${k}"><span class="num">${String(i + 1).padStart(2, "0")}</span><span class="t"><b>${t}</b><small>${s}</small></span><span class="chev">›</span></button>`).join("")}
-    <button class="tile ai" data-go="chat"><span class="num">AI</span><span class="t"><b>オーナーAIチャット</b><small>困った時にオーナーの考えを聞ける</small></span><span class="chev">›</span></button>
+    ${tiles.map(([k, t, s], i) => `<button class="tile" ${k === "work" || k === "lesson" ? `data-page="${k}"` : `data-go="${k}"`}><span class="num">${String(i + 1).padStart(2, "0")}</span><span class="t"><b>${t}</b><small>${s}</small></span><span class="chev">›</span></button>`).join("")}
+    <button class="tile ai" data-go="chat"><span class="num">AI</span><span class="t"><b>オーナーAIチャット</b><small>困ったときに、オーナーの考えを聞ける</small></span><span class="chev">›</span></button>
   </nav>`;
 }
 
 /* ---------- 入社前 ---------- */
 function viewPre() {
-  const u = me();
+  const u = subject(), sp = L("shampoo"), recs = prog(u, "shampoo").records;
   return `
-  <section style="display:grid;gap:6px"><div class="eyebrow">BEFORE APRIL</div><h1 style="font-family:var(--display);font-size:24px">入社前プログラム</h1>
-  <p class="lead">4月の初日から、シャンプー・カラーの準備・レジに入れる状態を目指します。</p></section>
-  <section class="group"><h2>アプリで合格・予習</h2><div class="list">
-    ${PRE_ENTRY.map((p, i) => `<button class="row" data-pre="${p.id}"><span class="n">${i + 1}</span><span class="t">${esc(p.title)}<br><small style="color:var(--muted);font-weight:400">${esc(p.desc)}</small></span>${chip(u, p.id)}</button>`).join("")}
+  <section class="ptitle"><div class="eyebrow">BEFORE APRIL</div><h1>入社前プログラム</h1>
+  <p class="lead">4月の入社時点で、シャンプー・カラーの準備・レジができている状態を目指します。</p></section>
+  <section class="group"><h2>入社前に合格するもの</h2><div class="list">
+    ${C.preEntry.map((id, i) => `<button class="row" data-lesson="${id}"><span class="n">${i + 1}</span><span class="t">${esc(L(id).title)}<small>${TYPE[L(id).type]}</small></span>${chip(u, id)}</button>`).join("")}
   </div></section>
-  <section class="section"><h3>月1回の店舗レッスン</h3>
-    <p class="note">動画で予習してから参加。シャンプーをお店で練習します。</p>
-    <div class="list">${MONTHLY_LESSONS.map(m => { const id = "monthly-" + m; const done = passed(u, id);
-      return `<button class="row" data-monthly="${id}"><span class="t">${m}レッスン</span><span class="chip ${done ? "ok" : "todo"}">${done ? "参加済み" : "未参加"}</span></button>`; }).join("")}</div>
-  </section>`;
-}
-function viewPreItem() {
-  const u = me(), p = PRE_ENTRY.find(x => x.id === route.id), st = prog(u, p.id);
-  const result = route.result;
-  return `
-  <section style="display:grid;gap:6px"><div class="eyebrow">入社前プログラム</div><h1 style="font-family:var(--display);font-size:24px">${esc(p.title)}</h1><p class="lead">${esc(p.desc)}</p></section>
-  ${videoBox(p.video)}
-  ${p.type === "quiz" ? `
-    <form class="section" id="quizForm"><h3>確認テスト（全問正解で合格）</h3>
-      ${result ? `<div class="toast ${result.ok ? "" : "err"}">${result.ok ? "合格です！" : `${result.correct}/${p.quiz.length}問正解。もう一度チャレンジしよう`}</div>` : ""}
-      ${p.quiz.map((q, qi) => `<div class="q"><p>Q${qi + 1}. ${esc(q.q)}</p>${q.options.map((o, oi) => `<label class="opt"><input type="radio" name="q${qi}" value="${oi}" required><span>${esc(o)}</span></label>`).join("")}</div>`).join("")}
-      <button class="btn" type="submit">${st.status === "ok" ? "もう一度解く" : "答え合わせ"}</button>
-    </form>` : `
-    <section class="section"><h3>予習</h3><p class="note">動画を最後まで見たら「見た」を押してください。</p>
-      <div class="btns"><button class="btn" id="watched" ${st.status === "ok" ? "disabled" : ""}>${st.status === "ok" ? "視聴済み" : "見た"}</button></div></section>`}`;
-}
-function bindPreItem() {
-  const u = me(), p = PRE_ENTRY.find(x => x.id === route.id), st = prog(u, p.id);
-  if ($("#quizForm")) $("#quizForm").onsubmit = e => {
-    e.preventDefault();
-    const correct = p.quiz.filter((q, i) => Number(document.querySelector(`input[name=q${i}]:checked`)?.value) === q.answer).length;
-    const ok = correct === p.quiz.length;
-    if (ok) st.status = "ok"; else if (st.status !== "ok") st.status = "prac";
-    store.save(); route.result = { ok, correct }; render();
-  };
-  if ($("#watched")) $("#watched").onclick = () => { st.status = "ok"; store.save(); render(); };
+  <section class="group"><h2>シャンプーレッスン 全5回</h2>
+    <div class="tablewrap"><table><thead><tr><th>回</th><th>時期</th><th>内容</th><th>点数</th></tr></thead><tbody>
+    ${sp.rounds.map((r, i) => { const rec = recs.filter(x => x.round === i + 1).pop();
+      return `<tr><td style="white-space:nowrap">${i + 1}回目</td><td style="white-space:nowrap">${esc(r.m)}</td><td>${esc(r.t)}</td><td style="white-space:nowrap">${rec ? `<b>${rec.score}</b>点` : "—"}</td></tr>`; }).join("")}
+    </tbody></table></div>
+    <p class="note">2月は国家試験の勉強のためお休み。事前に動画を見てから参加します。</p>
+  </section>
+  <section class="group"><h2>4月の初日からできるようにしておくこと</h2><div class="list">
+    ${["register", "cloth", "greeting"].map(id => `<button class="row" data-lesson="${id}"><span class="t">${esc(L(id).title)}<small>${esc(L(id).target || "")}</small></span>${chip(u, id)}</button>`).join("")}
+  </div></section>`;
 }
 
-/* ---------- アシスタントのしごと ---------- */
-function viewTasks() {
-  const u = me(); let n = 0;
+/* ---------- アシスタントのしごと（項目一覧） ---------- */
+function viewCats() {
+  const u = me(), P = C.pages[route.page]; let n = 0;
   return `
-  <section style="display:grid;gap:6px"><div class="eyebrow">ASSISTANT WORK</div><h1 style="font-family:var(--display);font-size:24px">アシスタントのしごと</h1>
-  <p class="lead">動画とやり方を見る → ウィッグで練習 → 先輩のチェックで合格したら次へ進めます。</p></section>
-  ${TASK_GROUPS.map(g => `<section class="group"><h2>${g.name}</h2><div class="list">
-    ${g.items.map(([id, title, desc]) => { const idx = n++; const locked = !unlocked(u, idx);
-      return `<button class="row" data-task="${id}" ${locked ? "disabled" : ""}><span class="n">${idx + 1}</span><span class="t">${title}<br><small style="color:var(--muted);font-weight:400">${desc}</small></span>${chip(u, id, locked)}</button>`; }).join("")}
+  <section class="ptitle"><div class="eyebrow">${esc(P.eyebrow)}</div><h1>${esc(P.title)}</h1><p class="lead">${esc(P.lead)}</p></section>
+  ${route.page === "work" ? `<section class="section"><h3>アシストの大前提</h3>${md(C.premise)}</section>` : ""}
+  ${C.groups.filter(g => g.page === route.page).map(g => `<section class="group"><h2>${esc(g.name)}</h2><div class="list">
+    ${g.categories.map(c => { n++;
+      const ready = c.lessons.filter(id => !C.lessons[id].draft), total = ready.length, ok = ready.filter(id => passed(u, id)).length;
+      const right = !total ? `<span class="chip soon">準備中</span>` : ok === total ? `<span class="chip ok">合格</span>` : `<span class="chip info">${ok}/${total}</span>`;
+      return `<button class="row" data-cat="${c.id}"><span class="n">${n}</span><span class="t">${esc(c.title)}${c.sub || c.planned ? `<small>${esc(c.sub || c.planned)}</small>` : ""}</span>${right}</button>`; }).join("")}
   </div></section>`).join("")}`;
 }
-function videoBox(url) {
-  return `<div class="video">${url ? `<div>動画を見る<br><a href="${esc(url)}" target="_blank" rel="noopener">▶ 再生する</a></div>` : `<div>▶ 動画は準備中です<br><small style="opacity:.7">撮影できたらここに入ります</small></div>`}</div>`;
-}
-function viewTask() {
-  const viewer = me();
-  const owner = route.uid ? db.users[route.uid] : viewer;   // 幹部が他の人のレッスンを見る時
-  const idx = TASKS.findIndex(t => t.id === route.id), t = TASKS[idx], d = TASK_DETAIL[t.id] || {}, st = prog(owner, t.id);
-  const [label, cls] = STATUS[st.status];
-  const next = TASKS[idx + 1];
-  const leads = Object.entries(db.users).filter(([, x]) => isLead(x));
+
+/* ---------- 項目（レッスンの並び） ---------- */
+function viewCat() {
+  const u = subject(), c = CATS.find(x => x.id === route.id);
   return `
-  <section style="display:grid;gap:6px"><div class="eyebrow">${esc(t.group)}・${idx + 1}/${TASKS.length}</div>
-    <h1 style="font-family:var(--display);font-size:24px">${esc(t.title)}</h1>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="chip ${cls}">${label}</span><span class="note">${route.uid ? esc(owner.name) + "さん・" : ""}ウィッグ練習 ${st.practice}回</span></div></section>
+  <section class="ptitle"><div class="eyebrow">${esc(c.group)}</div><h1>${esc(c.title)}</h1>
+    ${c.state ? `<div class="meta"><span class="chip soon">${esc(c.state)}</span></div>` : ""}</section>
+  ${c.note ? `<section class="section"><p class="note" style="font-size:13.5px;color:var(--ink)">${esc(c.note)}</p></section>` : ""}
+  ${c.lessons.length ? `<section class="group"><h2>レッスン（上から順に合格すると次が開きます）</h2><div class="list">
+    ${c.lessons.map((id, i) => { const l = L(id), locked = lessonLocked(u, c, i);
+      return `<button class="row" data-lesson="${id}" ${locked && !l.draft ? "disabled" : ""}><span class="n">${i + 1}</span><span class="t">${esc(l.title)}<small>${l.draft ? "中身を作成中" : TYPE[l.type] + (l.target ? "・" + esc(l.target) : "")}</small></span>${l.draft ? `<span class="chip soon">準備中</span>` : chip(u, id, locked)}</button>`; }).join("")}
+  </div></section>`
+  : `<section class="section"><h3>準備中</h3><p class="pending">この項目の中身は作成中です。${c.planned ? esc(c.planned) : ""}</p></section>`}`;
+}
+
+/* ---------- レッスン ---------- */
+function videoBox(l) {
+  return `<div class="video">${l.video ? `<div>お手本動画<br><a href="${esc(l.video)}" target="_blank" rel="noopener">▶ 再生する</a></div>` : `<div>▶ お手本動画は準備中です<br><small style="opacity:.7">撮影できたらここに入ります</small></div>`}</div>
+  ${l.chapters?.length ? `<ul class="chapters">${l.chapters.map(([t, s]) => `<li><b>${esc(t)}</b>${esc(s)}</li>`).join("")}</ul>` : ""}`;
+}
+function viewLesson() {
+  const u = subject(), l = L(route.id), st = prog(u, l.id), [label, cls] = STATUS[st.status];
+  if (l.draft) return `<section class="ptitle"><div class="eyebrow">準備中</div><h1>${esc(l.title)}</h1></section>
+  ${videoBox(l)}
+  <section class="section"><h3>やり方</h3><p class="pending">やり方・課題・チェックポイントは作成中です。できたらここに入ります。</p></section>`;
+  const leadView = isLead(me());
+  return `
+  <section class="ptitle"><div class="eyebrow">${TYPE[l.type]}</div><h1>${esc(l.title)}</h1>
+    <div class="meta"><span class="chip ${cls}">${label}</span>${l.target ? `<span class="chip info">目標 ${esc(l.target)}</span>` : ""}${l.time ? `<span class="chip info">目安 ${esc(l.time)}</span>` : ""}</div>
+    ${route.uid ? `<p class="note">${esc(u.name)}さんの記録を見ています</p>` : ""}</section>
   ${route.msg ? `<div class="toast ${route.err ? "err" : ""}">${esc(route.msg)}</div>` : ""}
-  ${videoBox(d.video)}
-  <section class="section"><h3>やり方</h3>${d.steps ? `<ol class="steps">${d.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>` : `<p class="pending">やり方の説明は準備中です。</p>`}</section>
-  <section class="section"><h3>合格チェックポイント</h3>${d.checks ? `<ul class="checks">${d.checks.map(s => `<li>${esc(s)}</li>`).join("")}</ul>` : `<p class="pending">チェックポイントは準備中です。</p>`}</section>
-  <section class="section"><h3>練習と合格</h3>
-    ${st.status === "ok" ? `<p class="note">合格済み（${esc(st.passedBy || "")} ${esc(st.passedAt || "")}）</p>` : ""}
-    <div class="btns">
-      <button class="btn ghost" id="practice">ウィッグで練習した ＋1</button>
-      ${st.status !== "ok" && st.status !== "wait" ? `<button class="btn" id="request">先輩にチェックをお願いする</button>` : ""}
-    </div>
-    ${st.status !== "ok" ? `
-    <form id="checkForm" style="display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px">
-      <p class="note">先輩（幹部・オーナー）が実技を見て、合格なら暗証番号を入れてください。</p>
-      ${leads.length ? `
-      <div class="field"><label for="checker">チェックする先輩</label><select id="checker">${leads.map(([id, x]) => `<option value="${id}" ${id === db.current ? "selected" : ""}>${esc(x.name)}（${ROLE[x.role]}）</option>`).join("")}</select></div>
-      <div class="field"><label for="checkPin">暗証番号</label><input id="checkPin" inputmode="numeric" maxlength="4" placeholder="4桁"></div>
-      <div class="btns"><button class="btn" type="submit" value="ok">合格</button><button class="btn warn" type="button" id="retry">やり直し</button></div>`
-      : `<p class="pending">幹部・オーナーがまだ登録されていません。</p>`}
-    </form>` : ""}
-  </section>
-  ${next && st.status === "ok" && !route.uid ? `<button class="btn" data-task="${next.id}">次のレッスン「${esc(next.title)}」へ</button>` : ""}`;
+  ${videoBox(l)}
+  ${l.intro ? `<section class="section">${md(l.intro)}</section>` : ""}
+  <section class="section"><h3>${l.type === "theory" ? "覚えること" : l.fold ? "マニュアル（章をタップで開く）" : "やり方"}</h3>${md(l.body, l.fold)}</section>
+  ${l.tasks ? `<section class="section"><h3>課題</h3><div class="md"><ol>${l.tasks.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
+  ${l.checks && l.type === "tech" ? `<section class="section"><h3>チェックポイント</h3><p class="note">${l.stages.join("と")}でチェックし、すべて○になれば合格です。</p><div class="md"><ul>${l.checks.map(t => `<li>${inline(t)}</li>`).join("")}</ul></div></section>` : ""}
+  ${l.questions ? `<section class="section"><h3>チェック（先輩が口頭で質問）</h3><p class="note">すべて自分の言葉で答えられたら合格です。</p><div class="md"><ol>${l.questions.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
+  ${l.type === "shampoo" ? scoreSheetInfo(l) : ""}
+  ${progressPanel(l, st, u)}
+  ${st.status !== "ok" && ["tech", "theory", "shampoo", "roleplay"].includes(l.type) ? checkPanel(l, st, leadView) : ""}
+  ${recordsPanel(l, st)}
+  ${nextButton(l, u)}`;
 }
-function bindTask() {
-  const owner = route.uid ? db.users[route.uid] : me(), st = prog(owner, route.id);
-  const flash = (msg, err) => { route.msg = msg; route.err = !!err; render(); };
-  $("#practice").onclick = () => { st.practice++; if (st.status === "todo") st.status = "prac"; store.save(); flash(`練習を記録しました（${st.practice}回目）`); };
-  if ($("#request")) $("#request").onclick = () => { st.status = "wait"; st.requestedAt = today(); store.save(); flash("チェック待ちにしました。先輩に声をかけよう"); };
-  const verify = () => { const l = db.users[$("#checker").value]; return l && l.pin === $("#checkPin").value.trim() ? l : null; };
-  if ($("#checkForm") && $("#checker")) {
-    $("#checkForm").onsubmit = e => { e.preventDefault(); const l = verify(); if (!l) return flash("暗証番号がちがいます", true);
-      Object.assign(st, { status: "ok", passedBy: l.name, passedAt: today() }); store.save(); flash("合格！次のレッスンに進めます"); };
-    $("#retry").onclick = () => { const l = verify(); if (!l) return flash("暗証番号がちがいます", true);
-      st.status = "prac"; store.save(); flash(`${l.name}さん：もう一度練習してからチェックしよう`, true); };
+function scoreSheetInfo(l) {
+  return `<section class="section"><h3>採点表（100点満点）</h3>
+    <p class="note">合格は${l.passScore}点以上、かつ<span class="star">★必須</span>の3項目が満点。★が1つでもできていなければ、点数が高くても不合格。合格判定は${l.judgeFrom}回目から。</p>
+    <div class="tablewrap"><table><thead><tr><th>区分</th><th>見るポイント</th><th>配点</th></tr></thead><tbody>
+    ${l.score.map(([g, p, pt, req]) => `<tr><td style="white-space:nowrap">${esc(g)}</td><td>${req ? '<span class="star">★必須</span> ' : ""}${esc(p)}</td><td>${pt}</td></tr>`).join("")}
+    </tbody></table></div></section>`;
+}
+function progressPanel(l, st, u) {
+  const self = !route.uid;
+  if (l.type === "chore" || l.type === "read") return `<section class="section"><h3>覚えたら</h3>
+    <p class="note">${l.type === "read" ? "読んで、自分の言葉で話せるようになったら押してください。" : "雑務はチェックなし。やり方を見て覚えたら押してください。"}</p>
+    ${st.status === "ok" ? `<p class="note">覚えた（${esc(st.passedAt || "")}）</p>` : self ? `<button class="btn" id="learned">${l.type === "read" ? "読んで覚えた" : "やり方を覚えた"}</button>` : `<p class="pending">まだです</p>`}</section>`;
+  if (l.type === "quiz") return quizPanel(l, st);
+  if (l.type === "tech") {
+    const goal = l.practice || 5, enough = st.practice >= goal;
+    return `<section class="section"><h3>練習</h3>
+      <div class="count"><b>${Math.min(st.practice, 99)}</b><small>/ ${goal}回 ${l.practiceLabel ? "" : "ウィッグ練習"}</small></div>
+      <div class="meter"><i style="width:${Math.min(100, st.practice / goal * 100)}%"></i></div>
+      ${l.stages.length > 1 ? `<p class="note">合格した段階：${l.stages.map(s => st.stages.includes(s) ? `${s} ○` : `${s} —`).join("　")}</p>` : ""}
+      ${self && st.status !== "ok" ? `<div class="btns"><button class="btn ghost" id="practice">${esc(l.practiceLabel || "ウィッグで練習した")} ＋1</button>
+      ${st.status !== "wait" ? `<button class="btn" id="request" ${enough ? "" : "disabled"}>先輩にチェックをお願いする</button>` : ""}</div>
+      ${!enough ? `<p class="note">${goal}回練習すると、チェックをお願いできます。</p>` : ""}` : ""}
+      ${st.status === "ok" ? `<p class="toast">合格。営業でお客様に入れます。</p>` : ""}
+    </section>`;
   }
+  if (l.type === "roleplay") return `<section class="section"><h3>ロープレ</h3>
+    <div class="list">${l.rounds.map((r, i) => `<div class="row"><span class="n">${i + 1}</span><span class="t">${esc(r)}</span>${st.stages.includes(String(i + 1)) ? `<span class="chip ok">○</span>` : `<span class="chip todo">未</span>`}</div>`).join("")}</div>
+    ${self && !["ok", "wait"].includes(st.status) ? `<button class="btn" id="request">先輩にロープレをお願いする</button>` : ""}
+    ${st.status === "ok" ? `<p class="note">合格後も、実際の新規入客3名は上席がカウンセリング内容とカルテを確認します。</p>` : ""}</section>`;
+  // theory / shampoo
+  return self && !["ok", "wait"].includes(st.status) ? `<section class="section"><h3>準備ができたら</h3>
+    <button class="btn" id="request">${l.type === "shampoo" ? "採点をお願いする" : "先輩にチェックをお願いする"}</button></section>` : "";
 }
-const today = () => new Date().toISOString().slice(0, 10);
+function quizPanel(l, st) {
+  const r = route.result;
+  return `<form class="section" id="quizForm"><h3>確認テスト（全問正解で合格）</h3>
+    ${st.status === "ok" ? `<div class="toast">合格しています（${esc(st.passedAt || "")}）</div>` : ""}
+    ${r ? `<div class="toast ${r.ok ? "" : "err"}">${r.ok ? "全問正解、合格です！" : `${r.correct}/${l.quiz.length}問正解。やり方を読み直して、もう一度チャレンジしよう`}</div>` : ""}
+    ${l.quiz.map((q, qi) => `<div class="q"><p>Q${qi + 1}. ${esc(q.q)}</p>${q.options.map((o, oi) => `<label class="opt"><input type="radio" name="q${qi}" value="${oi}" required><span>${esc(o)}</span></label>`).join("")}</div>`).join("")}
+    ${route.uid ? "" : `<button class="btn" type="submit">答え合わせ</button>`}
+  </form>`;
+}
+
+/* 先輩のチェック欄（暗証番号で本人確認） */
+function checkPanel(l, st, leadView) {
+  const leads = Object.entries(db.users).filter(([, x]) => isLead(x));
+  if (!route.open) return `<section class="section"><h3>先輩のチェック</h3>
+    <p class="note">チェックは幹部・オーナーが記入します。</p>
+    <button class="btn ${leadView ? "" : "ghost"}" id="openCheck">${l.type === "shampoo" ? "採点を記入する" : "チェックを記入する"}</button></section>`;
+  let body = "";
+  if (l.type === "tech") {
+    const remain = l.stages.filter(s => !st.stages.includes(s));
+    body = `<div class="field"><label for="ckStage">どこでチェック？</label><select id="ckStage">${remain.map(s => `<option>${esc(s)}</option>`).join("")}</select></div>
+      ${oxList(l.checks)}`;
+  } else if (l.type === "theory") {
+    body = oxList(l.questions);
+  } else if (l.type === "roleplay") {
+    body = `<div class="field"><label for="ckRound">何回目？</label><select id="ckRound">${l.rounds.map((r, i) => `<option value="${i + 1}" ${st.stages.includes(String(i + 1)) ? "" : ""}>${i + 1}回目：${esc(r)}</option>`).join("")}</select></div>
+      ${oxList(l.checks)}`;
+  } else if (l.type === "shampoo") {
+    const nextRound = Math.min((st.records.at(-1)?.round || 0) + 1, l.rounds.length + 1);
+    body = `<div class="field"><label for="ckRound">何回目？</label><select id="ckRound">${l.rounds.map((r, i) => `<option value="${i + 1}" ${nextRound === i + 1 ? "selected" : ""}>${i + 1}回目（${esc(r.m)}）${i + 1 >= l.judgeFrom ? "・合格判定" : ""}</option>`).join("")}<option value="${l.rounds.length + 1}" ${nextRound > l.rounds.length ? "selected" : ""}>追加の判定</option></select></div>
+      <div class="marks">${l.score.map(([g, p, pt, req], i) => `<div class="mark"><span>${req ? '<span class="star">★</span> ' : ""}${esc(p)}</span><select data-score="${i}" aria-label="${esc(p)}">${Array.from({ length: pt + 1 }, (_, v) => pt - v).map(v => `<option value="${v}">${v}/${pt}</option>`).join("")}</select></div>`).join("")}</div>
+      <div class="total"><span>合計</span><b id="scoreTotal">100</b></div>`;
+  }
+  return `<form class="section" id="checkForm"><h3>${l.type === "shampoo" ? "採点" : "チェック"}を記入</h3>
+    ${body}
+    <div class="field"><label for="ckComment">コメント</label><textarea id="ckComment" rows="2" placeholder="よかったところ・次に直すところ"></textarea></div>
+    ${leads.length ? `<div class="field"><label for="ckBy">チェックした先輩</label><select id="ckBy">${leads.map(([id, x]) => `<option value="${id}" ${id === db.current ? "selected" : ""}>${esc(x.name)}（${ROLE[x.role]}）</option>`).join("")}</select></div>
+    <div class="field"><label for="ckPin">暗証番号</label><input id="ckPin" type="password" inputmode="numeric" maxlength="4" placeholder="4桁"></div>
+    <button class="btn" type="submit">記録する</button>`
+    : `<p class="pending">幹部・オーナーがまだ登録されていません。</p>`}
+  </form>`;
+}
+function oxList(items) {
+  return `<div class="marks">${items.map((t, i) => `<div class="mark"><span>${esc(t)}</span><div class="ox">
+    <label><input type="radio" name="ox${i}" value="1" required>○</label><label><input type="radio" name="ox${i}" value="0">×</label></div></div>`).join("")}</div>`;
+}
+function recordsPanel(l, st) {
+  if (!st.records.length) return "";
+  const items = l.type === "shampoo" ? null : l.type === "tech" || l.type === "roleplay" ? l.checks : l.questions;
+  return `<section class="section"><h3>チェックの記録</h3><div style="display:grid;gap:10px">
+    ${st.records.slice().reverse().map(r => {
+      const ng = items ? r.marks.map((v, i) => v ? null : items[i]).filter(Boolean) : l.score.map(([, p, pt], i) => r.marks[i] < pt ? `${p}（${r.marks[i]}/${pt}）` : null).filter(Boolean);
+      return `<div class="rec"><div class="h"><span class="chip ${r.pass ? "ok" : "ng"}">${r.pass ? "合格" : "もう一度"}</span>
+        <b>${esc(r.label)}</b>${r.score != null ? `<b>${r.score}点</b>` : ""}<span>${esc(r.date)}・${esc(r.by)}</span></div>
+        ${ng.length ? `<div class="x">× ${ng.map(esc).join("／")}</div>` : ""}
+        ${r.comment ? `<div>${esc(r.comment)}</div>` : ""}</div>`; }).join("")}
+  </div></section>`;
+}
+function nextButton(l, u) {
+  if (route.uid || !passed(u, l.id)) return "";
+  const c = CATS.find(x => x.id === route.cat) || CATS.find(x => x.lessons.includes(l.id));
+  const nextId = c.lessons[c.lessons.indexOf(l.id) + 1];
+  return nextId ? `<button class="btn wide" data-lesson="${nextId}">次のレッスン「${esc(L(nextId).title)}」へ</button>`
+    : `<button class="btn wide ghost" data-page="${c.page}">「${esc(c.title)}」はすべて合格。一覧へ</button>`;
+}
+function bindLesson() {
+  const u = subject(), l = L(route.id), st = prog(u, l.id);
+  const flash = (msg, err) => { route.msg = msg; route.err = !!err; route.open = false; store.save(); render(); scrollTo(0, 0); };
+  const pass = by => Object.assign(st, { status: "ok", passedAt: today(), passedBy: by });
+  $("#learned")?.addEventListener("click", () => { pass(""); flash("覚えた！次へ進めます"); });
+  $("#practice")?.addEventListener("click", () => { st.practice++; if (st.status === "todo") st.status = "prac"; flash(`練習を記録しました（${st.practice}回目）`); });
+  $("#request")?.addEventListener("click", () => { st.status = "wait"; flash("チェック待ちにしました。先輩に声をかけよう"); });
+  $("#openCheck")?.addEventListener("click", () => { route.open = true; render(); $("#checkForm")?.scrollIntoView({ block: "start" }); });
+  $("#quizForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    const correct = l.quiz.filter((q, i) => Number($(`input[name=q${i}]:checked`)?.value) === q.answer).length, ok = correct === l.quiz.length;
+    if (ok) pass("アプリのテスト"); else if (st.status !== "ok") st.status = "prac";
+    route.result = { ok, correct }; store.save(); render();
+  });
+  const sumScore = () => $$("[data-score]").reduce((a, s) => a + Number(s.value), 0);
+  $$("[data-score]").forEach(s => s.onchange = () => $("#scoreTotal").textContent = sumScore());
+  $("#checkForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    const lead = db.users[$("#ckBy").value];
+    if (!lead || lead.pin !== $("#ckPin").value.trim()) { route.open = true; route.msg = "暗証番号がちがいます"; route.err = true; render(); return; }
+    const rec = { date: today(), by: lead.name, comment: $("#ckComment").value.trim() };
+    if (l.type === "shampoo") {
+      rec.marks = $$("[data-score]").map(s => Number(s.value)); rec.score = sumScore(); rec.round = Number($("#ckRound").value);
+      const reqOk = l.score.every(([, , pt, req], i) => !req || rec.marks[i] === pt);
+      rec.label = rec.round > l.rounds.length ? "追加の判定" : `${rec.round}回目`;
+      rec.pass = rec.round >= l.judgeFrom && rec.score >= l.passScore && reqOk;
+      if (rec.pass) pass(lead.name); else st.status = "prac";
+      st.records.push(rec);
+      return flash(rec.pass ? `${rec.score}点、合格です！` : `${rec.score}点。${!reqOk ? "★必須がまだ満点ではありません。" : rec.round < l.judgeFrom ? "練習の採点として記録しました。" : `合格は${l.passScore}点以上です。`}`, !rec.pass);
+    }
+    rec.marks = $$(".marks .mark").map((_, i) => $(`input[name=ox${i}]:checked`)?.value === "1");
+    const allOk = rec.marks.every(Boolean);
+    if (l.type === "tech") {
+      rec.label = $("#ckStage").value + "チェック"; rec.pass = allOk;
+      if (allOk) st.stages.push($("#ckStage").value);
+      const done = l.stages.every(s => st.stages.includes(s));
+      if (done) pass(lead.name); else st.status = "prac";
+      st.records.push(rec);
+      return flash(done ? "すべて○、合格！営業でお客様に入れます" : allOk ? `${$("#ckStage").value}は合格。次は${l.stages.find(s => !st.stages.includes(s))}でチェックを受けよう` : "×のところを練習して、もう一度チェックを受けよう", !allOk);
+    }
+    if (l.type === "roleplay") {
+      const r = $("#ckRound").value; rec.label = `${r}回目：${l.rounds[r - 1]}`; rec.pass = allOk;
+      if (allOk && !st.stages.includes(r)) st.stages.push(r);
+      const done = l.rounds.every((_, i) => st.stages.includes(String(i + 1)));
+      if (done) pass(lead.name); else st.status = "prac";
+      st.records.push(rec);
+      return flash(done ? "3回すべて合格！" : allOk ? `${r}回目は合格。次のロープレへ` : "×のところを見直して、もう一度", !allOk);
+    }
+    rec.label = "口頭チェック"; rec.pass = allOk;
+    if (allOk) pass(lead.name); else st.status = "prac";
+    st.records.push(rec);
+    flash(allOk ? "すべて答えられました。合格！" : "×の質問を復習して、もう一度", !allOk);
+  });
+}
 
 /* ---------- ロードマップ ---------- */
 function viewRoadmap() {
+  const u = me();
+  const buckets = [[0, "入社前"], [0.5, "入社2週間まで"], [1, "入社1ヶ月まで"], [2, "入社2ヶ月まで"], [8, "デビューまで"]];
   return `
-  <section style="display:grid;gap:6px"><div class="eyebrow">ROADMAP</div><h1 style="font-family:var(--display);font-size:24px">デビューまでの道のり</h1>
-  <p class="lead">${esc(GOAL.text)}</p></section>
-  <section class="timeline">${ROADMAP.map(r => `<div class="tl ${r.goal ? "goalpt" : ""}"><div class="m">${esc(r.m)}</div><b>${esc(r.t)}</b>${r.d ? `<p>${esc(r.d)}</p>` : ""}</div>`).join("")}</section>`;
+  <section class="ptitle"><div class="eyebrow">ROADMAP</div><h1>デビューまでの道のり</h1><p class="lead">${esc(C.goal.text)}</p></section>
+  <section class="timeline">${C.roadmap.map(r => `<div class="tl ${r.goal ? "goalpt" : ""}"><div class="m">${esc(r.m)}</div><b>${esc(r.t)}</b>${r.d ? `<p>${esc(r.d)}</p>` : ""}</div>`).join("")}</section>
+  ${buckets.map(([d, name]) => { const ids = LESSON_IDS.filter(id => (C.lessons[id].due ?? 99) === d); if (!ids.length) return "";
+    return `<section class="group"><h2>${name}に合格するもの</h2><div class="list">${ids.map(id => `<button class="row" data-lesson="${id}"><span class="t">${esc(L(id).title)}</span>${chip(u, id)}</button>`).join("")}</div></section>`; }).join("")}`;
 }
 
-/* ---------- みんなの進捗（幹部・オーナー） ---------- */
+/* ---------- みんなの進み具合（幹部・オーナー） ---------- */
 function viewTeam() {
-  const rows = Object.entries(db.users).filter(([, u]) => u.role === "assistant");
-  const waiting = rows.flatMap(([uid, u]) => TASKS.filter(t => u.progress[t.id]?.status === "wait").map(t => ({ uid, u, t })));
+  const f = route.store || "すべて";
+  const rows = Object.entries(db.users).filter(([, u]) => u.role === "assistant" && (f === "すべて" || u.store === f));
+  const waiting = rows.flatMap(([uid, u]) => LESSON_IDS.filter(id => u.progress[id]?.status === "wait").map(id => ({ uid, u, id })));
   return `
-  <section style="display:grid;gap:6px"><div class="eyebrow">TEAM</div><h1 style="font-family:var(--display);font-size:24px">みんなの進捗</h1></section>
+  <section class="ptitle"><div class="eyebrow">TEAM</div><h1>みんなの進み具合</h1></section>
+  <div class="filters">${["すべて", ...C.stores].map(s => `<button data-store="${esc(s)}" aria-pressed="${s === f}">${esc(s)}</button>`).join("")}</div>
   <section class="group"><h2>チェック待ち（${waiting.length}件）</h2><div class="list">
-    ${waiting.length ? waiting.map(w => `<button class="row" data-task="${w.t.id}" data-uid="${w.uid}"><span class="t">${esc(w.u.name)}<br><small style="color:var(--muted);font-weight:400">${esc(w.t.title)}</small></span><span class="chip wait">チェックする</span></button>`).join("") : `<p class="pending">いまチェック待ちはありません。</p>`}
+    ${waiting.length ? waiting.map(w => `<button class="row" data-lesson="${w.id}" data-uid="${w.uid}"><span class="t">${esc(w.u.name)}<small>${esc(L(w.id).title)}</small></span><span class="chip wait">チェックする</span></button>`).join("") : `<p class="pending">いまチェック待ちはありません。</p>`}
   </div></section>
-  <section class="group"><h2>アシスタント一覧</h2>
-    ${rows.length ? `<div class="tablewrap"><table><thead><tr><th>名前</th><th>進み具合</th><th>合格</th><th>いま取り組み中</th></tr></thead><tbody>
-    ${rows.map(([, u]) => { const cur = TASKS.find(t => !passed(u, t.id)); return `<tr><td>${esc(u.name)}</td><td>${percent(u)}%</td><td>${TASKS.filter(t => passed(u, t.id)).length}/${TASKS.length}</td><td>${cur ? esc(cur.title) : "全て合格"}</td></tr>`; }).join("")}
-    </tbody></table></div>` : `<p class="pending">アシスタントはまだ登録されていません。</p>`}
+  <section class="group"><h2>アシスタント</h2>
+    ${rows.length ? `<div class="list">${rows.map(([uid, u]) => { const cur = LESSON_IDS.find(id => !passed(u, id)), pre = C.preEntry.filter(id => passed(u, id)).length;
+      return `<button class="row" data-member="${uid}"><span class="t">${esc(u.name)}<small>${esc(u.store || "")}・入社前 ${pre}/${C.preEntry.length}・いま：${cur ? esc(L(cur).title) : "全て合格"}</small></span><span class="chip info">${percent(u)}%</span></button>`; }).join("")}</div>`
+    : `<p class="pending">アシスタントはまだ登録されていません。</p>`}
   </section>`;
+}
+function viewMember() {
+  const u = db.users[route.uid];
+  return `
+  <section class="ptitle"><div class="eyebrow">${esc(u.store || "")}・${ROLE[u.role]}</div><h1>${esc(u.name)}さん</h1>
+    <div class="meter"><i style="width:${percent(u)}%"></i></div><p class="note">${percent(u)}% 合格・登録 ${esc(u.joined || "")}</p></section>
+  ${C.groups.map(g => `<section class="group"><h2>${esc(g.name)}</h2><div class="tablewrap"><table><tbody>
+    ${g.categories.map(c => ({ ...c, lessons: c.lessons.filter(id => !C.lessons[id].draft) })).filter(c => c.lessons.length).flatMap(c => c.lessons.map((id, i) => `<tr data-lesson="${id}" data-uid="${route.uid}" style="cursor:pointer"><td style="white-space:nowrap">${i === 0 ? esc(c.title) : ""}</td><td>${esc(L(id).title)}</td><td style="text-align:right">${chip(u, id)}</td></tr>`)).join("")}
+  </tbody></table></div></section>`).join("")}`;
 }
 
 /* ---------- オーナーAIチャット ---------- */
-function viewChat() {
-  const log = route.log ||= [{ who: "ai", text: "困ったことがあったら何でも聞いてね。オーナーの考え方をもとに答えます。" }];
-  return `
-  <section style="display:grid;gap:6px"><div class="eyebrow">ASK THE OWNER</div><h1 style="font-family:var(--display);font-size:24px">オーナーAIチャット</h1>
-  <p class="note">いまはサンプルの答えです。オーナーの資料を入れると、その内容で答えるようになります。</p></section>
-  <section class="chat" id="chatLog">${log.map(m => `<div class="msg ${m.who}">${esc(m.text)}</div>`).join("")}</section>
-  <div class="sugg">${["売上100万円にするには？", "お客様が再来しない", "ミスをしてしまった"].map(s => `<button data-sugg="${esc(s)}">${esc(s)}</button>`).join("")}</div>
-  <form class="chatform" id="chatForm"><input id="chatInput" placeholder="質問を入力" autocomplete="off"><button class="btn" type="submit">送信</button></form>`;
+// claude.ai で開くとAIが答える（content.js の chatSources に並べたマニュアルだけを根拠にする）。
+// それ以外の場所ではキーワードの答え → マニュアルの近い章を表示。
+let sample = null;
+const chatLog = [{ who: "ai", text: "困ったときは何でも聞いてね。オーナーのマニュアルをもとに答えます。" }];
+const SOURCES = () => (C.chatSources || []).map(id => `===== ${L(id).title} =====\n${L(id).intro || ""}\n${L(id).body}`).join("\n\n");
+const RULES = () => `あなたは美容室「enu」のオーナー・夏実さんの考え方で、スタッフの相談に答えるAIです。
+ルール：
+- 下のマニュアルに書いてあることだけを根拠に答える。マニュアルにない事実・価格・薬剤の配合などは作らない。
+- 答えがマニュアルにない、または判断が難しいときは「マニュアルにまだ載っていないので、オーナーか幹部に確認してください」と書く。近い項目があれば「参考：」で紹介する。
+- 夏実さんの言い回しで答える：否定しない、うそやごまかしをしない、理由まで説明する、2択で選んでもらう、ポジティブに言い換える。
+- スマホで読みやすく短く。まず結論を1〜2文。次にお客様にそのまま言えるトーク例を「」で。最後に「参考：（マニュアルの章名）」。
+- 見出し記号(#)や表は使わない。箇条書きは「- 」、強調は**だけ。日本語で答える。
+
+${SOURCES()}`;
+
+function chatSections() {
+  return (C.chatSources || []).flatMap(id => L(id).body.split(/\n(?=#{2,4} )/).map(s => ({ title: `${L(id).title}：${s.split("\n")[0].replace(/^#+\s*/, "")}`, body: s.split("\n").slice(1).join("\n").trim() }))).filter(s => s.body);
 }
+function searchManual(text) {
+  const grams = new Set();
+  text.replace(/[？?、。！!「」]/g, " ").split(/\s+/).filter(w => w.length >= 2).forEach(w => { for (let i = 0; i < w.length - 1; i++) grams.add(w.slice(i, i + 2)); });
+  return chatSections().map(s => { let n = 0; grams.forEach(g => { if ((s.title + s.title + s.body).includes(g)) n++; }); return { s, n }; })
+    .filter(x => x.n > 1).sort((a, b) => b.n - a.n).filter((x, i, all) => i === 0 || (i < 2 && x.n >= all[0].n * 0.8)).map(x => x.s);
+}
+function viewChat() {
+  return `
+  <section class="ptitle"><div class="eyebrow">ASK THE OWNER</div><h1>オーナーAIチャット</h1>
+  <p class="note" id="chatMode">${sample ? "AIが、カウンセリング＆接客マニュアルと再来術マニュアルをもとに答えます。" : "マニュアルの中から、近い答えを探して表示します。"}</p></section>
+  <section class="chat" id="chatLogEl">${chatLog.map(m => m.who === "me" ? `<div class="msg me">${esc(m.text)}</div>` : `<div class="msg ai">${m.html || esc(m.text)}</div>`).join("")}</section>
+  <div class="sugg">${["次回予約を「また連絡します」と言われた", "ブリーチしないと出ない色の写真を見せられた", "仕上がりに微妙な顔をされた", "値段が高いと言われた", "仕事が終わったら？"].map(s => `<button data-sugg="${esc(s)}">${esc(s)}</button>`).join("")}</div>
+  <form class="chatform" id="chatForm"><input id="chatInput" placeholder="質問を入力" autocomplete="off"><button class="btn" type="submit" id="chatSend">送信</button></form>`;
+}
+function chatHtml(t) {
+  return t.split(/\n+/).map(l => l.trim()).filter(Boolean).map(l => `<p style="margin:0 0 .5em">${inline(l.replace(/^#+\s*/, ""))}</p>`).join("");
+}
+let chatBusy = false;
 function bindChat() {
-  const ask = text => {
-    if (!text.trim()) return;
-    const hit = OWNER_QA.find(q => q.keys.some(k => text.includes(k)));
-    route.log.push({ who: "me", text }, { who: "ai", text: hit ? hit.a : "その質問の答えはまだ資料にありません。幹部かオーナーに直接聞いてみてね。" });
-    render(); $("#chatInput").focus();
+  const logEl = $("#chatLogEl");
+  const add = m => { chatLog.push(m); const d = document.createElement("div"); d.className = "msg " + m.who; if (m.who === "me") d.textContent = m.text; else d.innerHTML = m.html || esc(m.text); logEl.appendChild(d); d.scrollIntoView({ block: "end" }); return d; };
+  const offline = text => {
+    const hit = C.ownerQA.find(q => q.keys.some(k => text.includes(k)));
+    if (hit) return add({ who: "ai", text: hit.a });
+    const secs = searchManual(text);
+    add(secs.length ? { who: "ai", html: secs.map(s => `<b>${esc(s.title)}</b>` + md(s.body.slice(0, 700) + (s.body.length > 700 ? "\n…（続きはマニュアルで）" : ""))).join("<hr style='border:0;border-top:1px solid var(--line)'>") }
+      : { who: "ai", text: "その質問の答えはまだマニュアルにありません。オーナーか幹部に直接聞いてみてね。" });
+  };
+  const ask = async text => {
+    text = text.trim(); if (!text || chatBusy) return;
+    $("#chatInput").value = "";
+    add({ who: "me", text });
+    if (!sample) return offline(text);
+    chatBusy = true; $("#chatSend").disabled = true;
+    const out = add({ who: "ai", text: "考えています…" }), entry = chatLog[chatLog.length - 1];
+    const history = chatLog.slice(1, -2).filter(m => m.raw || m.who === "me").slice(-6).map(m => ({ role: m.who === "me" ? "user" : "assistant", content: m.raw || m.text }));
+    const msgs = [...history, { role: "user", content: text }];
+    msgs[0] = { role: "user", content: RULES() + "\n\nスタッフの質問：\n" + msgs[0].content };
+    try {
+      const r = await sample(msgs, { cache: false, modelTier: "default", onText: ({ text: t }) => { out.innerHTML = chatHtml(t); } });
+      entry.raw = r.text; entry.html = chatHtml(r.text); out.innerHTML = entry.html;
+    } catch (e) {
+      entry.html = esc(e?.code === "rate_limited" ? "いま質問が集中しています。少し待ってから送ってください。" : "AIが使えなかったので、マニュアルから近い答えを探します。");
+      out.innerHTML = entry.html;
+      if (e?.code === "not_granted") sample = null;
+      if (e?.code !== "rate_limited") offline(text);
+    } finally { chatBusy = false; $("#chatSend").disabled = false; }
   };
   $("#chatForm").onsubmit = e => { e.preventDefault(); ask($("#chatInput").value); };
-  document.querySelectorAll("[data-sugg]").forEach(b => b.onclick = () => ask(b.dataset.sugg));
+  $$("[data-sugg]").forEach(b => b.onclick = () => ask(b.dataset.sugg));
 }
+(async () => {
+  try { sample = window.claude?.use ? await window.claude.use("sample") : null; } catch { sample = null; }
+  if (route.name === "chat" && $("#chatMode")) $("#chatMode").textContent = sample ? "AIが、カウンセリング＆接客マニュアルと再来術マニュアルをもとに答えます。" : "マニュアルの中から、近い答えを探して表示します。";
+})();
 
 /* ---------- 描画 ---------- */
 const VIEWS = {
-  home: [viewHome], pre: [viewPre], preItem: [viewPreItem, bindPreItem], tasks: [viewTasks], task: [viewTask, bindTask],
-  roadmap: [viewRoadmap], team: [viewTeam], chat: [viewChat, bindChat],
+  home: [viewHome], pre: [viewPre], cats: [viewCats], cat: [viewCat], lesson: [viewLesson, bindLesson],
+  roadmap: [viewRoadmap], team: [viewTeam], member: [viewMember], chat: [viewChat, bindChat],
 };
-const TITLES = { pre: "入社前プログラム", preItem: "入社前プログラム", tasks: "アシスタントのしごと", task: "レッスン", roadmap: "ロードマップ", team: "みんなの進捗", chat: "オーナーAIチャット" };
+const TITLES = { pre: "入社前プログラム", roadmap: "ロードマップ", team: "みんなの進み具合", member: "進み具合", chat: "オーナーAIチャット" };
 
-function render(override) {
+function render() {
   const u = me();
   if (!u) {
     $("#backBtn").hidden = true; $("#who").innerHTML = ""; $("#brand").textContent = "enu Academy";
-    $("#view").innerHTML = override || viewLogin(); bindLogin(); return;
+    $("#view").innerHTML = viewLogin(); bindLogin(); return;
   }
   const [view, bind] = VIEWS[route.name] || VIEWS.home;
   $("#backBtn").hidden = route.name === "home";
-  $("#brand").textContent = TITLES[route.name] || "enu Academy";
+  $("#brand").textContent = route.name === "cats" ? C.pages[route.page].title : route.name === "cat" ? CATS.find(c => c.id === route.id).title : route.name === "lesson" ? L(route.id).title : TITLES[route.name] || "enu Academy";
   $("#who").innerHTML = `${esc(u.name)}<br><button id="logout">切り替え</button>`;
   $("#logout").onclick = () => { db.current = null; store.save(); route = { name: "home" }; stack = []; render(); };
   $("#view").innerHTML = view();
-  document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
-  document.querySelectorAll("[data-pre]").forEach(b => b.onclick = () => go("preItem", { id: b.dataset.pre }));
-  document.querySelectorAll("[data-task]").forEach(b => b.onclick = () => go("task", { id: b.dataset.task, uid: b.dataset.uid || route.uid }));
-  document.querySelectorAll("[data-monthly]").forEach(b => b.onclick = () => { const s = prog(u, b.dataset.monthly); s.status = s.status === "ok" ? "todo" : "ok"; store.save(); render(); });
+  $$("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
+  $$("[data-page]").forEach(b => b.onclick = () => go("cats", { page: b.dataset.page }));
+  $$("[data-cat]").forEach(b => b.onclick = () => go("cat", { id: b.dataset.cat, uid: route.uid }));
+  $$("[data-lesson]").forEach(b => b.onclick = () => go("lesson", { id: b.dataset.lesson, cat: route.name === "cat" ? route.id : route.cat, uid: b.dataset.uid || route.uid }));
+  $$("[data-member]").forEach(b => b.onclick = () => go("member", { uid: b.dataset.member }));
+  $$("[data-store]").forEach(b => b.onclick = () => { route.store = b.dataset.store; render(); });
   bind && bind();
 }
 render();
