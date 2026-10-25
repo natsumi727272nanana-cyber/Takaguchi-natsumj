@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<title>enu Academy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: 縦型モバイル1カラム。上部に固定ヘッダー、カードは役割ごとにだけ枠を付ける */
+:root {
+  --bg: #f5f6f7;
+  --surface: #ffffff;
+  --ink: #1d2128;
+  --muted: #69707c;
+  --line: #e2e4e8;
+  --accent: #2f5d62;      /* 深いグリーン：サロンの落ち着き */
+  --accent-soft: #e3eeee;
+  --rose: #b0656b;        /* 目標・ゴール用 */
+  --ok: #2e7d4f; --ok-soft: #e2f2e8;
+  --wait: #a86b12; --wait-soft: #fbf0db;
+  --lock: #9aa0a9;
+  --display: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #14171b; --surface: #1d2127; --ink: #eceef1; --muted: #9aa1ad; --line: #2c3139;
+  --accent: #7fb3b8; --accent-soft: #23373a; --rose: #e0959b;
+  --ok: #7cc79a; --ok-soft: #1f3528; --wait: #e2b366; --wait-soft: #3a2f1c; --lock: #5d636c;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #14171b; --surface: #1d2127; --ink: #eceef1; --muted: #9aa1ad; --line: #2c3139;
+  --accent: #7fb3b8; --accent-soft: #23373a; --rose: #e0959b;
+  --ok: #7cc79a; --ok-soft: #1f3528; --wait: #e2b366; --wait-soft: #3a2f1c; --lock: #5d636c;
+  color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.7; margin: 0 }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface) }
+button, input, select, textarea { font: inherit; color: inherit }
+button { cursor: pointer }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.35 }
+
+.wrap { max-width: 560px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+header.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line) }
+header.bar .wrap { display: flex; align-items: center; gap: 10px; min-height: 54px; padding-block: 6px }
+.back { border: 0; background: none; color: var(--accent); padding: 6px 4px; font-weight: 700 }
+.brand { font-family: var(--display); font-size: 18px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.who { font-size: 12px; color: var(--muted); text-align: right; line-height: 1.3 }
+.who button { border: 0; background: none; color: var(--accent); padding: 0; font-size: 12px }
+
+main .wrap { padding-block: 20px 48px; display: grid; gap: 20px }
+.eyebrow { font-size: 11px; letter-spacing: .14em; color: var(--muted); font-weight: 700 }
+.lead { color: var(--muted); margin: 0 }
+
+/* 理念 */
+.philo { background: var(--accent); color: #fff; border-radius: 14px; padding: 26px 22px; display: grid; gap: 14px }
+.philo .eyebrow { color: rgba(255,255,255,.75) }
+.philo h1 { font-family: var(--display); font-size: 26px; letter-spacing: .04em }
+.philo p { margin: 0; opacity: .92 }
+.philo ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px }
+
+.goal { display: flex; gap: 14px; align-items: center; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 14px 16px }
+.goal b { font-family: var(--display); font-size: 26px; color: var(--rose); white-space: nowrap; font-variant-numeric: tabular-nums }
+.goal span { font-size: 13px; color: var(--muted); min-width: 0 }
+
+/* メニュー */
+.menu { display: grid; gap: 10px }
+.tile { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px }
+.tile:hover { border-color: var(--accent) }
+.tile .num { font-family: var(--display); font-size: 13px; color: var(--accent); width: 26px; flex: none }
+.tile .t { flex: 1; min-width: 0 }
+.tile .t b { display: block; font-size: 16px }
+.tile .t small { color: var(--muted); font-size: 12.5px; display: block; line-height: 1.5 }
+.tile .chev { color: var(--muted); flex: none }
+.tile.ai { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.tile.ai small, .tile.ai .chev, .tile.ai .num { color: var(--bg); opacity: .75 }
+
+.meter { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 6px }
+.meter i { display: block; height: 100%; background: var(--accent) }
+
+/* レッスン一覧 */
+.group h2 { font-size: 13px; color: var(--muted); letter-spacing: .08em; margin-bottom: 8px }
+.list { display: grid; gap: 8px }
+.row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px }
+.row[disabled] { cursor: not-allowed; opacity: .55 }
+.row .n { font-size: 12px; color: var(--muted); width: 22px; flex: none; font-variant-numeric: tabular-nums }
+.row .t { flex: 1; min-width: 0; font-weight: 500 }
+.chip { font-size: 11.5px; padding: 2px 9px; border-radius: 99px; white-space: nowrap; flex: none; font-weight: 700 }
+.chip.todo { background: var(--line); color: var(--muted) }
+.chip.prac { background: var(--accent-soft); color: var(--accent) }
+.chip.wait { background: var(--wait-soft); color: var(--wait) }
+.chip.ok { background: var(--ok-soft); color: var(--ok) }
+.chip.lock { background: transparent; color: var(--lock); border: 1px solid var(--line) }
+
+/* レッスン詳細 */
+.video { aspect-ratio: 16/9; max-width: 100%; border-radius: 12px; background: var(--ink); color: var(--bg); display: grid; place-items: center; text-align: center; padding: 16px; font-size: 13px }
+.video a { color: var(--bg); font-weight: 700 }
+.section { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px }
+.section h3 { font-size: 15px }
+ol.steps, ul.checks { margin: 0; padding-left: 1.3em; display: grid; gap: 6px }
+.pending { color: var(--muted); font-size: 13px; margin: 0 }
+.btns { display: flex; flex-wrap: wrap; gap: 8px }
+.btn { border: 1px solid var(--accent); background: var(--accent); color: var(--surface); border-radius: 10px; padding: 10px 16px; font-weight: 700 }
+.btn.ghost { background: transparent; color: var(--accent) }
+.btn.warn { background: transparent; color: var(--rose); border-color: var(--rose) }
+.btn[disabled] { opacity: .45; cursor: not-allowed }
+.note { font-size: 12.5px; color: var(--muted); margin: 0 }
+.field { display: grid; gap: 4px }
+.field label { font-size: 12.5px; color: var(--muted) }
+.field input, .field select, .field textarea { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 12px; width: 100% }
+.toast { background: var(--ok-soft); color: var(--ok); border-radius: 10px; padding: 10px 14px; font-weight: 700; font-size: 13.5px }
+.toast.err { background: var(--wait-soft); color: var(--wait) }
+
+/* ログイン */
+.login h1 { font-family: var(--display); font-size: 30px }
+.users { display: grid; gap: 8px }
+.roles { display: flex; gap: 6px; flex-wrap: wrap }
+.roles label { flex: 1; min-width: 90px; border: 1px solid var(--line); border-radius: 10px; padding: 9px; text-align: center; background: var(--surface); font-size: 13.5px }
+.roles input { position: absolute; opacity: 0; pointer-events: none }
+.roles input:checked + span { color: var(--accent); font-weight: 700 }
+.roles label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft) }
+
+/* ロードマップ */
+.timeline { display: grid; gap: 0; position: relative; padding-left: 22px }
+.timeline::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; background: var(--line) }
+.tl { position: relative; padding: 0 0 18px }
+.tl::before { content: ""; position: absolute; left: -21px; top: 7px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent) }
+.tl.goalpt::before { background: var(--rose); border-color: var(--rose) }
+.tl .m { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: .06em }
+.tl.goalpt .m { color: var(--rose) }
+.tl b { display: block }
+.tl p { margin: 2px 0 0; color: var(--muted); font-size: 13.5px }
+
+/* クイズ */
+.q { display: grid; gap: 6px }
+.q p { margin: 0; font-weight: 500 }
+.opt { display: flex; gap: 8px; align-items: flex-start; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; background: var(--bg) }
+.opt input { margin-top: 6px }
+
+/* 進捗表 */
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface) }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums }
+th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap }
+th { color: var(--muted); font-weight: 500; font-size: 12px }
+
+/* チャット */
+.chat { display: grid; gap: 10px }
+.msg { max-width: 85%; padding: 10px 14px; border-radius: 14px; white-space: pre-wrap }
+.msg.me { justify-self: end; background: var(--accent); color: var(--surface); border-bottom-right-radius: 4px }
+.msg.ai { justify-self: start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px }
+.chatform { display: flex; gap: 8px }
+.chatform input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 12px }
+.sugg { display: flex; flex-wrap: wrap; gap: 6px }
+.sugg button { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 12.5px }
+
+@media (prefers-reduced-motion: no-preference) { main .wrap > * { animation: in .25s ease-out both } }
+@keyframes in { from { transform: translateY(4px) } to { transform: none } }
+</style>
+
+<header class="bar"><div class="wrap">
+  <button class="back" id="backBtn" hidden aria-label="戻る">‹ 戻る</button>
+  <div class="brand" id="brand">enu Academy</div>
+  <div class="who" id="who"></div>
+</div></header>
+<main><div class="wrap" id="view"></div></main>
+
+<script>
+/* =====================================================================
+   コンテンツ（ここを書き換えるだけで中身を増やせます）
+   video: 動画のURL（YouTube限定公開など）を入れるとボタンが出ます
+   steps: やり方（手順）  checks: 合格チェックポイント
+   ===================================================================== */
+const PHILOSOPHY = {
+  title: "enu の理念",
+  message: "（ここに enu の理念が入ります。資料ができたら差し替えてください）",
+  values: ["お客様に一番近い存在であること", "一人ひとりが自分の言葉で提案できること", "チームで育て、チームで勝つこと"],
+};
+const GOAL = { amount: "100万円", text: "4月入社 → 12月スタイリストデビュー → 月間売上100万円。このアプリを1からクリアすれば、誰でもそこに届く。" };
+
+// 入社前プログラム：アプリで合格させる項目と、事前に動画で予習する項目
+const PRE_ENTRY = [
+  { id: "pre-phone", title: "電話対応", type: "quiz", desc: "予約電話の受け方・名乗り方・復唱", video: "",
+    quiz: [
+      { q: "電話は何コール以内に出る？", options: ["3コール以内", "5コール以内", "出られる時でよい"], answer: 0 },
+      { q: "最初に名乗る言葉として正しいのは？", options: ["もしもし", "お電話ありがとうございます、enuの〇〇です", "はい、enuです"], answer: 1 },
+      { q: "予約を受けたら最後に必ずすることは？", options: ["日時・メニュー・お名前を復唱する", "すぐ電話を切る", "スタッフに丸投げする"], answer: 0 },
+    ] },
+  { id: "pre-greet", title: "挨拶", type: "quiz", desc: "お出迎え・お見送り・スタッフ間の挨拶", video: "",
+    quiz: [
+      { q: "お客様がご来店されたら？", options: ["手を止めて目を見て「いらっしゃいませ」", "作業しながら声だけ出す", "担当者だけが挨拶する"], answer: 0 },
+      { q: "お見送りはどこまで？", options: ["レジまで", "入口の外まで出て見送る", "見送らない"], answer: 1 },
+    ] },
+  { id: "pre-shampoo", title: "シャンプー（予習動画）", type: "video", desc: "月1回の店舗レッスン前に動画で手順を覚える", video: "" },
+  { id: "pre-prep", title: "カラー剤・レジの準備（予習動画）", type: "video", desc: "4月の初日から準備に入れるように", video: "" },
+];
+const MONTHLY_LESSONS = ["11月", "12月", "1月", "2月", "3月"];
+
+// アシスタントのしごと（この順番でレッスンが進みます）
+const TASK_GROUPS = [
+  { name: "基本・お店のしごと", items: [
+    ["phone", "電話", "予約・変更・キャンセルの受け方"],
+    ["greet", "挨拶", "お出迎え・お見送り・声かけ"],
+    ["tidy", "片付け", "道具・セット面・シャンプー台"],
+    ["open", "開店作業", "掃除・準備・朝礼まで"],
+    ["close", "閉店作業", "清掃・洗濯・締め"],
+    ["cloth", "施術クロスの準備", "クロス・タオル・ケープ"],
+    ["register", "レジ", "会計・次回予約・お見送り"],
+  ]},
+  { name: "施術の技術", items: [
+    ["shampoo", "シャンプー", "姿勢・流し・すすぎ"],
+    ["treatment", "トリートメント", "選び方・塗布・流し"],
+    ["headspa", "ヘッドスパ", "手順・圧・声かけ"],
+    ["dry", "ドライ", "根元から・時間短縮"],
+    ["finish", "仕上げ", "アイロン・スタイリング剤"],
+    ["color", "カラー", "調合・塗布・放置・流し"],
+    ["straight", "縮毛矯正", "薬剤・アイロン工程"],
+    ["perm", "パーマ", "ワインディング・薬剤"],
+  ]},
+  { name: "スタイリストへの道", items: [
+    ["counsel", "カウンセリング", "聞く・提案する・決める"],
+    ["attract", "集客", "SNS・口コミ・紹介"],
+    ["repeat", "再来", "次回予約・フォロー"],
+    ["sales", "売上管理", "数字の見方・目標の立て方"],
+  ]},
+];
+// 個別の中身（資料ができたものから追記）
+const TASK_DETAIL = {
+  phone: {
+    steps: ["3コール以内に出る", "「お電話ありがとうございます、enuの〇〇です」と名乗る", "お名前・ご希望日時・メニュー・担当を伺う", "予約表を確認して空きを伝える", "日時・メニュー・お名前を復唱して確認", "「ご来店お待ちしております」で、お客様が切ってから切る"],
+    checks: ["声のトーンが明るい", "復唱ができている", "予約表への入力ミスがない"],
+  },
+};
+
+const ROADMAP = [
+  { m: "11月〜3月", t: "入社前", d: "アプリで電話・挨拶に合格。月1回お店に集まってシャンプーレッスン" },
+  { m: "4月", t: "入社", d: "シャンプー・カラー準備・レジができる状態でスタート" },
+  { m: "4月〜6月", t: "アシスタント基礎", d: "お店のしごと・シャンプー・トリートメント・ヘッドスパ・ドライ" },
+  { m: "7月〜9月", t: "技術アシスト", d: "仕上げ・カラー・縮毛矯正・パーマ" },
+  { m: "10月〜11月", t: "スタイリスト準備", d: "カウンセリング・集客・再来・売上管理" },
+  { m: "12月", t: "スタイリストデビュー", d: "" },
+  { m: "ゴール", t: "月間売上 100万円", d: "", goal: true },
+];
+
+// オーナーAIチャット：資料ができたら質問と答えを追加（キーワードで検索して答えます）
+const OWNER_QA = [
+  { keys: ["失客", "来なくな", "再来"], a: "（サンプル）お客様が来なくなった時は、まず前回の施術とカウンセリングを振り返ってみよう。次回予約の提案ができていたかもチェック。" },
+  { keys: ["売上", "100万", "目標"], a: "（サンプル）100万円は「客数 × 客単価」。今の自分がどちらを伸ばすべきか、売上管理のレッスンで一緒に数字を見よう。" },
+  { keys: ["怒", "叱", "失敗", "ミス"], a: "（サンプル）ミスはすぐに報告。隠さないことが一番大事。どうすれば次は防げるかを一緒に考えよう。" },
+  { keys: ["休み", "辞め", "つらい", "しんどい"], a: "（サンプル）一人で抱えずに、まず幹部かオーナーに話してね。話すだけで整理できることも多いよ。" },
+];
+
+/* =====================================================================
+   アプリ本体
+   ===================================================================== */
+const ROLE = { owner: "オーナー", lead: "幹部（監督）", assistant: "アシスタント" };
+const STATUS = { todo: ["未着手", "todo"], prac: ["練習中", "prac"], wait: ["チェック待ち", "wait"], ok: ["合格", "ok"] };
+const TASKS = TASK_GROUPS.flatMap(g => g.items.map(([id, title, desc]) => ({ id, title, desc, group: g.name })));
+
+const KEY = "enu-academy-v1";
+const store = {
+  load() { try { return JSON.parse(localStorage.getItem(KEY)) || { users: {}, current: null }; } catch { return { users: {}, current: null }; } },
+  save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch {} },
+};
+let db = store.load();
+let route = { name: "home" }, stack = [];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const me = () => db.users[db.current];
+const isLead = u => u && (u.role === "owner" || u.role === "lead");
+const prog = (u, id) => (u.progress[id] ||= { status: "todo", practice: 0 });
+const passed = (u, id) => u.progress[id]?.status === "ok";
+
+function unlocked(u, idx) {
+  if (isLead(u)) return true;
+  return idx === 0 || passed(u, TASKS[idx - 1].id);
+}
+function percent(u) {
+  const ids = [...PRE_ENTRY.map(p => p.id), ...TASKS.map(t => t.id)];
+  return Math.round(ids.filter(id => passed(u, id)).length / ids.length * 100);
+}
+
+function go(name, params = {}) { stack.push(route); route = { name, ...params }; render(); scrollTo(0, 0); }
+function back() { route = stack.pop() || { name: "home" }; render(); scrollTo(0, 0); }
+$("#backBtn").onclick = back;
+
+function chip(u, id, locked) {
+  if (locked) return `<span class="chip lock">🔒</span>`;
+  const [label, cls] = STATUS[prog(u, id).status];
+  return `<span class="chip ${cls}">${label}</span>`;
+}
+
+/* ---------- ログイン ---------- */
+function viewLogin(msg) {
+  const users = Object.entries(db.users);
+  return `
+  <section class="login" style="display:grid;gap:8px">
+    <div class="eyebrow">ENU ACADEMY</div>
+    <h1>enu アカデミー</h1>
+    <p class="lead">一度名前を登録すると、次からは続きから学べます。</p>
+  </section>
+  ${users.length ? `<section class="group"><h2>続きから</h2><div class="users">
+    ${users.map(([id, u]) => `<button class="row" data-login="${id}"><span class="t">${esc(u.name)}</span><span class="chip prac">${ROLE[u.role]}</span></button>`).join("")}
+  </div></section>` : ""}
+  <form class="section" id="regForm">
+    <h3>はじめての方</h3>
+    ${msg ? `<div class="toast err">${esc(msg)}</div>` : ""}
+    <div class="field"><label for="regName">名前</label><input id="regName" required placeholder="例：高口 なつみ" autocomplete="name"></div>
+    <div class="field"><label>立場</label><div class="roles">
+      ${Object.entries(ROLE).map(([k, v], i) => `<label><input type="radio" name="role" value="${k}" ${i === 2 ? "checked" : ""}><span>${v}</span></label>`).join("")}
+    </div></div>
+    <div class="field" id="pinField" hidden><label for="regPin">合格チェック用の暗証番号（4桁）</label><input id="regPin" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="0000"></div>
+    <button class="btn" type="submit">登録してはじめる</button>
+  </form>`;
+}
+function bindLogin() {
+  document.querySelectorAll("[data-login]").forEach(b => b.onclick = () => { db.current = b.dataset.login; store.save(); route = { name: "home" }; stack = []; render(); });
+  const pinField = $("#pinField");
+  document.querySelectorAll("input[name=role]").forEach(r => r.onchange = () => { pinField.hidden = r.value === "assistant" && r.checked; $("#regPin").required = !pinField.hidden; });
+  $("#regForm").onsubmit = e => {
+    e.preventDefault();
+    const name = $("#regName").value.trim();
+    const role = document.querySelector("input[name=role]:checked").value;
+    const pin = $("#regPin").value.trim();
+    if (!name) return;
+    if (role !== "assistant" && !/^\d{4}$/.test(pin)) return render(viewLogin("暗証番号は数字4桁で入れてください"));
+    const id = "u" + Date.now();
+    db.users[id] = { name, role, pin: role === "assistant" ? "" : pin, progress: {}, joined: new Date().toISOString().slice(0, 10) };
+    db.current = id; store.save(); route = { name: "home" }; stack = []; render();
+  };
+}
+
+/* ---------- ホーム ---------- */
+function viewHome() {
+  const u = me(), pct = percent(u);
+  const preDone = PRE_ENTRY.filter(p => passed(u, p.id)).length;
+  const taskDone = TASKS.filter(t => passed(u, t.id)).length;
+  const tiles = [
+    ["pre", "入社前プログラム", `電話・挨拶はアプリで合格／シャンプーは動画で予習（${preDone}/${PRE_ENTRY.length}）`],
+    ["tasks", "アシスタントのしごと", `動画とやり方 → ウィッグで練習 → 先輩チェックで合格（${taskDone}/${TASKS.length}）`],
+    ["roadmap", "ロードマップ", "4月入社から12月デビュー、売上100万円まで"],
+  ];
+  if (isLead(u)) tiles.push(["team", "みんなの進捗・合格チェック", "チェック待ちのレッスンを確認して合格をつける"]);
+  return `
+  <section class="philo">
+    <div class="eyebrow">PHILOSOPHY</div>
+    <h1>${esc(PHILOSOPHY.title)}</h1>
+    <p>${esc(PHILOSOPHY.message)}</p>
+    <ul>${PHILOSOPHY.values.map(v => `<li>${esc(v)}</li>`).join("")}</ul>
+  </section>
+  <div class="goal"><b>${esc(GOAL.amount)}</b><span>${esc(GOAL.text)}</span></div>
+  <section class="section">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><h3>${esc(u.name)}さんの進み具合</h3><b style="font-variant-numeric:tabular-nums">${pct}%</b></div>
+    <div class="meter"><i style="width:${pct}%"></i></div>
+  </section>
+  <nav class="menu">
+    ${tiles.map(([k, t, s], i) => `<button class="tile" data-go="${k}"><span class="num">${String(i + 1).padStart(2, "0")}</span><span class="t"><b>${t}</b><small>${s}</small></span><span class="chev">›</span></button>`).join("")}
+    <button class="tile ai" data-go="chat"><span class="num">AI</span><span class="t"><b>オーナーAIチャット</b><small>困った時にオーナーの考えを聞ける</small></span><span class="chev">›</span></button>
+  </nav>`;
+}
+
+/* ---------- 入社前 ---------- */
+function viewPre() {
+  const u = me();
+  return `
+  <section style="display:grid;gap:6px"><div class="eyebrow">BEFORE APRIL</div><h1 style="font-family:var(--display);font-size:24px">入社前プログラム</h1>
+  <p class="lead">4月の初日から、シャンプー・カラーの準備・レジに入れる状態を目指します。</p></section>
+  <section class="group"><h2>アプリで合格・予習</h2><div class="list">
+    ${PRE_ENTRY.map((p, i) => `<button class="row" data-pre="${p.id}"><span class="n">${i + 1}</span><span class="t">${esc(p.title)}<br><small style="color:var(--muted);font-weight:400">${esc(p.desc)}</small></span>${chip(u, p.id)}</button>`).join("")}
+  </div></section>
+  <section class="section"><h3>月1回の店舗レッスン</h3>
+    <p class="note">動画で予習してから参加。シャンプーをお店で練習します。</p>
+    <div class="list">${MONTHLY_LESSONS.map(m => { const id = "monthly-" + m; const done = passed(u, id);
+      return `<button class="row" data-monthly="${id}"><span class="t">${m}レッスン</span><span class="chip ${done ? "ok" : "todo"}">${done ? "参加済み" : "未参加"}</span></button>`; }).join("")}</div>
+  </section>`;
+}
+function viewPreItem() {
+  const u = me(), p = PRE_ENTRY.find(x => x.id === route.id), st = prog(u, p.id);
+  const result = route.result;
+  return `
+  <section style="display:grid;gap:6px"><div class="eyebrow">入社前プログラム</div><h1 style="font-family:var(--display);font-size:24px">${esc(p.title)}</h1><p class="lead">${esc(p.desc)}</p></section>
+  ${videoBox(p.video)}
+  ${p.type === "quiz" ? `
+    <form class="section" id="quizForm"><h3>確認テスト（全問正解で合格）</h3>
+      ${result ? `<div class="toast ${result.ok ? "" : "err"}">${result.ok ? "合格です！" : `${result.correct}/${p.quiz.length}問正解。もう一度チャレンジしよう`}</div>` : ""}
+      ${p.quiz.map((q, qi) => `<div class="q"><p>Q${qi + 1}. ${esc(q.q)}</p>${q.options.map((o, oi) => `<label class="opt"><input type="radio" name="q${qi}" value="${oi}" required><span>${esc(o)}</span></label>`).join("")}</div>`).join("")}
+      <button class="btn" type="submit">${st.status === "ok" ? "もう一度解く" : "答え合わせ"}</button>
+    </form>` : `
+    <section class="section"><h3>予習</h3><p class="note">動画を最後まで見たら「見た」を押してください。</p>
+      <div class="btns"><button class="btn" id="watched" ${st.status === "ok" ? "disabled" : ""}>${st.status === "ok" ? "視聴済み" : "見た"}</button></div></section>`}`;
+}
+function bindPreItem() {
+  const u = me(), p = PRE_ENTRY.find(x => x.id === route.id), st = prog(u, p.id);
+  if ($("#quizForm")) $("#quizForm").onsubmit = e => {
+    e.preventDefault();
+    const correct = p.quiz.filter((q, i) => Number(document.querySelector(`input[name=q${i}]:checked`)?.value) === q.answer).length;
+    const ok = correct === p.quiz.length;
+    if (ok) st.status = "ok"; else if (st.status !== "ok") st.status = "prac";
+    store.save(); route.result = { ok, correct }; render();
+  };
+  if ($("#watched")) $("#watched").onclick = () => { st.status = "ok"; store.save(); render(); };
+}
+
+/* ---------- アシスタントのしごと ---------- */
+function viewTasks() {
+  const u = me(); let n = 0;
+  return `
+  <section style="display:grid;gap:6px"><div class="eyebrow">ASSISTANT WORK</div><h1 style="font-family:var(--display);font-size:24px">アシスタントのしごと</h1>
+  <p class="lead">動画とやり方を見る → ウィッグで練習 → 先輩のチェックで合格したら次へ進めます。</p></section>
+  ${TASK_GROUPS.map(g => `<section class="group"><h2>${g.name}</h2><div class="list">
+    ${g.items.map(([id, title, desc]) => { const idx = n++; const locked = !unlocked(u, idx);
+      return `<button class="row" data-task="${id}" ${locked ? "disabled" : ""}><span class="n">${idx + 1}</span><span class="t">${title}<br><small style="color:var(--muted);font-weight:400">${desc}</small></span>${chip(u, id, locked)}</button>`; }).join("")}
+  </div></section>`).join("")}`;
+}
+function videoBox(url) {
+  return `<div class="video">${url ? `<div>動画を見る<br><a href="${esc(url)}" target="_blank" rel="noopener">▶ 再生する</a></div>` : `<div>▶ 動画は準備中です<br><small style="opacity:.7">撮影できたらここに入ります</small></div>`}</div>`;
+}
+function viewTask() {
+  const viewer = me();
+  const owner = route.uid ? db.users[route.uid] : viewer;   // 幹部が他の人のレッスンを見る時
+  const idx = TASKS.findIndex(t => t.id === route.id), t = TASKS[idx], d = TASK_DETAIL[t.id] || {}, st = prog(owner, t.id);
+  const [label, cls] = STATUS[st.status];
+  const next = TASKS[idx + 1];
+  const leads = Object.entries(db.users).filter(([, x]) => isLead(x));
+  return `
+  <section style="display:grid;gap:6px"><div class="eyebrow">${esc(t.group)}・${idx + 1}/${TASKS.length}</div>
+    <h1 style="font-family:var(--display);font-size:24px">${esc(t.title)}</h1>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="chip ${cls}">${label}</span><span class="note">${route.uid ? esc(owner.name) + "さん・" : ""}ウィッグ練習 ${st.practice}回</span></div></section>
+  ${route.msg ? `<div class="toast ${route.err ? "err" : ""}">${esc(route.msg)}</div>` : ""}
+  ${videoBox(d.video)}
+  <section class="section"><h3>やり方</h3>${d.steps ? `<ol class="steps">${d.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>` : `<p class="pending">やり方の説明は準備中です。</p>`}</section>
+  <section class="section"><h3>合格チェックポイント</h3>${d.checks ? `<ul class="checks">${d.checks.map(s => `<li>${esc(s)}</li>`).join("")}</ul>` : `<p class="pending">チェックポイントは準備中です。</p>`}</section>
+  <section class="section"><h3>練習と合格</h3>
+    ${st.status === "ok" ? `<p class="note">合格済み（${esc(st.passedBy || "")} ${esc(st.passedAt || "")}）</p>` : ""}
+    <div class="btns">
+      <button class="btn ghost" id="practice">ウィッグで練習した ＋1</button>
+      ${st.status !== "ok" && st.status !== "wait" ? `<button class="btn" id="request">先輩にチェックをお願いする</button>` : ""}
+    </div>
+    ${st.status !== "ok" ? `
+    <form id="checkForm" style="display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px">
+      <p class="note">先輩（幹部・オーナー）が実技を見て、合格なら暗証番号を入れてください。</p>
+      ${leads.length ? `
+      <div class="field"><label for="checker">チェックする先輩</label><select id="checker">${leads.map(([id, x]) => `<option value="${id}" ${id === db.current ? "selected" : ""}>${esc(x.name)}（${ROLE[x.role]}）</option>`).join("")}</select></div>
+      <div class="field"><label for="checkPin">暗証番号</label><input id="checkPin" inputmode="numeric" maxlength="4" placeholder="4桁"></div>
+      <div class="btns"><button class="btn" type="submit" value="ok">合格</button><button class="btn warn" type="button" id="retry">やり直し</button></div>`
+      : `<p class="pending">幹部・オーナーがまだ登録されていません。</p>`}
+    </form>` : ""}
+  </section>
+  ${next && st.status === "ok" && !route.uid ? `<button class="btn" data-task="${next.id}">次のレッスン「${esc(next.title)}」へ</button>` : ""}`;
+}
+function bindTask() {
+  const owner = route.uid ? db.users[route.uid] : me(), st = prog(owner, route.id);
+  const flash = (msg, err) => { route.msg = msg; route.err = !!err; render(); };
+  $("#practice").onclick = () => { st.practice++; if (st.status === "todo") st.status = "prac"; store.save(); flash(`練習を記録しました（${st.practice}回目）`); };
+  if ($("#request")) $("#request").onclick = () => { st.status = "wait"; st.requestedAt = today(); store.save(); flash("チェック待ちにしました。先輩に声をかけよう"); };
+  const verify = () => { const l = db.users[$("#checker").value]; return l && l.pin === $("#checkPin").value.trim() ? l : null; };
+  if ($("#checkForm") && $("#checker")) {
+    $("#checkForm").onsubmit = e => { e.preventDefault(); const l = verify(); if (!l) return flash("暗証番号がちがいます", true);
+      Object.assign(st, { status: "ok", passedBy: l.name, passedAt: today() }); store.save(); flash("合格！次のレッスンに進めます"); };
+    $("#retry").onclick = () => { const l = verify(); if (!l) return flash("暗証番号がちがいます", true);
+      st.status = "prac"; store.save(); flash(`${l.name}さん：もう一度練習してからチェックしよう`, true); };
+  }
+}
+const today = () => new Date().toISOString().slice(0, 10);
+
+/* ---------- ロードマップ ---------- */
+function viewRoadmap() {
+  return `
+  <section style="display:grid;gap:6px"><div class="eyebrow">ROADMAP</div><h1 style="font-family:var(--display);font-size:24px">デビューまでの道のり</h1>
+  <p class="lead">${esc(GOAL.text)}</p></section>
+  <section class="timeline">${ROADMAP.map(r => `<div class="tl ${r.goal ? "goalpt" : ""}"><div class="m">${esc(r.m)}</div><b>${esc(r.t)}</b>${r.d ? `<p>${esc(r.d)}</p>` : ""}</div>`).join("")}</section>`;
+}
+
+/* ---------- みんなの進捗（幹部・オーナー） ---------- */
+function viewTeam() {
+  const rows = Object.entries(db.users).filter(([, u]) => u.role === "assistant");
+  const waiting = rows.flatMap(([uid, u]) => TASKS.filter(t => u.progress[t.id]?.status === "wait").map(t => ({ uid, u, t })));
+  return `
+  <section style="display:grid;gap:6px"><div class="eyebrow">TEAM</div><h1 style="font-family:var(--display);font-size:24px">みんなの進捗</h1></section>
+  <section class="group"><h2>チェック待ち（${waiting.length}件）</h2><div class="list">
+    ${waiting.length ? waiting.map(w => `<button class="row" data-task="${w.t.id}" data-uid="${w.uid}"><span class="t">${esc(w.u.name)}<br><small style="color:var(--muted);font-weight:400">${esc(w.t.title)}</small></span><span class="chip wait">チェックする</span></button>`).join("") : `<p class="pending">いまチェック待ちはありません。</p>`}
+  </div></section>
+  <section class="group"><h2>アシスタント一覧</h2>
+    ${rows.length ? `<div class="tablewrap"><table><thead><tr><th>名前</th><th>進み具合</th><th>合格</th><th>いま取り組み中</th></tr></thead><tbody>
+    ${rows.map(([, u]) => { const cur = TASKS.find(t => !passed(u, t.id)); return `<tr><td>${esc(u.name)}</td><td>${percent(u)}%</td><td>${TASKS.filter(t => passed(u, t.id)).length}/${TASKS.length}</td><td>${cur ? esc(cur.title) : "全て合格"}</td></tr>`; }).join("")}
+    </tbody></table></div>` : `<p class="pending">アシスタントはまだ登録されていません。</p>`}
+  </section>`;
+}
+
+/* ---------- オーナーAIチャット ---------- */
+function viewChat() {
+  const log = route.log ||= [{ who: "ai", text: "困ったことがあったら何でも聞いてね。オーナーの考え方をもとに答えます。" }];
+  return `
+  <section style="display:grid;gap:6px"><div class="eyebrow">ASK THE OWNER</div><h1 style="font-family:var(--display);font-size:24px">オーナーAIチャット</h1>
+  <p class="note">いまはサンプルの答えです。オーナーの資料を入れると、その内容で答えるようになります。</p></section>
+  <section class="chat" id="chatLog">${log.map(m => `<div class="msg ${m.who}">${esc(m.text)}</div>`).join("")}</section>
+  <div class="sugg">${["売上100万円にするには？", "お客様が再来しない", "ミスをしてしまった"].map(s => `<button data-sugg="${esc(s)}">${esc(s)}</button>`).join("")}</div>
+  <form class="chatform" id="chatForm"><input id="chatInput" placeholder="質問を入力" autocomplete="off"><button class="btn" type="submit">送信</button></form>`;
+}
+function bindChat() {
+  const ask = text => {
+    if (!text.trim()) return;
+    const hit = OWNER_QA.find(q => q.keys.some(k => text.includes(k)));
+    route.log.push({ who: "me", text }, { who: "ai", text: hit ? hit.a : "その質問の答えはまだ資料にありません。幹部かオーナーに直接聞いてみてね。" });
+    render(); $("#chatInput").focus();
+  };
+  $("#chatForm").onsubmit = e => { e.preventDefault(); ask($("#chatInput").value); };
+  document.querySelectorAll("[data-sugg]").forEach(b => b.onclick = () => ask(b.dataset.sugg));
+}
+
+/* ---------- 描画 ---------- */
+const VIEWS = {
+  home: [viewHome], pre: [viewPre], preItem: [viewPreItem, bindPreItem], tasks: [viewTasks], task: [viewTask, bindTask],
+  roadmap: [viewRoadmap], team: [viewTeam], chat: [viewChat, bindChat],
+};
+const TITLES = { pre: "入社前プログラム", preItem: "入社前プログラム", tasks: "アシスタントのしごと", task: "レッスン", roadmap: "ロードマップ", team: "みんなの進捗", chat: "オーナーAIチャット" };
+
+function render(override) {
+  const u = me();
+  if (!u) {
+    $("#backBtn").hidden = true; $("#who").innerHTML = ""; $("#brand").textContent = "enu Academy";
+    $("#view").innerHTML = override || viewLogin(); bindLogin(); return;
+  }
+  const [view, bind] = VIEWS[route.name] || VIEWS.home;
+  $("#backBtn").hidden = route.name === "home";
+  $("#brand").textContent = TITLES[route.name] || "enu Academy";
+  $("#who").innerHTML = `${esc(u.name)}<br><button id="logout">切り替え</button>`;
+  $("#logout").onclick = () => { db.current = null; store.save(); route = { name: "home" }; stack = []; render(); };
+  $("#view").innerHTML = view();
+  document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
+  document.querySelectorAll("[data-pre]").forEach(b => b.onclick = () => go("preItem", { id: b.dataset.pre }));
+  document.querySelectorAll("[data-task]").forEach(b => b.onclick = () => go("task", { id: b.dataset.task, uid: b.dataset.uid || route.uid }));
+  document.querySelectorAll("[data-monthly]").forEach(b => b.onclick = () => { const s = prog(u, b.dataset.monthly); s.status = s.status === "ok" ? "todo" : "ok"; store.save(); render(); });
+  bind && bind();
+}
+render();
+</script>
