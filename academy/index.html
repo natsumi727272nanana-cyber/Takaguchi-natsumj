@@ -5,36 +5,39 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
 <style>
 /* Layout: 縦型モバイル1カラム。上部に固定ヘッダー、カードは役割ごとにだけ枠を付ける */
+/* Layout: 温かい白地に白いカード、太めのゴシック。画面下にタブ。 */
 :root {
-  --bg: #f5f6f7;
+  --bg: #f4f0ea;
   --surface: #ffffff;
-  --ink: #1d2128;
-  --muted: #69707c;
-  --line: #e2e4e8;
-  --accent: #2f5d62;
-  --accent-soft: #e3eeee;
-  --rose: #b0656b;
-  --ok: #2e7d4f; --ok-soft: #e2f2e8;
-  --wait: #a86b12; --wait-soft: #fbf0db;
-  --ng: #b3453f; --ng-soft: #f8e4e2;
-  --lock: #9aa0a9;
+  --ink: #2b2723;
+  --muted: #7b736b;
+  --line: #e7e0d6;
+  --track: #e9e3da;
+  --accent: #8b5a2b;
+  --accent-soft: #f3e9dd;
+  --rose: #a5583f;
+  --ok: #3d7a4e; --ok-soft: #e4f0e4;
+  --wait: #a2650f; --wait-soft: #f8ecd6;
+  --ng: #b0473d; --ng-soft: #f7e3df;
+  --lock: #a8a097;
   --on-accent: #ffffff;
-  --display: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --display: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
   --body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  --logo: "Josefin Sans", "Zen Kaku Gothic New", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #14171b; --surface: #1d2127; --ink: #eceef1; --muted: #9aa1ad; --line: #2c3139;
-  --accent: #7fb3b8; --accent-soft: #23373a; --rose: #e0959b;
-  --ok: #7cc79a; --ok-soft: #1f3528; --wait: #e2b366; --wait-soft: #3a2f1c; --ng: #ec8f88; --ng-soft: #3d2322; --lock: #5d636c;
-  --on-accent: #10181a; color-scheme: dark } }
+  --bg: #1a1714; --surface: #24201c; --ink: #efe9e1; --muted: #a89e93; --line: #3a332c; --track: #3a332c;
+  --accent: #d9a877; --accent-soft: #3a2c1f; --rose: #e39a82;
+  --ok: #8cc79b; --ok-soft: #22322a; --wait: #e6b765; --wait-soft: #3a2e1b; --ng: #ee9389; --ng-soft: #3d2420; --lock: #6b6259;
+  --on-accent: #1f1912; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #14171b; --surface: #1d2127; --ink: #eceef1; --muted: #9aa1ad; --line: #2c3139;
-  --accent: #7fb3b8; --accent-soft: #23373a; --rose: #e0959b;
-  --ok: #7cc79a; --ok-soft: #1f3528; --wait: #e2b366; --wait-soft: #3a2f1c; --ng: #ec8f88; --ng-soft: #3d2322; --lock: #5d636c;
-  --on-accent: #10181a; color-scheme: dark }
+  --bg: #1a1714; --surface: #24201c; --ink: #efe9e1; --muted: #a89e93; --line: #3a332c; --track: #3a332c;
+  --accent: #d9a877; --accent-soft: #3a2c1f; --rose: #e39a82;
+  --ok: #8cc79b; --ok-soft: #22322a; --wait: #e6b765; --wait-soft: #3a2e1b; --ng: #ee9389; --ng-soft: #3d2420; --lock: #6b6259;
+  --on-accent: #1f1912; color-scheme: dark }
 
 * { box-sizing: border-box }
 body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.75; margin: 0 }
@@ -212,6 +215,48 @@ th { color: var(--muted); font-weight: 500; font-size: 12px; white-space: nowrap
 .chatform input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 12px }
 .sugg { display: flex; flex-wrap: wrap; gap: 6px }
 .sugg button { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 12.5px }
+
+/* ---- スクリーンショットの見た目に合わせた上書き ---- */
+body::before { background: var(--bg) }
+header.bar { background: var(--bg); border-bottom: 0 }
+header.bar .wrap { min-height: 52px }
+.brand { font-weight: 700; font-size: 17px }
+.brand.logo { font-family: var(--logo); font-size: 30px; letter-spacing: .04em; padding-top: 8px }
+.brand.logo.small { font-size: 19px; padding-top: 4px; color: var(--muted) }
+main .wrap { padding-block: 8px calc(96px + env(safe-area-inset-bottom, 0px)); gap: 16px }
+.ptitle h1 { font-weight: 900; font-size: 24px }
+.eyebrow { color: var(--accent) }
+.section, .row, .tile, .card { border-radius: 18px; border-color: var(--line) }
+.row { padding: 16px 18px; gap: 12px }
+.row .t { font-weight: 700; font-size: 16.5px }
+.row .t small { font-size: 13.5px; margin-top: 2px }
+.row .n { display: none }
+.chip { font-weight: 500; font-size: 12.5px; padding: 3px 12px; border: 1px solid transparent }
+.chip.todo { background: transparent; color: var(--muted); border-color: var(--line) }
+.row .t .chip { margin-left: 8px; vertical-align: 2px }
+.group > h2 { font-size: 19px; font-weight: 900; color: var(--ink); letter-spacing: 0; margin-top: 6px }
+.card { background: var(--surface); border: 1px solid var(--line); padding: 18px 20px; display: grid; gap: 6px; width: 100%; text-align: left }
+.card .name { font-size: 20px; font-weight: 900 }
+.card .name small { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 6px }
+.card .sub { color: var(--muted); font-size: 14px }
+.card .big { display: flex; align-items: baseline; gap: 8px; color: var(--muted); font-size: 14px }
+.card .big b { font-size: 26px; font-weight: 900; color: var(--ink); font-variant-numeric: tabular-nums }
+.meter { height: 8px; background: var(--track) }
+.meter i { background: var(--accent) }
+button.card:hover { border-color: var(--accent) }
+.card h3 { font-size: 19px; font-weight: 900 }
+.philo { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 18px; padding: 20px }
+.philo .eyebrow { color: var(--accent); opacity: 1; font-family: var(--logo); font-size: 13px; letter-spacing: .14em }
+.philo h1 { font-family: var(--display); font-weight: 900; font-size: 21px }
+.philo small { color: var(--muted); opacity: 1 }
+.tile .num { font-family: var(--logo); color: var(--accent) }
+.tile.ai { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.btn { border-radius: 14px; padding: 12px 18px }
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px) }
+nav.tabs .in { max-width: 600px; margin: 0 auto; display: flex }
+nav.tabs button { flex: 1; min-width: 0; border: 0; background: none; padding: 12px 0 14px; font-size: 12.5px; white-space: nowrap; line-height: 1.3; color: var(--muted); font-weight: 500 }
+nav.tabs button[aria-current="page"] { color: var(--accent); font-weight: 900 }
 </style>
 
 <header class="bar"><div class="wrap">
@@ -220,6 +265,7 @@ th { color: var(--muted); font-weight: 500; font-size: 12px; white-space: nowrap
   <div class="who" id="who"></div>
 </div></header>
 <main><div class="wrap" id="view"></div></main>
+<nav class="tabs" id="tabs" hidden><div class="in" id="tabsIn"></div></nav>
 
 <script src="content.js"></script>
 <script>
@@ -319,6 +365,11 @@ function md(src, fold) {
 
 /* ---------- 画面遷移 ---------- */
 function go(name, params = {}) { stack.push(route); route = { name, ...params }; render(); scrollTo(0, 0); }
+// 画面下のタブ。タブを押すとそのページの一番上から
+let activeTab = "home";
+const TABS = () => [["home", "ホーム", { name: "home" }], ["work", "しごと", { name: "cats", page: "work" }], ["lesson", "レッスン", { name: "cats", page: "lesson" }],
+  ["chat", "AI相談", { name: "chat" }], ["mypage", "マイページ", { name: "mypage" }], ...(isLead(me()) ? [["team", "スタッフ", { name: "team" }]] : [])];
+function tab(key) { activeTab = key; stack = []; route = { ...TABS().find(t => t[0] === key)[2] }; render(); scrollTo(0, 0); }
 function back() { route = stack.pop() || { name: "home" }; render(); scrollTo(0, 0); }
 $("#backBtn").onclick = back;
 
@@ -347,7 +398,7 @@ function viewLogin(msg) {
   </form>`;
 }
 function bindLogin() {
-  $$("[data-login]").forEach(b => b.onclick = () => { db.current = b.dataset.login; store.save(); route = { name: "home" }; stack = []; render(); });
+  $$("[data-login]").forEach(b => b.onclick = () => { db.current = b.dataset.login; store.save(); route = { name: "home" }; stack = []; activeTab = "home"; render(); });
   $$("input[name=role]").forEach(r => r.onchange = () => { $("#pinField").hidden = $("input[name=role]:checked").value === "assistant"; });
   $("#regForm").onsubmit = e => {
     e.preventDefault();
@@ -356,22 +407,32 @@ function bindLogin() {
     if (role !== "assistant" && !/^\d{4}$/.test(pin)) { $("#view").innerHTML = viewLogin("暗証番号は数字4桁で入れてください"); return bindLogin(); }
     const id = "u" + Date.now();
     db.users[id] = { name, role, store: $("#regStore").value, pin: role === "assistant" ? "" : pin, progress: {}, joined: today() };
-    db.current = id; store.save(); route = { name: "home" }; stack = []; render();
+    db.current = id; store.save(); route = { name: "home" }; stack = []; activeTab = "home"; render();
   };
 }
 
 /* ---------- ホーム ---------- */
+function stageLabel(u) {
+  if (!u.joinDate) return "入社前";
+  const j = new Date(u.joinDate), n = new Date();
+  if (n < j) return "入社前";
+  return `入社${(n.getFullYear() - j.getFullYear()) * 12 + n.getMonth() - j.getMonth() + 1}ヶ月目`;
+}
+function nextLessons(u, max = 3) {
+  const out = [];
+  const add = (id, sub) => { if (out.length < max && !out.some(x => x.id === id) && !passed(u, id) && !C.lessons[id].draft) out.push({ id, sub }); };
+  C.preEntry.forEach(id => add(id, `入社前・${L(id).title}`));
+  for (const c of CATS) c.lessons.forEach((id, i) => { if (!lessonLocked(u, c, i)) add(id, `${C.pages[c.page].title}・${c.title}`); });
+  return out;
+}
+function waitingList() {
+  const u = me();
+  const who = isLead(u) ? Object.entries(db.users).filter(([, x]) => x.role === "assistant") : [[db.current, u]];
+  return who.flatMap(([uid, x]) => LESSON_IDS.filter(id => x.progress[id]?.status === "wait").map(id => ({ uid, x, id })));
+}
 function viewHome() {
-  const u = me(), pct = percent(u), P = C.philosophy;
-  const preDone = C.preEntry.filter(id => passed(u, id)).length;
-  const count = page => { const ids = pageLessons(page); return `${ids.filter(id => passed(u, id)).length}/${ids.length}`; };
-  const tiles = [
-    ["pre", "入社前プログラム", `電話・挨拶はアプリで合格／シャンプーはレッスン全5回で合格（${preDone}/${C.preEntry.length}）`],
-    ["work", "アシスタントのしごと", `電話・開店・閉店・クロス・レジ・挨拶など、お店の仕事（${count("work")}）`],
-    ["lesson", "レッスン", `シャンプー・カラー・縮毛矯正・カウンセリング・再来。練習 → 先輩チェックで合格（${count("lesson")}）`],
-    ["roadmap", "ロードマップ", "入社前から12月デビュー、売上100万円まで"],
-  ];
-  if (isLead(u)) tiles.push(["team", "みんなの進み具合", "チェック待ちの確認・合格を出す"]);
+  const u = me(), P = C.philosophy, done = LESSON_IDS.filter(id => passed(u, id)).length, pct = percent(u);
+  const waits = waitingList(), lead = isLead(u);
   return `
   <section class="philo">
     <div class="eyebrow">${esc(P.eyebrow)}</div>
@@ -380,15 +441,59 @@ function viewHome() {
     <p>${esc(P.message)}</p>
     ${P.note ? `<small>${esc(P.note)}</small>` : ""}
   </section>
-  <div class="goal"><b>${esc(C.goal.amount)}</b><span>${esc(C.goal.text)}</span></div>
-  <section class="section">
-    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h3>${esc(u.name)}さんの進み具合</h3><b style="font-variant-numeric:tabular-nums">${pct}%</b></div>
+  <button class="card" data-tab="mypage">
+    <div class="name">${esc(u.name)}<small>${esc(u.store || "店舗未設定")}・${stageLabel(u)}</small></div>
+    <div class="sub">目標デビュー日：${esc(u.debut || "—")}</div>
+    <div class="big"><b>${done}/${LESSON_IDS.length}</b>課題 合格（${pct}%）</div>
     <div class="meter"><i style="width:${pct}%"></i></div>
-  </section>
+    <div class="sub">今月の目標：${u.monthGoal ? esc(u.monthGoal) : "未設定（マイページで入力）"}</div>
+  </button>
+  <button class="card" ${lead ? 'data-tab="team"' : 'data-scroll="waits"'}>
+    <h3>チェック待ち ${waits.length}件</h3>
+    <div class="sub">${lead ? "タップして評価する" : waits.length ? "先輩に声をかけてチェックしてもらおう" : "練習が終わったら、レッスンからチェックをお願いしよう"}</div>
+  </button>
+  ${(() => { const nx = nextLessons(u); return nx.length ? `<section class="group"><h2>次に取り組む課題</h2><div class="list">
+    ${nx.map(n => `<button class="row" data-lesson="${n.id}"><span class="t">${esc(L(n.id).title)}${chip(u, n.id)}<small>${esc(n.sub)}</small></span></button>`).join("")}
+  </div></section>` : `<section class="group"><h2>次に取り組む課題</h2><p class="pending">いま開いている課題はすべて合格です。</p></section>`; })()}
+  <section class="group" id="waits"><h2>チェック待ち</h2><div class="list">
+    ${waits.length ? waits.map(w => `<button class="row" data-lesson="${w.id}" ${lead ? `data-uid="${w.uid}"` : ""}><span class="t">${esc(L(w.id).title)}<span class="chip wait">チェック待ち</span><small>${lead ? esc(w.x.name) + "さん" : esc(L(w.id).target || "")}</small></span></button>`).join("")
+      : `<p class="pending">いまチェック待ちはありません。</p>`}
+  </div></section>
+  <section class="group"><h2>メニュー</h2><nav class="menu">
+    <button class="tile" data-go="pre"><span class="t"><b>入社前プログラム</b><small>電話・挨拶はアプリで合格／シャンプーはレッスン全5回で合格（${C.preEntry.filter(id => passed(u, id)).length}/${C.preEntry.length}）</small></span><span class="chev">›</span></button>
+    <button class="tile" data-go="roadmap"><span class="t"><b>ロードマップ</b><small>入社前から12月デビュー、売上100万円まで</small></span><span class="chev">›</span></button>
+    <button class="tile ai" data-tab="chat"><span class="t"><b>オーナーAIチャット</b><small>困ったときに、オーナーの考えを聞ける</small></span><span class="chev">›</span></button>
+  </nav></section>`;
+}
+
+/* ---------- マイページ ---------- */
+function viewMypage() {
+  const u = me();
+  return `
+  <section class="ptitle"><h1>マイページ</h1></section>
+  ${route.msg ? `<div class="toast">${esc(route.msg)}</div>` : ""}
+  <form class="section" id="myForm">
+    <div class="field"><label for="myName">名前</label><input id="myName" value="${esc(u.name)}" required></div>
+    <div class="field"><label for="myStore">店舗</label><select id="myStore">${C.stores.map(s => `<option ${s === u.store ? "selected" : ""}>${esc(s)}</option>`).join("")}</select></div>
+    <div class="field"><label for="myJoin">入社日</label><input id="myJoin" type="date" value="${esc(u.joinDate || "")}"></div>
+    <div class="field"><label for="myDebut">目標デビュー日</label><input id="myDebut" type="date" value="${esc(u.debut || "")}"></div>
+    <div class="field"><label for="myGoal">今月の目標</label><textarea id="myGoal" rows="2" placeholder="例：カラー塗布の先輩チェックに合格する">${esc(u.monthGoal || "")}</textarea></div>
+    <button class="btn" type="submit">保存する</button>
+  </form>
   <nav class="menu">
-    ${tiles.map(([k, t, s], i) => `<button class="tile" ${k === "work" || k === "lesson" ? `data-page="${k}"` : `data-go="${k}"`}><span class="num">${String(i + 1).padStart(2, "0")}</span><span class="t"><b>${t}</b><small>${s}</small></span><span class="chev">›</span></button>`).join("")}
-    <button class="tile ai" data-go="chat"><span class="num">AI</span><span class="t"><b>オーナーAIチャット</b><small>困ったときに、オーナーの考えを聞ける</small></span><span class="chev">›</span></button>
-  </nav>`;
+    <button class="tile" data-go="pre"><span class="t"><b>入社前プログラム</b></span><span class="chev">›</span></button>
+    <button class="tile" data-go="roadmap"><span class="t"><b>ロードマップ</b></span><span class="chev">›</span></button>
+  </nav>
+  <button class="btn ghost" id="logout">ほかの人に切り替える</button>`;
+}
+function bindMypage() {
+  const u = me();
+  $("#myForm").onsubmit = e => {
+    e.preventDefault();
+    Object.assign(u, { name: $("#myName").value.trim() || u.name, store: $("#myStore").value, joinDate: $("#myJoin").value, debut: $("#myDebut").value, monthGoal: $("#myGoal").value.trim() });
+    store.save(); route.msg = "保存しました"; render();
+  };
+  $("#logout").onclick = () => { db.current = null; store.save(); route = { name: "home" }; stack = []; activeTab = "home"; render(); };
 }
 
 /* ---------- 入社前 ---------- */
@@ -563,7 +668,7 @@ function nextButton(l, u) {
   const c = CATS.find(x => x.id === route.cat) || CATS.find(x => x.lessons.includes(l.id));
   const nextId = c.lessons[c.lessons.indexOf(l.id) + 1];
   return nextId ? `<button class="btn wide" data-lesson="${nextId}">次のレッスン「${esc(L(nextId).title)}」へ</button>`
-    : `<button class="btn wide ghost" data-page="${c.page}">「${esc(c.title)}」はすべて合格。一覧へ</button>`;
+    : `<button class="btn wide ghost" data-tab="${c.page}">「${esc(c.title)}」はすべて合格。一覧へ</button>`;
 }
 function bindLesson() {
   const u = subject(), l = L(route.id), st = prog(u, l.id);
@@ -736,23 +841,28 @@ function bindChat() {
 /* ---------- 描画 ---------- */
 const VIEWS = {
   home: [viewHome], pre: [viewPre], cats: [viewCats], cat: [viewCat], lesson: [viewLesson, bindLesson],
-  roadmap: [viewRoadmap], team: [viewTeam], member: [viewMember], chat: [viewChat, bindChat],
+  roadmap: [viewRoadmap], team: [viewTeam], member: [viewMember], chat: [viewChat, bindChat], mypage: [viewMypage, bindMypage],
 };
-const TITLES = { pre: "入社前プログラム", roadmap: "ロードマップ", team: "みんなの進み具合", member: "進み具合", chat: "オーナーAIチャット" };
+const TITLES = { mypage: "マイページ", pre: "入社前プログラム", roadmap: "ロードマップ", team: "みんなの進み具合", member: "進み具合", chat: "オーナーAIチャット" };
 
 function render() {
   const u = me();
   if (!u) {
-    $("#backBtn").hidden = true; $("#who").innerHTML = ""; $("#brand").textContent = "enu Academy";
+    $("#tabs").hidden = true; $("#brand").className = "brand logo";
+    $("#backBtn").hidden = true; $("#who").innerHTML = ""; $("#brand").textContent = "enu ACADEMY";
     $("#view").innerHTML = viewLogin(); bindLogin(); return;
   }
   const [view, bind] = VIEWS[route.name] || VIEWS.home;
-  $("#backBtn").hidden = route.name === "home";
-  $("#brand").textContent = route.name === "cats" ? C.pages[route.page].title : route.name === "cat" ? CATS.find(c => c.id === route.id).title : route.name === "lesson" ? L(route.id).title : TITLES[route.name] || "enu Academy";
-  $("#who").innerHTML = `${esc(u.name)}<br><button id="logout">切り替え</button>`;
-  $("#logout").onclick = () => { db.current = null; store.save(); route = { name: "home" }; stack = []; render(); };
+  $("#backBtn").hidden = !stack.length;
+  $("#tabs").hidden = false;
+  $("#tabsIn").innerHTML = TABS().map(([k, l]) => `<button data-tab="${k}" ${k === activeTab ? 'aria-current="page"' : ""}>${l}</button>`).join("");
+  $("#brand").className = route.name === "home" ? "brand logo" : !stack.length ? "brand logo small" : "brand";
+  $("#brand").textContent = !stack.length ? "enu ACADEMY" : route.name === "cats" ? C.pages[route.page].title : route.name === "cat" ? CATS.find(c => c.id === route.id).title : route.name === "lesson" ? L(route.id).title : TITLES[route.name] || "enu ACADEMY";
+  $("#who").innerHTML = "";
   $("#view").innerHTML = view();
   $$("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
+  $$("[data-tab]").forEach(b => b.onclick = () => tab(b.dataset.tab));
+  $$("[data-scroll]").forEach(b => b.onclick = () => $("#" + b.dataset.scroll)?.scrollIntoView({ behavior: "smooth" }));
   $$("[data-page]").forEach(b => b.onclick = () => go("cats", { page: b.dataset.page }));
   $$("[data-cat]").forEach(b => b.onclick = () => go("cat", { id: b.dataset.cat, uid: route.uid }));
   $$("[data-lesson]").forEach(b => b.onclick = () => go("lesson", { id: b.dataset.lesson, cat: route.name === "cat" ? route.id : route.cat, uid: b.dataset.uid || route.uid }));
