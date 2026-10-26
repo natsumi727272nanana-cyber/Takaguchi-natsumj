@@ -82,6 +82,11 @@ window.ENU = {
     { name: "カウンセリング", page: "stylist", categories: [
       { id: "counsel", title: "カウンセリング", sub: "カウンセリング＆接客マニュアル", lessons: ["counseling"] },
     ]},
+    { name: "ワンランク上の技術と売り方", page: "million", categories: [
+      { id: "counsel-adv", title: "上級カウンセリング", sub: "", lessons: [], planned: "100万円に届くための、より高度なカウンセリング（作成予定）" },
+      { id: "sns", title: "SNS", sub: "", lessons: [], planned: "SNSでの発信・集客（作成予定）" },
+      { id: "selfbrand", title: "自分の売り方", sub: "", lessons: [], planned: "自分の強みの見つけ方・伝え方（作成予定）" },
+    ]},
     { name: "お客様を増やす・売上をつくる", page: "million", categories: [
       { id: "attract", title: "集客", sub: "", lessons: [], planned: "メソッドを作成中" },
       { id: "repeat", title: "再来", sub: "再来術マニュアル", lessons: ["repeat-manual"] },
