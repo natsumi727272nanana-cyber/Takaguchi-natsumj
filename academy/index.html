@@ -608,7 +608,39 @@ function waitingList() {
   const who = isLead(u) ? Object.entries(db.users).filter(([, x]) => x.role === "assistant") : [[db.current, u]];
   return who.flatMap(([uid, x]) => LESSON_IDS.filter(id => x.progress[id]?.status === "wait").map(id => ({ uid, x, id })));
 }
+// 幹部・オーナーのホーム：採点する側の画面（チェック待ちとアシスタントの進み具合）
+function viewLeadHome() {
+  const u = me(), P = C.philosophy, waits = waitingList();
+  const team = Object.entries(db.users).filter(([, x]) => x.role === "assistant");
+  return `
+  <button class="philo" ${P.link ? `data-lesson="${P.link}"` : ""} style="text-align:left;width:100%">
+    <div class="eyebrow">${esc(P.eyebrow)}</div>
+    <h1>${esc(P.title)}</h1>
+    <p class="tag">${esc(P.lead)}</p>
+    ${P.link ? `<small style="color:var(--accent);font-weight:700">enuとは（理念をくわしく読む）›</small>` : ""}
+  </button>
+  <button class="card" data-tab="mypage">
+    <div class="name">${esc(u.name)}<small>${esc(u.store || "")}・${ROLE[u.role]}</small></div>
+    <div class="sub">アシスタントのチェックを記録できます</div>
+  </button>
+  <section class="group"><h2>チェック待ち（${waits.length}件）</h2><div class="list">
+    ${waits.length ? waits.map(w => `<button class="row" data-lesson="${w.id}" data-uid="${w.uid}"><span class="t">${esc(w.x.name)}さん<span class="chip wait">チェックする</span><small>${esc(L(w.id).title)}</small></span></button>`).join("")
+      : `<p class="pending">いまチェック待ちはありません。アシスタントが「先輩にチェックをお願いする」を押すと、ここに出ます。</p>`}
+  </div></section>
+  <section class="group"><h2>アシスタントの進み具合</h2>
+    ${team.length ? `<div class="list">${team.map(([uid, x]) => { const cur = LESSON_IDS.find(id => !passed(x, id));
+      return `<button class="row" data-member="${uid}"><span class="t">${esc(x.name)}<span class="chip info">${percent(x)}%</span><small>${esc(x.store || "")}・${stageLabel(x)}・いま：${cur ? esc(L(cur).title) : "全て合格"}</small></span></button>`; }).join("")}</div>`
+      : `<p class="pending">アシスタントはまだ登録されていません。共有メニューから「編集者」として招待すると、ここに出ます。</p>`}
+  </section>
+  <section class="group"><h2>メニュー</h2><nav class="menu">
+    <button class="tile" data-tab="team"><span class="t"><b>スタッフ</b><small>店舗ごとの進み具合${cloudState.isOwner ? "・幹部の設定" : ""}</small></span><span class="chev">›</span></button>
+    <button class="tile" data-go="pre"><span class="t"><b>入社前プログラム</b><small>中身の確認</small></span><span class="chev">›</span></button>
+    <button class="tile" data-go="roadmap"><span class="t"><b>ロードマップ</b></span><span class="chev">›</span></button>
+    <button class="tile ai" data-tab="chat"><span class="t"><b>オーナーAIチャット</b><small>アシスタントに届く答えを確かめられる</small></span><span class="chev">›</span></button>
+  </nav></section>`;
+}
 function viewHome() {
+  if (isLead(me())) return viewLeadHome();
   const u = me(), P = C.philosophy, done = LESSON_IDS.filter(id => passed(u, id)).length, pct = percent(u);
   const waits = waitingList(), lead = isLead(u);
   return `
