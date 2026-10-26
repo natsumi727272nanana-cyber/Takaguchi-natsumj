@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 622" width="360" height="622">
+<rect width="360" height="622" fill="#ffffff"/>
+<text x="180.0" y="34" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="17" font-weight="800" fill="#2b2723" text-anchor="middle">電話の受け方の流れ</text>
+<rect x="16" y="56" width="328" height="70" rx="14" fill="#f4f0ea" stroke="#e7e0d6"/>
+<circle cx="44" cy="91" r="15" fill="#8b5a2b"/><text x="44" y="96" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">1</text>
+<text x="70" y="85" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="15.5" font-weight="800" fill="#2b2723">3コール以内に出る</text>
+<text x="70" y="105" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11.5" fill="#7b736b">出るのが遅れたら「お待たせいたしました」</text>
+<path d="M 180.0 128 l 0 14 m -6 -6 l 6 6 l 6 -6" fill="none" stroke="#8b5a2b" stroke-width="2.5"/>
+<rect x="16" y="148" width="328" height="70" rx="14" fill="#f4f0ea" stroke="#e7e0d6"/>
+<circle cx="44" cy="183" r="15" fill="#8b5a2b"/><text x="44" y="188" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">2</text>
+<text x="70" y="177" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="15.5" font-weight="800" fill="#2b2723">明るい声で名乗る</text>
+<text x="70" y="197" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11.5" fill="#7b736b">「お電話ありがとうございます。enu○○店</text>
+<text x="70" y="212" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11.5" fill="#7b736b">の○○です」</text>
+<path d="M 180.0 220 l 0 14 m -6 -6 l 6 6 l 6 -6" fill="none" stroke="#8b5a2b" stroke-width="2.5"/>
+<rect x="16" y="240" width="328" height="70" rx="14" fill="#f4f0ea" stroke="#e7e0d6"/>
+<circle cx="44" cy="275" r="15" fill="#8b5a2b"/><text x="44" y="280" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">3</text>
+<text x="70" y="269" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="15.5" font-weight="800" fill="#2b2723">お名前とご用件を伺う</text>
+<text x="70" y="289" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11.5" fill="#7b736b">聞きながら、すぐにメモを取る</text>
+<path d="M 180.0 312 l 0 14 m -6 -6 l 6 6 l 6 -6" fill="none" stroke="#8b5a2b" stroke-width="2.5"/>
+<rect x="16" y="332" width="328" height="70" rx="14" fill="#f4f0ea" stroke="#e7e0d6"/>
+<circle cx="44" cy="367" r="15" fill="#8b5a2b"/><text x="44" y="372" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">4</text>
+<text x="70" y="361" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="15.5" font-weight="800" fill="#2b2723">わからないことは保留</text>
+<text x="70" y="381" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11.5" fill="#7b736b">「お調べしますので、少々お待ちください」→</text>
+<text x="70" y="396" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11.5" fill="#7b736b"> 先輩に聞く（30秒以内）</text>
+<path d="M 180.0 404 l 0 14 m -6 -6 l 6 6 l 6 -6" fill="none" stroke="#8b5a2b" stroke-width="2.5"/>
+<rect x="16" y="424" width="328" height="70" rx="14" fill="#f4f0ea" stroke="#e7e0d6"/>
+<circle cx="44" cy="459" r="15" fill="#8b5a2b"/><text x="44" y="464" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">5</text>
+<text x="70" y="453" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="15.5" font-weight="800" fill="#2b2723">内容を復唱する</text>
+<text x="70" y="473" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11.5" fill="#7b736b">日時・メニュー・担当・お名前を、もう一度伝</text>
+<text x="70" y="488" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11.5" fill="#7b736b">える</text>
+<path d="M 180.0 496 l 0 14 m -6 -6 l 6 6 l 6 -6" fill="none" stroke="#8b5a2b" stroke-width="2.5"/>
+<rect x="16" y="516" width="328" height="70" rx="14" fill="#f4f0ea" stroke="#e7e0d6"/>
+<circle cx="44" cy="551" r="15" fill="#8b5a2b"/><text x="44" y="556" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">6</text>
+<text x="70" y="545" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="15.5" font-weight="800" fill="#2b2723">お客様が切ってから切る</text>
+<text x="70" y="565" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11.5" fill="#7b736b">「お電話ありがとうございました」→ 担当・</text>
+<text x="70" y="580" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11.5" fill="#7b736b">店長に報告</text>
+</svg>

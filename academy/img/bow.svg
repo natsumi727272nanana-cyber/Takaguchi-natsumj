@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360" width="600" height="360">
+<rect width="600" height="360" fill="#ffffff"/>
+<text x="300" y="32" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="20" font-weight="800" fill="#2b2723" text-anchor="middle">お辞儀の角度</text>
+<line x1="83" y1="57" x2="83" y2="175" stroke="#d9d1c6" stroke-width="2" stroke-dasharray="5 5"/>
+<path d="M 83 123 A 52 52 0 0 1 96.5 124.8" fill="none" stroke="#8b5a2b" stroke-width="2.5"/>
+<text x="71" y="115" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="17" font-weight="800" fill="#8b5a2b" text-anchor="end">15°</text>
+<line x1="83" y1="175" x2="104.2" y2="95.8" stroke="#2b2723" stroke-width="10" stroke-linecap="round"/>
+<line x1="101.6" y1="105.5" x2="91" y2="193" stroke="#2b2723" stroke-width="6" stroke-linecap="round"/>
+<circle cx="110.4" cy="72.6" r="16" fill="#2b2723"/>
+<line x1="83" y1="175" x2="83" y2="253" stroke="#2b2723" stroke-width="10" stroke-linecap="round"/>
+<line x1="83" y1="253" x2="103" y2="253" stroke="#2b2723" stroke-width="8" stroke-linecap="round"/>
+<text x="105" y="300" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="20" font-weight="800" fill="#2b2723" text-anchor="middle">会釈</text>
+<text x="105" y="324" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="14" fill="#7b736b" text-anchor="middle">すれ違うとき・スタッフ同士</text>
+<text x="105" y="344" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="14" fill="#7b736b" text-anchor="middle">「失礼いたします」</text>
+<line x1="278" y1="57" x2="278" y2="175" stroke="#d9d1c6" stroke-width="2" stroke-dasharray="5 5"/>
+<path d="M 278 123 A 52 52 0 0 1 304.0 130.0" fill="none" stroke="#8b5a2b" stroke-width="2.5"/>
+<text x="266" y="115" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="17" font-weight="800" fill="#8b5a2b" text-anchor="end">30°</text>
+<line x1="278" y1="175" x2="319.0" y2="104.0" stroke="#2b2723" stroke-width="10" stroke-linecap="round"/>
+<line x1="314.0" y1="112.6" x2="286" y2="193" stroke="#2b2723" stroke-width="6" stroke-linecap="round"/>
+<circle cx="331.0" cy="83.2" r="16" fill="#2b2723"/>
+<line x1="278" y1="175" x2="278" y2="253" stroke="#2b2723" stroke-width="10" stroke-linecap="round"/>
+<line x1="278" y1="253" x2="298" y2="253" stroke="#2b2723" stroke-width="8" stroke-linecap="round"/>
+<text x="300" y="300" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="20" font-weight="800" fill="#2b2723" text-anchor="middle">敬礼</text>
+<text x="300" y="324" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="14" fill="#7b736b" text-anchor="middle">お出迎え・ご案内</text>
+<text x="300" y="344" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="14" fill="#7b736b" text-anchor="middle">「いらっしゃいませ」</text>
+<line x1="473" y1="57" x2="473" y2="175" stroke="#d9d1c6" stroke-width="2" stroke-dasharray="5 5"/>
+<path d="M 473 123 A 52 52 0 0 1 509.8 138.2" fill="none" stroke="#8b5a2b" stroke-width="2.5"/>
+<text x="461" y="115" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="17" font-weight="800" fill="#8b5a2b" text-anchor="end">45°</text>
+<line x1="473" y1="175" x2="531.0" y2="117.0" stroke="#2b2723" stroke-width="10" stroke-linecap="round"/>
+<line x1="523.9" y1="124.1" x2="481" y2="193" stroke="#2b2723" stroke-width="6" stroke-linecap="round"/>
+<circle cx="548.0" cy="100.0" r="16" fill="#2b2723"/>
+<line x1="473" y1="175" x2="473" y2="253" stroke="#2b2723" stroke-width="10" stroke-linecap="round"/>
+<line x1="473" y1="253" x2="493" y2="253" stroke="#2b2723" stroke-width="8" stroke-linecap="round"/>
+<text x="495" y="300" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="20" font-weight="800" fill="#2b2723" text-anchor="middle">最敬礼</text>
+<text x="495" y="324" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="14" fill="#7b736b" text-anchor="middle">お見送り・お詫び</text>
+<text x="495" y="344" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="14" fill="#7b736b" text-anchor="middle">「ありがとうございました」</text>
+</svg>
