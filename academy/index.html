@@ -308,18 +308,19 @@ const passed = (u, id) => u.progress[id]?.status === "ok";
 const subject = () => route.uid ? db.users[route.uid] : me();   // 幹部が他の人の記録を見る時
 
 function lessonLocked(u, cat, idx) {
-  if (isLead(u) || idx === 0) return false;
+  if (isLead(u) || idx === 0 || ["chore", "read"].includes(C.lessons[cat.lessons[idx]].type)) return false;
   return !passed(u, cat.lessons[idx - 1]);
 }
 // 前のレッスンに合格していないとき、そのレッスン名を返す（中身は見られる。練習とチェックだけ止める）
 function blockedBy(u, id, catId) {
-  if (isLead(me())) return null;
+  if (isLead(me()) || ["chore", "read"].includes(C.lessons[id].type)) return null;   // 雑務はチェックなしなので順番待ちにしない
   const c = CATS.find(x => x.id === catId && x.lessons.includes(id)) || CATS.find(x => x.lessons.includes(id));
   const i = c.lessons.indexOf(id);
   return i > 0 && !passed(u, c.lessons[i - 1]) ? c.lessons[i - 1] : null;
 }
 // 毎日のチェックリスト（日付が変わると空に戻る）
-const checklistItems = l => l.body.split("\n").filter(x => /^\d+\.\s/.test(x)).map(x => x.replace(/^\d+\.\s/, ""));
+const WEEK = ["日", "月", "火", "水", "木", "金", "土"];
+const checklistItems = l => l.weekly ? (l.weekly[WEEK[new Date().getDay()]] || []) : l.body.split("\n").filter(x => /^\d+\.\s/.test(x)).map(x => x.replace(/^\d+\.\s/, ""));
 function todayDone(u, id) { const d = prog(u, id).daily; return d && d.date === today() ? d.done : []; }
 function percent(u) { return Math.round(LESSON_IDS.filter(id => passed(u, id)).length / LESSON_IDS.length * 100); }
 function chip(u, id, locked) {
@@ -467,7 +468,7 @@ function viewHome() {
     <div class="sub">${lead ? "タップして評価する" : waits.length ? "先輩に声をかけてチェックしてもらおう" : "練習が終わったら、レッスンからチェックをお願いしよう"}</div>
   </button>
   <section class="group"><h2>今日の掃除</h2><div class="list">
-    ${["opening", "closing"].map(id => { const n = checklistItems(L(id)).length, d = todayDone(u, id).length;
+    ${["opening", "closing", "cleaning-weekly"].filter(id => checklistItems(L(id)).length).map(id => { const n = checklistItems(L(id)).length, d = todayDone(u, id).length;
       return `<button class="row" data-lesson="${id}"><span class="t">${esc(L(id).checklist.name)}<span class="chip ${d === n ? "ok" : d ? "prac" : "todo"}">${d}/${n}</span><small>${esc(L(id).title)}</small></span></button>`; }).join("")}
   </div></section>
   ${(() => { const nx = nextLessons(u); return nx.length ? `<section class="group"><h2>次に取り組む課題</h2><div class="list">
@@ -594,11 +595,13 @@ function viewLesson() {
 }
 function checklistPanel(l, u) {
   const items = checklistItems(l), done = todayDone(u, l.id), all = done.length === items.length;
-  return `<section class="section"><h3>今日の${esc(l.checklist.name)}（${done.length}/${items.length}）</h3>
+  if (!items.length) return `<section class="section"><h3>今日の${esc(l.checklist.name)}</h3><p class="note">今日（${WEEK[new Date().getDay()]}曜日）は、曜日別のそうじはありません。</p></section>
+    <section class="section"><h3>曜日ごとのやること</h3>${md(l.body)}</section>`;
+  return `<section class="section"><h3>今日の${esc(l.checklist.name)}${l.weekly ? `（${WEEK[new Date().getDay()]}曜日）` : ""}（${done.length}/${items.length}）</h3>
     <p class="note">${today()}。終わったものからタップ。日付が変わると空に戻ります。</p>
     <div class="marks">${items.map((t, i) => `<label class="mark ck"><input type="checkbox" data-ck="${i}" ${done.includes(i) ? "checked" : ""} ${route.uid ? "disabled" : ""}><span>${inline(t)}</span></label>`).join("")}</div>
     ${all ? `<div class="toast">ぜんぶ終わりました！ ${esc(l.checklist.done)}</div>` : ""}
-  </section>`;
+  </section>${l.weekly ? `<section class="section"><h3>曜日ごとのやること</h3>${md(l.body)}</section>` : ""}`;
 }
 function scoreSheetInfo(l) {
   return `<section class="section"><h3>採点表（100点満点）</h3>

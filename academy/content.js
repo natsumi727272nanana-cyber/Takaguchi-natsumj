@@ -56,9 +56,7 @@ window.ENU = {
   groups: [
     { name: "基本・お店のしごと", page: "work", categories: [
       { id: "phone", title: "電話", sub: "電話・予約対応・予約確認", lessons: ["phone", "phone-booking", "booking-check"] },
-      { id: "tidy", title: "片付け", sub: "営業中・曜日別の掃除", lessons: ["cleaning"], state: "一部準備中" },
-      { id: "open", title: "開店作業", sub: "おはよう掃除", lessons: ["opening"] },
-      { id: "close", title: "閉店作業", sub: "夜のお掃除", lessons: ["closing"] },
+      { id: "tidy", title: "掃除", sub: "開店作業・閉店作業・手が空いた時・曜日別", lessons: ["opening", "closing", "cleaning", "cleaning-weekly"] },
       { id: "cloth", title: "施術クロスの準備", sub: "カラー・ストレート／カット", lessons: ["cloth"] },
       { id: "register", title: "レジ", sub: "お会計・次回予約", lessons: ["register"] },
       { id: "greet", title: "挨拶", sub: "お客様ご案内", lessons: ["greeting"] },
@@ -160,21 +158,30 @@ window.ENU = {
     },
 
     "cleaning": {
-      title: "掃除", type: "chore", target: "入社2週間以内", due: 0.5, noVideo: true,
-      body: `#### 営業中、空いているときにやること
-
-この順番でやります。
+      title: "手が空いた時の掃除", type: "chore", target: "入社2週間以内", due: 0.5, noVideo: true,
+      body: `営業中、手が空いたらこの順番でやります。
 
 1. 予約を見て、次のお客様の準備をする
 2. 地面をもう一度はく
 3. 次の日のラップタオルを作っておく
 4. イヤーキャップやシャンプーボウルまわりをきれいにする
 5. レジまわりに余分なものがないか確認して、片付ける
-6. バックルームや在庫置き場など（本店は9面、茶屋町店はボイラールーム）
+6. バックルームや在庫置き場など（本店は9面、茶屋町店はボイラールーム）`,
+    },
 
-#### 曜日別の掃除
-
-| 曜日 | やること |
+    "cleaning-weekly": {
+      title: "曜日別そうじ", type: "chore", target: "入社2週間以内", due: 0.5, noVideo: true,
+      checklist: { name: "曜日別そうじ", done: "「終わりました！次はどうしますか？」と報告しよう" },
+      // 曜日ごとのやること。今日の曜日の分がチェックリストになります
+      weekly: {
+        火: ["サーバーの下を洗って拭く", "シンクのネットを替える"],
+        水: ["OXや薬剤の整理", "地面を拭く（水拭き → 乾拭き）"],
+        木: ["シャンプー台の地面をスポンジでこすって乾拭き", "シャンプー台の下のタオルを替える"],
+        金: ["更衣室Bの整理整頓", "ドライヤーの埃取り"],
+        土: ["セット面の上・窓の上・ロッカーの上・電球2つ・クーラーのスイッチ・窓の前の埃を拭く"],
+        日: ["パイプユニッシュ", "クロス・膝掛け・白クロスを週に1種類ずつ洗う"],
+      },
+      body: `| 曜日 | やること |
 | --- | --- |
 | 火 | サーバーの下を洗って拭く、シンクのネットを替える |
 | 水 | OXや薬剤の整理、地面を拭く（水拭き → 乾拭き） |
@@ -185,7 +192,7 @@ window.ENU = {
     },
 
     "opening": {
-      title: "オープン準備（おはよう掃除）", type: "chore", target: "入社2週間以内", due: 0.5, noVideo: true,
+      title: "開店作業（おはよう掃除）", type: "chore", target: "入社2週間以内", due: 0.5, noVideo: true,
       checklist: { name: "おはよう掃除", done: "店長に「オープン準備終わりました！」と報告しよう" },
       body: `1. 地面を掃く（待合の傘立ての下まで）
 2. 鏡・机・椅子を拭く
