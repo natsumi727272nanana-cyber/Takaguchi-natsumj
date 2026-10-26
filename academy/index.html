@@ -554,8 +554,8 @@ function viewPre() {
     ${C.preEntry.map((id, i) => `<button class="row" data-lesson="${id}"><span class="n">${i + 1}</span><span class="t">${esc(L(id).title)}<small>${TYPE[L(id).type]}</small></span>${chip(u, id)}</button>`).join("")}
   </div></section>
   ${(C.preVideo || []).length ? `<section class="group"><h2>入社前に動画で予習</h2>
-    <p class="note">家では練習しません。お手本動画を見ておいて、入社したらすぐ練習を始め、1ヶ月以内に合格します。</p><div class="list">
-    ${C.preVideo.map(id => { const w = prog(u, id).watched; return `<button class="row" data-lesson="${id}"><span class="t">${esc(L(id).title)}<span class="chip ${w ? "ok" : "todo"}">${w ? "動画を見た" : "まだ"}</span><small>${esc(L(id).target || "")}</small></span></button>`; }).join("")}
+    <p class="note">家では練習しません。お手本動画を見て、確認テストに全問正解したら予習完了。入社したらすぐ練習を始め、1ヶ月以内に合格します。</p><div class="list">
+    ${C.preVideo.map(id => { const s = prog(u, id), done = s.watched && (s.preQuiz || !L(id).preQuiz); return `<button class="row" data-lesson="${id}"><span class="t">${esc(L(id).title)}<span class="chip ${done ? "ok" : s.watched ? "prac" : "todo"}">${done ? "予習完了" : s.watched ? "テストまだ" : "まだ"}</span><small>${esc(L(id).target || "")}</small></span></button>`; }).join("")}
   </div></section>` : ""}
   <section class="group"><h2>シャンプーレッスン 全4回</h2>
     <div class="tablewrap"><table><thead><tr><th>回</th><th>時期</th><th>内容</th><th>点数</th></tr></thead><tbody>
@@ -628,7 +628,11 @@ function viewLesson() {
   ${l.type === "shampoo" ? scoreSheetInfo(l) : ""}
   ${(C.preVideo || []).includes(l.id) ? `<section class="section"><h3>入社前の予習</h3>
     <p class="note">入社前は、お手本動画を見ておくだけです（家では練習しません）。</p>
-    ${st.watched ? `<p class="toast">動画を見た（${esc(st.watched)}）</p>` : route.uid ? `<p class="pending">まだ見ていません</p>` : `<button class="btn ghost" id="watched">動画を見た</button>`}</section>` : ""}
+    ${st.watched ? `<p class="toast">動画を見た（${esc(st.watched)}）</p>` : route.uid ? `<p class="pending">まだ見ていません</p>` : `<button class="btn ghost" id="watched">動画を見た</button>`}
+    ${st.watched && l.preQuiz ? (st.preQuiz ? `<p class="toast">確認テスト合格・予習完了（${esc(st.preQuiz)}）</p>` : route.uid ? `<p class="pending">確認テストはまだです</p>` : `<form id="preQuizForm" class="marks" style="gap:12px"><h3>動画を見たら、確認テスト（全問正解で予習完了）</h3>
+      ${route.pq ? `<div class="toast err">${route.pq}/${l.preQuiz.length}問正解。動画とやり方を見直して、もう一度</div>` : ""}
+      ${l.preQuiz.map((q, qi) => `<div class="q"><p>Q${qi + 1}. ${esc(q.q)}</p>${q.options.map((o, oi) => `<label class="opt"><input type="radio" name="pq${qi}" value="${oi}" required><span>${esc(o)}</span></label>`).join("")}</div>`).join("")}
+      <button class="btn" type="submit">答え合わせ</button></form>`) : ""}</section>` : ""}
   ${(() => { const b = blockedBy(u, l.id, route.cat); return b && st.status !== "ok"
     ? `<section class="section"><h3>練習とチェック</h3><p class="note" style="font-size:14px">いまは予習の時間です。前のレッスン「${esc(L(b).title)}」に合格すると、練習の記録と先輩のチェックができるようになります。</p><button class="btn ghost" data-lesson="${b}">「${esc(L(b).title)}」へ</button></section>`
     : progressPanel(l, st, u) + (st.status !== "ok" && ["tech", "theory", "shampoo", "roleplay"].includes(l.type) ? checkPanel(l, st, leadView) : ""); })()}
@@ -820,6 +824,12 @@ function bindLesson() {
     st.daily.done = b.checked ? [...new Set([...st.daily.done, i])] : st.daily.done.filter(x => x !== i);
     store.save(); const y = scrollY; render(); scrollTo(0, y);
   });
+  $("#preQuizForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    const n = l.preQuiz.filter((q, i) => Number($(`input[name=pq${i}]:checked`)?.value) === q.answer).length;
+    if (n === l.preQuiz.length) { st.preQuiz = today(); route.pq = null; flash("全問正解！予習完了です"); }
+    else { route.pq = n; route.msg = null; store.save(); render(); $("#preQuizForm")?.scrollIntoView({ block: "start" }); }
+  });
   $("#watched")?.addEventListener("click", () => { st.watched = today(); flash("動画を見たを記録しました"); });
   $("#learned")?.addEventListener("click", () => { pass(""); flash("覚えた！次へ進めます"); });
   $("#practice")?.addEventListener("click", () => { st.practice++; if (st.status === "todo") st.status = "prac"; flash(`練習を記録しました（${st.practice}回目）`); });
@@ -880,7 +890,7 @@ function bindLesson() {
 /* ---------- ロードマップ ---------- */
 function viewRoadmap() {
   const u = me();
-  const buckets = [[0, "入社前"], [0.5, "入社2週間まで"], [1, "入社1ヶ月まで"], [2, "入社2ヶ月まで"], [8, "デビューまで"]];
+  const buckets = [[0, "入社前"], [0.25, "入社1週間まで"], [0.5, "入社2週間まで"], [1, "入社1ヶ月まで"], [2, "入社2ヶ月まで"], [8, "デビューまで"]];
   return `
   <section class="ptitle"><div class="eyebrow">ROADMAP</div><h1>デビューまでの道のり</h1><p class="lead">${esc(C.goal.text)}</p></section>
   <section class="timeline">${C.roadmap.map(r => `<div class="tl ${r.goal ? "goalpt" : ""}"><div class="m">${esc(r.m)}</div><b>${esc(r.t)}</b>${r.d ? `<p>${esc(r.d)}</p>` : ""}</div>`).join("")}</section>
