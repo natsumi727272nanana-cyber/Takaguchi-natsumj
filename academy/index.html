@@ -105,6 +105,7 @@ main .wrap { padding-block: 20px 56px; display: grid; gap: 20px }
 .chip.ok { background: var(--ok-soft); color: var(--ok) }
 .chip.ng { background: var(--ng-soft); color: var(--ng) }
 .chip.lock, .chip.soon { background: transparent; color: var(--lock); border: 1px solid var(--line) }
+.meta .chip { white-space: normal; flex: 0 1 auto }
 .chip.info { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 500 }
 
 /* 本文（資料の書き方をそのまま表示） */
@@ -508,7 +509,7 @@ function viewHome() {
       : `<p class="pending">いまチェック待ちはありません。</p>`}
   </div></section>
   <section class="group"><h2>メニュー</h2><nav class="menu">
-    <button class="tile" data-go="pre"><span class="t"><b>入社前プログラム</b><small>電話・挨拶はアプリで合格／シャンプーはレッスン全4回で合格（${C.preEntry.filter(id => passed(u, id)).length}/${C.preEntry.length}）</small></span><span class="chev">›</span></button>
+    <button class="tile" data-go="pre"><span class="t"><b>入社前プログラム</b><small>電話・挨拶はアプリで合格／シャンプーはレッスン全5回で合格（${C.preEntry.filter(id => passed(u, id)).length}/${C.preEntry.length}）</small></span><span class="chev">›</span></button>
     <button class="tile" data-go="roadmap"><span class="t"><b>ロードマップ</b><small>入社前から12月デビュー、売上100万円まで</small></span><span class="chev">›</span></button>
     <button class="tile ai" data-tab="chat"><span class="t"><b>オーナーAIチャット</b><small>困ったときに、オーナーの考えを聞ける</small></span><span class="chev">›</span></button>
   </nav></section>`;
@@ -557,7 +558,7 @@ function viewPre() {
     <p class="note">家では練習しません。お手本動画を見て、確認テストに全問正解したら予習完了。入社したらすぐ練習を始め、1ヶ月以内に合格します。</p><div class="list">
     ${C.preVideo.map(id => { const s = prog(u, id), done = s.watched && (s.preQuiz || !L(id).preQuiz); return `<button class="row" data-lesson="${id}"><span class="t">${esc(L(id).title)}<span class="chip ${done ? "ok" : s.watched ? "prac" : "todo"}">${done ? "予習完了" : s.watched ? "テストまだ" : "まだ"}</span><small>${esc(L(id).target || "")}</small></span></button>`; }).join("")}
   </div></section>` : ""}
-  <section class="group"><h2>シャンプーレッスン 全4回</h2>
+  <section class="group"><h2>シャンプーレッスン 全5回</h2>
     <div class="tablewrap"><table><thead><tr><th>回</th><th>時期</th><th>内容</th><th>点数</th></tr></thead><tbody>
     ${sp.rounds.map((r, i) => { const rec = recs.filter(x => x.round === i + 1).pop();
       return `<tr><td style="white-space:nowrap">${esc(r.day || `${i + 1}回目`)}</td><td style="white-space:nowrap">${esc(r.m)}</td><td>${esc(r.t)}</td><td style="white-space:nowrap">${rec ? `<b>${rec.score}</b>点` : "—"}</td></tr>`; }).join("")}
