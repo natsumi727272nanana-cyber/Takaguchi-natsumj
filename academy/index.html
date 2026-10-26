@@ -553,6 +553,10 @@ function viewPre() {
   <section class="group"><h2>入社前に合格するもの</h2><div class="list">
     ${C.preEntry.map((id, i) => `<button class="row" data-lesson="${id}"><span class="n">${i + 1}</span><span class="t">${esc(L(id).title)}<small>${TYPE[L(id).type]}</small></span>${chip(u, id)}</button>`).join("")}
   </div></section>
+  ${(C.preVideo || []).length ? `<section class="group"><h2>入社前に動画で予習</h2>
+    <p class="note">家では練習しません。お手本動画を見ておいて、入社したらすぐ練習を始め、1ヶ月以内に合格します。</p><div class="list">
+    ${C.preVideo.map(id => { const w = prog(u, id).watched; return `<button class="row" data-lesson="${id}"><span class="t">${esc(L(id).title)}<span class="chip ${w ? "ok" : "todo"}">${w ? "動画を見た" : "まだ"}</span><small>${esc(L(id).target || "")}</small></span></button>`; }).join("")}
+  </div></section>` : ""}
   <section class="group"><h2>シャンプーレッスン 全4回</h2>
     <div class="tablewrap"><table><thead><tr><th>回</th><th>時期</th><th>内容</th><th>点数</th></tr></thead><tbody>
     ${sp.rounds.map((r, i) => { const rec = recs.filter(x => x.round === i + 1).pop();
@@ -622,6 +626,9 @@ function viewLesson() {
   ${l.checks && l.type === "tech" ? `<section class="section"><h3>チェックポイント</h3><p class="note">${l.stages.join("と")}でチェックし、すべて○になれば合格です。</p><div class="md"><ul>${l.checks.map(t => `<li>${inline(t)}</li>`).join("")}</ul></div></section>` : ""}
   ${l.questions ? `<section class="section"><h3>チェック（先輩が口頭で質問）</h3><p class="note">すべて自分の言葉で答えられたら合格です。</p><div class="md"><ol>${l.questions.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
   ${l.type === "shampoo" ? scoreSheetInfo(l) : ""}
+  ${(C.preVideo || []).includes(l.id) ? `<section class="section"><h3>入社前の予習</h3>
+    <p class="note">入社前は、お手本動画を見ておくだけです（家では練習しません）。</p>
+    ${st.watched ? `<p class="toast">動画を見た（${esc(st.watched)}）</p>` : route.uid ? `<p class="pending">まだ見ていません</p>` : `<button class="btn ghost" id="watched">動画を見た</button>`}</section>` : ""}
   ${(() => { const b = blockedBy(u, l.id, route.cat); return b && st.status !== "ok"
     ? `<section class="section"><h3>練習とチェック</h3><p class="note" style="font-size:14px">いまは予習の時間です。前のレッスン「${esc(L(b).title)}」に合格すると、練習の記録と先輩のチェックができるようになります。</p><button class="btn ghost" data-lesson="${b}">「${esc(L(b).title)}」へ</button></section>`
     : progressPanel(l, st, u) + (st.status !== "ok" && ["tech", "theory", "shampoo", "roleplay"].includes(l.type) ? checkPanel(l, st, leadView) : ""); })()}
@@ -813,6 +820,7 @@ function bindLesson() {
     st.daily.done = b.checked ? [...new Set([...st.daily.done, i])] : st.daily.done.filter(x => x !== i);
     store.save(); const y = scrollY; render(); scrollTo(0, y);
   });
+  $("#watched")?.addEventListener("click", () => { st.watched = today(); flash("動画を見たを記録しました"); });
   $("#learned")?.addEventListener("click", () => { pass(""); flash("覚えた！次へ進めます"); });
   $("#practice")?.addEventListener("click", () => { st.practice++; if (st.status === "todo") st.status = "prac"; flash(`練習を記録しました（${st.practice}回目）`); });
   $("#request")?.addEventListener("click", () => { st.status = "wait"; flash("チェック待ちにしました。先輩に声をかけよう"); });
