@@ -252,6 +252,10 @@ button.card:hover { border-color: var(--accent) }
 .tile .num { font-family: var(--logo); color: var(--accent) }
 .tile.ai { background: var(--ink); color: var(--bg); border-color: var(--ink) }
 .btn { border-radius: 14px; padding: 12px 18px }
+.ck { cursor: pointer }
+.ck input { width: 22px; height: 22px; flex: none; accent-color: var(--accent); margin: 0 }
+.ck:has(input:checked) { background: var(--accent-soft); border-color: var(--accent) }
+.ck:has(input:checked) span { color: var(--muted); text-decoration: line-through }
 nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px) }
 nav.tabs .in { max-width: 600px; margin: 0 auto; display: flex }
@@ -314,6 +318,9 @@ function blockedBy(u, id, catId) {
   const i = c.lessons.indexOf(id);
   return i > 0 && !passed(u, c.lessons[i - 1]) ? c.lessons[i - 1] : null;
 }
+// 毎日のチェックリスト（日付が変わると空に戻る）
+const checklistItems = l => l.body.split("\n").filter(x => /^\d+\.\s/.test(x)).map(x => x.replace(/^\d+\.\s/, ""));
+function todayDone(u, id) { const d = prog(u, id).daily; return d && d.date === today() ? d.done : []; }
 function percent(u) { return Math.round(LESSON_IDS.filter(id => passed(u, id)).length / LESSON_IDS.length * 100); }
 function chip(u, id, locked) {
   if (locked && prog(u, id).status === "todo") return `<span class="chip lock">予習OK</span>`;
@@ -459,6 +466,10 @@ function viewHome() {
     <h3>チェック待ち ${waits.length}件</h3>
     <div class="sub">${lead ? "タップして評価する" : waits.length ? "先輩に声をかけてチェックしてもらおう" : "練習が終わったら、レッスンからチェックをお願いしよう"}</div>
   </button>
+  <section class="group"><h2>今日の掃除</h2><div class="list">
+    ${["opening", "closing"].map(id => { const n = checklistItems(L(id)).length, d = todayDone(u, id).length;
+      return `<button class="row" data-lesson="${id}"><span class="t">${esc(L(id).checklist.name)}<span class="chip ${d === n ? "ok" : d ? "prac" : "todo"}">${d}/${n}</span><small>${esc(L(id).title)}</small></span></button>`; }).join("")}
+  </div></section>
   ${(() => { const nx = nextLessons(u); return nx.length ? `<section class="group"><h2>次に取り組む課題</h2><div class="list">
     ${nx.map(n => `<button class="row" data-lesson="${n.id}"><span class="t">${esc(L(n.id).title)}${chip(u, n.id)}<small>${esc(n.sub)}</small></span></button>`).join("")}
   </div></section>` : `<section class="group"><h2>次に取り組む課題</h2><p class="pending">いま開いている課題はすべて合格です。</p></section>`; })()}
@@ -568,9 +579,9 @@ function viewLesson() {
     <div class="meta"><span class="chip ${cls}">${label}</span>${l.target ? `<span class="chip info">目標 ${esc(l.target)}</span>` : ""}${l.time ? `<span class="chip info">目安 ${esc(l.time)}</span>` : ""}</div>
     ${route.uid ? `<p class="note">${esc(u.name)}さんの記録を見ています</p>` : ""}</section>
   ${route.msg ? `<div class="toast ${route.err ? "err" : ""}">${esc(route.msg)}</div>` : ""}
-  ${videoBox(l)}
+  ${l.noVideo ? "" : videoBox(l)}
   ${l.intro ? `<section class="section">${md(l.intro)}</section>` : ""}
-  <section class="section"><h3>${l.type === "theory" ? "覚えること" : l.fold ? "マニュアル（章をタップで開く）" : "やり方"}</h3>${md(l.body, l.fold)}</section>
+  ${l.checklist ? checklistPanel(l, u) : `<section class="section"><h3>${l.type === "theory" ? "覚えること" : l.fold ? "マニュアル（章をタップで開く）" : "やり方"}</h3>${md(l.body, l.fold)}</section>`}
   ${l.tasks ? `<section class="section"><h3>課題</h3><div class="md"><ol>${l.tasks.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
   ${l.checks && l.type === "tech" ? `<section class="section"><h3>チェックポイント</h3><p class="note">${l.stages.join("と")}でチェックし、すべて○になれば合格です。</p><div class="md"><ul>${l.checks.map(t => `<li>${inline(t)}</li>`).join("")}</ul></div></section>` : ""}
   ${l.questions ? `<section class="section"><h3>チェック（先輩が口頭で質問）</h3><p class="note">すべて自分の言葉で答えられたら合格です。</p><div class="md"><ol>${l.questions.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
@@ -580,6 +591,14 @@ function viewLesson() {
     : progressPanel(l, st, u) + (st.status !== "ok" && ["tech", "theory", "shampoo", "roleplay"].includes(l.type) ? checkPanel(l, st, leadView) : ""); })()}
   ${recordsPanel(l, st)}
   ${nextButton(l, u)}`;
+}
+function checklistPanel(l, u) {
+  const items = checklistItems(l), done = todayDone(u, l.id), all = done.length === items.length;
+  return `<section class="section"><h3>今日の${esc(l.checklist.name)}（${done.length}/${items.length}）</h3>
+    <p class="note">${today()}。終わったものからタップ。日付が変わると空に戻ります。</p>
+    <div class="marks">${items.map((t, i) => `<label class="mark ck"><input type="checkbox" data-ck="${i}" ${done.includes(i) ? "checked" : ""} ${route.uid ? "disabled" : ""}><span>${inline(t)}</span></label>`).join("")}</div>
+    ${all ? `<div class="toast">ぜんぶ終わりました！ ${esc(l.checklist.done)}</div>` : ""}
+  </section>`;
 }
 function scoreSheetInfo(l) {
   return `<section class="section"><h3>採点表（100点満点）</h3>
@@ -682,6 +701,12 @@ function bindLesson() {
   const u = subject(), l = L(route.id), st = prog(u, l.id);
   const flash = (msg, err) => { route.msg = msg; route.err = !!err; route.open = false; store.save(); render(); scrollTo(0, 0); };
   const pass = by => Object.assign(st, { status: "ok", passedAt: today(), passedBy: by });
+  $$("[data-ck]").forEach(b => b.onchange = () => {
+    if (!st.daily || st.daily.date !== today()) st.daily = { date: today(), done: [] };
+    const i = Number(b.dataset.ck);
+    st.daily.done = b.checked ? [...new Set([...st.daily.done, i])] : st.daily.done.filter(x => x !== i);
+    store.save(); const y = scrollY; render(); scrollTo(0, y);
+  });
   $("#learned")?.addEventListener("click", () => { pass(""); flash("覚えた！次へ進めます"); });
   $("#practice")?.addEventListener("click", () => { st.practice++; if (st.status === "todo") st.status = "prac"; flash(`練習を記録しました（${st.practice}回目）`); });
   $("#request")?.addEventListener("click", () => { st.status = "wait"; flash("チェック待ちにしました。先輩に声をかけよう"); });

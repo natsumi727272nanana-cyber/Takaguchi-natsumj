@@ -11,6 +11,8 @@
      roleplay ロープレ：3回。言葉・判断・カルテを教育者が確認
      read     読んで覚える（スタイリスト向けのマニュアルなど）。チェックなし
 
+   checklist を入れたレッスンは、やり方の番号リストが毎日チェックできるリストになります（日付が変わると空に戻る）
+   noVideo: true で動画の枠を出しません
    draft: true のレッスンは「準備中」と表示され、進み具合の計算に入りません
    body は資料と同じ書き方（####見出し、1. 番号、- 箇条書き、**太字**、| 表 |、> 引用）
    video に動画URL、chapters に [「秒数」, 「手順」] を入れると動画の下に出ます
@@ -158,7 +160,7 @@ window.ENU = {
     },
 
     "cleaning": {
-      title: "掃除", type: "chore", target: "入社2週間以内", due: 0.5,
+      title: "掃除", type: "chore", target: "入社2週間以内", due: 0.5, noVideo: true,
       body: `#### 営業中、空いているときにやること
 
 - ラップタオルを作る
@@ -179,7 +181,8 @@ window.ENU = {
     },
 
     "opening": {
-      title: "オープン準備（おはよう掃除）", type: "chore", target: "入社2週間以内", due: 0.5,
+      title: "オープン準備（おはよう掃除）", type: "chore", target: "入社2週間以内", due: 0.5, noVideo: true,
+      checklist: { name: "おはよう掃除", done: "店長に「オープン準備終わりました！」と報告しよう" },
       body: `1. 地面を掃く（待合の傘立ての下まで）
 2. 鏡・机・椅子を拭く
 3. タオルをたたむ
@@ -191,7 +194,8 @@ window.ENU = {
     },
 
     "closing": {
-      title: "閉店作業（夜のお掃除）", type: "chore", target: "入社1ヶ月以内", due: 1,
+      title: "閉店作業（夜のお掃除）", type: "chore", target: "入社1ヶ月以内", due: 1, noVideo: true,
+      checklist: { name: "夜のお掃除", done: "「終わりました！次はどうしますか？」と報告しよう" },
       body: `1. ワゴンを拭く
 2. タイマーを拭いて定位置へ
 3. イヤーキャップ
