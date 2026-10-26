@@ -252,6 +252,13 @@ button.card:hover { border-color: var(--accent) }
 .tile .num { font-family: var(--logo); color: var(--accent) }
 .tile.ai { background: var(--ink); color: var(--bg); border-color: var(--ink) }
 .btn { border-radius: 14px; padding: 12px 18px }
+.fig { display: block; width: 100%; max-width: 360px; margin: 0 auto; border-radius: 12px; background: #fff }
+.fillq { display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 10px }
+.fillq:first-child { border-top: 0; padding-top: 0 }
+.fillq p { margin: 0; font-size: 14.5px }
+.fillq input { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 8px 12px; width: 100% }
+.fillq .res { font-size: 13px; font-weight: 700 }
+.fillq .res.ok { color: var(--ok) } .fillq .res.ng { color: var(--ng) } .fillq .res.na { color: var(--muted); font-weight: 500 }
 .ck { cursor: pointer }
 .ck input { width: 22px; height: 22px; flex: none; accent-color: var(--accent); margin: 0 }
 .ck:has(input:checked) { background: var(--accent-soft); border-color: var(--accent) }
@@ -347,6 +354,7 @@ function md(src, fold) {
       i++; continue;
     }
     if (/^---+$/.test(line.trim())) { out("<hr>"); i++; continue; }
+    if ((m = line.match(/^!\[(.*?)\]\((.+?)\)\s*$/))) { out(`<img class="fig" src="${esc(m[2])}" alt="${esc(m[1])}" loading="lazy">`); i++; continue; }
     if (line.startsWith("|")) {
       const rows = [];
       while (i < lines.length && lines[i].startsWith("|")) { rows.push(lines[i]); i++; }
@@ -479,7 +487,7 @@ function viewHome() {
       : `<p class="pending">いまチェック待ちはありません。</p>`}
   </div></section>
   <section class="group"><h2>メニュー</h2><nav class="menu">
-    <button class="tile" data-go="pre"><span class="t"><b>入社前プログラム</b><small>電話・挨拶はアプリで合格／シャンプーはレッスン全5回で合格（${C.preEntry.filter(id => passed(u, id)).length}/${C.preEntry.length}）</small></span><span class="chev">›</span></button>
+    <button class="tile" data-go="pre"><span class="t"><b>入社前プログラム</b><small>電話・挨拶はアプリで合格／シャンプーはレッスン全4回で合格（${C.preEntry.filter(id => passed(u, id)).length}/${C.preEntry.length}）</small></span><span class="chev">›</span></button>
     <button class="tile" data-go="roadmap"><span class="t"><b>ロードマップ</b><small>入社前から12月デビュー、売上100万円まで</small></span><span class="chev">›</span></button>
     <button class="tile ai" data-tab="chat"><span class="t"><b>オーナーAIチャット</b><small>困ったときに、オーナーの考えを聞ける</small></span><span class="chev">›</span></button>
   </nav></section>`;
@@ -524,12 +532,12 @@ function viewPre() {
   <section class="group"><h2>入社前に合格するもの</h2><div class="list">
     ${C.preEntry.map((id, i) => `<button class="row" data-lesson="${id}"><span class="n">${i + 1}</span><span class="t">${esc(L(id).title)}<small>${TYPE[L(id).type]}</small></span>${chip(u, id)}</button>`).join("")}
   </div></section>
-  <section class="group"><h2>シャンプーレッスン 全5回</h2>
+  <section class="group"><h2>シャンプーレッスン 全4回</h2>
     <div class="tablewrap"><table><thead><tr><th>回</th><th>時期</th><th>内容</th><th>点数</th></tr></thead><tbody>
     ${sp.rounds.map((r, i) => { const rec = recs.filter(x => x.round === i + 1).pop();
-      return `<tr><td style="white-space:nowrap">${i + 1}回目</td><td style="white-space:nowrap">${esc(r.m)}</td><td>${esc(r.t)}</td><td style="white-space:nowrap">${rec ? `<b>${rec.score}</b>点` : "—"}</td></tr>`; }).join("")}
+      return `<tr><td style="white-space:nowrap">${esc(r.day || `${i + 1}回目`)}</td><td style="white-space:nowrap">${esc(r.m)}</td><td>${esc(r.t)}</td><td style="white-space:nowrap">${rec ? `<b>${rec.score}</b>点` : "—"}</td></tr>`; }).join("")}
     </tbody></table></div>
-    <p class="note">2月は国家試験の勉強のためお休み。事前に動画を見てから参加します。</p>
+    <p class="note">1月・2月は国家試験の勉強のためお休み。事前に動画を見てから参加します。</p>
   </section>
   <section class="group"><h2>4月の初日からできるようにしておくこと</h2><div class="list">
     ${["register", "cloth", "greeting"].map(id => `<button class="row" data-lesson="${id}"><span class="t">${esc(L(id).title)}<small>${esc(L(id).target || "")}</small></span>${chip(u, id)}</button>`).join("")}
@@ -582,6 +590,7 @@ function viewLesson() {
   ${route.msg ? `<div class="toast ${route.err ? "err" : ""}">${esc(route.msg)}</div>` : ""}
   ${l.noVideo ? "" : videoBox(l)}
   ${l.intro ? `<section class="section">${md(l.intro)}</section>` : ""}
+  ${l.type === "shampoo" ? daysPanel(l, st) : ""}
   ${l.checklist ? checklistPanel(l, u) : `<section class="section"><h3>${l.type === "theory" ? "覚えること" : l.fold ? "マニュアル（章をタップで開く）" : "やり方"}</h3>${md(l.body, l.fold)}</section>`}
   ${l.tasks ? `<section class="section"><h3>課題</h3><div class="md"><ol>${l.tasks.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
   ${l.checks && l.type === "tech" ? `<section class="section"><h3>チェックポイント</h3><p class="note">${l.stages.join("と")}でチェックし、すべて○になれば合格です。</p><div class="md"><ul>${l.checks.map(t => `<li>${inline(t)}</li>`).join("")}</ul></div></section>` : ""}
@@ -592,6 +601,26 @@ function viewLesson() {
     : progressPanel(l, st, u) + (st.status !== "ok" && ["tech", "theory", "shampoo", "roleplay"].includes(l.type) ? checkPanel(l, st, leadView) : ""); })()}
   ${recordsPanel(l, st)}
   ${nextButton(l, u)}`;
+}
+/* シャンプー：日ごとの教材・穴埋め小テスト・自己評価 */
+const norm = s => String(s || "").normalize("NFKC").replace(/[\s［］\[\]　]/g, "").toLowerCase();
+function daysPanel(l, st) {
+  const fill = st.fill || {}, self = st.self || {};
+  return `<section class="section"><h3>レッスン日程（全${l.rounds.length}回）</h3>
+    <p class="note">日にちをタップすると、その日の教材が開きます。</p>
+    ${l.rounds.map((r, ri) => { const f = fill[ri], open = route.openDay === ri;
+      return `<details class="fold" data-day="${ri}" ${open ? "open" : ""}><summary>${esc(r.day || `${ri + 1}回目`)}（${esc(r.m)}）${ri + 1 >= l.judgeFrom ? "・合格判定" : ""}</summary><div class="md">
+        <p>${esc(r.t)}</p>
+        ${r.body ? md(r.body) : `<p class="pending">この日の教材は準備中です。</p>`}
+        ${r.fill ? `<h4>穴埋め小テスト</h4>
+          ${f ? `<div class="toast ${f.score === f.total ? "" : "err"}">${f.score}/${f.total}問正解（${esc(f.date)}）</div>` : ""}
+          <form class="marks" data-fillform="${ri}">${r.fill.map((q, qi) => { const ans = f?.answers?.[qi] ?? "", graded = q.a.length, ok = graded && q.a.some(a => norm(a) === norm(ans));
+            return `<div class="fillq"><p>${qi + 1}. ${esc(q.q)}</p><input data-fill="${qi}" value="${esc(ans)}" autocomplete="off" aria-label="${qi + 1}問目の答え" ${route.uid ? "disabled" : ""}>
+              ${f ? `<span class="res ${!graded ? "na" : ok ? "ok" : "ng"}">${!graded ? "答えは準備中（採点なし）" : ok ? "○ 正解" : `× 答え：${esc(q.a[0])}`}</span>` : ""}</div>`; }).join("")}
+            ${route.uid ? "" : `<button class="btn" type="submit">答え合わせ</button>`}</form>` : ""}
+        ${r.selfCheck ? `<h4>自己評価</h4><div class="marks">${r.selfCheck.map((s, si) => `<label class="mark ck"><input type="checkbox" data-self="${ri}-${si}" ${(self[ri] || []).includes(si) ? "checked" : ""} ${route.uid ? "disabled" : ""}><span>${esc(s)}できた</span></label>`).join("")}</div>` : ""}
+      </div></details>`; }).join("")}
+  </section>`;
 }
 function checklistPanel(l, u) {
   const items = checklistItems(l), done = todayDone(u, l.id), all = done.length === items.length;
@@ -664,7 +693,7 @@ function checkPanel(l, st, leadView) {
       ${oxList(l.checks)}`;
   } else if (l.type === "shampoo") {
     const nextRound = Math.min((st.records.at(-1)?.round || 0) + 1, l.rounds.length + 1);
-    body = `<div class="field"><label for="ckRound">何回目？</label><select id="ckRound">${l.rounds.map((r, i) => `<option value="${i + 1}" ${nextRound === i + 1 ? "selected" : ""}>${i + 1}回目（${esc(r.m)}）${i + 1 >= l.judgeFrom ? "・合格判定" : ""}</option>`).join("")}<option value="${l.rounds.length + 1}" ${nextRound > l.rounds.length ? "selected" : ""}>追加の判定</option></select></div>
+    body = `<div class="field"><label for="ckRound">何回目？</label><select id="ckRound">${l.rounds.map((r, i) => `<option value="${i + 1}" ${nextRound === i + 1 ? "selected" : ""}>${esc(r.day || `${i + 1}回目`)}（${esc(r.m)}）${i + 1 >= l.judgeFrom ? "・合格判定" : ""}</option>`).join("")}<option value="${l.rounds.length + 1}" ${nextRound > l.rounds.length ? "selected" : ""}>追加の判定</option></select></div>
       <div class="marks">${l.score.map(([g, p, pt, req], i) => `<div class="mark"><span>${req ? '<span class="star">★</span> ' : ""}${esc(p)}</span><select data-score="${i}" aria-label="${esc(p)}">${Array.from({ length: pt + 1 }, (_, v) => pt - v).map(v => `<option value="${v}">${v}/${pt}</option>`).join("")}</select></div>`).join("")}</div>
       <div class="total"><span>合計</span><b id="scoreTotal">100</b></div>`;
   }
@@ -704,6 +733,20 @@ function bindLesson() {
   const u = subject(), l = L(route.id), st = prog(u, l.id);
   const flash = (msg, err) => { route.msg = msg; route.err = !!err; route.open = false; store.save(); render(); scrollTo(0, 0); };
   const pass = by => Object.assign(st, { status: "ok", passedAt: today(), passedBy: by });
+  $$("details[data-day]").forEach(d => d.ontoggle = () => { if (d.open) route.openDay = Number(d.dataset.day); else if (route.openDay === Number(d.dataset.day)) route.openDay = null; });
+  $$("[data-fillform]").forEach(f => f.onsubmit = e => {
+    e.preventDefault();
+    const ri = Number(f.dataset.fillform), qs = l.rounds[ri].fill;
+    const answers = qs.map((_, qi) => f.querySelector(`[data-fill="${qi}"]`).value.trim());
+    const graded = qs.map((q, qi) => q.a.length ? q.a.some(a => norm(a) === norm(answers[qi])) : null).filter(x => x !== null);
+    st.fill = { ...(st.fill || {}), [ri]: { answers, score: graded.filter(Boolean).length, total: graded.length, date: today() } };
+    if (st.status === "todo") st.status = "prac";
+    route.openDay = ri; store.save(); const y = scrollY; render(); scrollTo(0, y);
+  });
+  $$("[data-self]").forEach(b => b.onchange = () => {
+    const [ri, si] = b.dataset.self.split("-").map(Number), cur = (st.self ||= {})[ri] || [];
+    st.self[ri] = b.checked ? [...new Set([...cur, si])] : cur.filter(x => x !== si); store.save();
+  });
   $$("[data-ck]").forEach(b => b.onchange = () => {
     if (!st.daily || st.daily.date !== today()) st.daily = { date: today(), done: [] };
     const i = Number(b.dataset.ck);
@@ -730,7 +773,7 @@ function bindLesson() {
     if (l.type === "shampoo") {
       rec.marks = $$("[data-score]").map(s => Number(s.value)); rec.score = sumScore(); rec.round = Number($("#ckRound").value);
       const reqOk = l.score.every(([, , pt, req], i) => !req || rec.marks[i] === pt);
-      rec.label = rec.round > l.rounds.length ? "追加の判定" : `${rec.round}回目`;
+      rec.label = rec.round > l.rounds.length ? "追加の判定" : (l.rounds[rec.round - 1].day || `${rec.round}回目`);
       rec.pass = rec.round >= l.judgeFrom && rec.score >= l.passScore && reqOk;
       if (rec.pass) pass(lead.name); else st.status = "prac";
       st.records.push(rec);
