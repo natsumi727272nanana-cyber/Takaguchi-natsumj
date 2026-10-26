@@ -479,13 +479,13 @@ function viewHome() {
   const u = me(), P = C.philosophy, done = LESSON_IDS.filter(id => passed(u, id)).length, pct = percent(u);
   const waits = waitingList(), lead = isLead(u);
   return `
-  <section class="philo">
+  <button class="philo" ${P.link ? `data-lesson="${P.link}"` : ""} style="text-align:left;width:100%">
     <div class="eyebrow">${esc(P.eyebrow)}</div>
     <h1>${esc(P.title)}</h1>
     <p class="tag">${esc(P.lead)}</p>
     <p>${esc(P.message)}</p>
-    ${P.note ? `<small>${esc(P.note)}</small>` : ""}
-  </section>
+    ${P.link ? `<small style="color:var(--accent);font-weight:700">enuとは（理念をくわしく読む）›</small>` : ""}
+  </button>
   <button class="card" data-tab="mypage">
     <div class="name">${esc(u.name)}<small>${esc(u.store || "店舗未設定")}・${stageLabel(u)}</small></div>
     <div class="sub">目標デビュー日：${esc(u.debut || "—")}</div>
