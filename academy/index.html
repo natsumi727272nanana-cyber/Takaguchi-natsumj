@@ -650,7 +650,7 @@ function daysPanel(l, st) {
       return `<details class="fold" data-day="${ri}" ${open ? "open" : ""}><summary>${esc(r.day || `${ri + 1}回目`)}（${esc(r.m)}）${ri + 1 >= l.judgeFrom ? "・合格判定" : ""}</summary><div class="md">
         <p>${esc(r.t)}</p>
         ${r.body ? md(r.body) : `<p class="pending">この日の教材は準備中です。</p>`}
-        ${r.see ? `<button type="button" class="btn ghost" data-lesson="${r.see}">「${esc(L(r.see).title)}」を開く</button>` : ""}
+        ${r.see ? `<div class="btns">${[].concat(r.see).map(id => `<button type="button" class="btn ghost" data-lesson="${id}">「${esc(L(id).title)}」を開く</button>`).join("")}</div>` : ""}
         ${r.fill ? `<h4>穴埋め小テスト</h4>
           ${f ? `<div class="toast ${f.score === f.total ? "" : "err"}">${f.score}/${f.total}問正解（${esc(f.date)}）</div>` : ""}
           <form class="marks" data-fillform="${ri}">${r.fill.map((q, qi) => { const ans = f?.answers?.[qi] ?? "", graded = q.a.length, ok = graded && q.a.some(a => norm(a) === norm(ans));
