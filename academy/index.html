@@ -259,6 +259,14 @@ button.card:hover { border-color: var(--accent) }
 .fillq input { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 8px 12px; width: 100% }
 .fillq .res { font-size: 13px; font-weight: 700 }
 .fillq .res.ok { color: var(--ok) } .fillq .res.ng { color: var(--ng) } .fillq .res.na { color: var(--muted); font-weight: 500 }
+.tmenu { display: grid; gap: 10px }
+.tm { border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; background: var(--surface); display: grid; gap: 4px }
+.tm.core { border-color: var(--accent) }
+.tm .price { font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.2 }
+.tm .price small { font-size: 14px; font-weight: 700; margin-left: 2px }
+.tm .nm { font-size: 19px; font-weight: 900; line-height: 1.4 }
+.tm p { margin: 0; font-size: 14.5px }
+.tm .tags { display: flex; gap: 6px; flex-wrap: wrap }
 .ck { cursor: pointer }
 .ck input { width: 22px; height: 22px; flex: none; accent-color: var(--accent); margin: 0 }
 .ck:has(input:checked) { background: var(--accent-soft); border-color: var(--accent) }
@@ -596,7 +604,11 @@ function viewLesson() {
   ${l.noVideo ? "" : videoBox(l)}
   ${l.intro ? `<section class="section">${md(l.intro)}</section>` : ""}
   ${l.type === "shampoo" ? daysPanel(l, st) : ""}
-  ${l.checklist ? checklistPanel(l, u) : `<section class="section"><h3>${l.type === "theory" ? "覚えること" : l.fold ? "マニュアル（章をタップで開く）" : "やり方"}</h3>${md(l.body, l.fold)}</section>`}
+  ${l.menu ? `<section class="section"><h3>メニュー</h3><div class="tmenu">${l.menu.map(t => `<div class="tm ${t.core ? "core" : ""}">
+      <div class="price">${t.price.toLocaleString()}<small>円</small></div><div class="nm">${esc(t.name)}</div>
+      <div class="tags">${t.mix ? `<span class="chip info">カラー剤に混ぜる</span>` : ""}${t.core ? `<span class="chip prac">新卒が説明できる</span>` : ""}</div>
+      <p>${esc(t.desc)}</p></div>`).join("")}</div></section>` : ""}
+  ${l.checklist ? checklistPanel(l, u) : `<section class="section"><h3>${l.menu ? "あわせて覚えること" : l.type === "theory" ? "覚えること" : l.fold ? "マニュアル（章をタップで開く）" : "やり方"}</h3>${md(l.body, l.fold)}</section>`}
   ${l.tasks ? `<section class="section"><h3>課題</h3><div class="md"><ol>${l.tasks.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
   ${l.checks && l.type === "tech" ? `<section class="section"><h3>チェックポイント</h3><p class="note">${l.stages.join("と")}でチェックし、すべて○になれば合格です。</p><div class="md"><ul>${l.checks.map(t => `<li>${inline(t)}</li>`).join("")}</ul></div></section>` : ""}
   ${l.questions ? `<section class="section"><h3>チェック（先輩が口頭で質問）</h3><p class="note">すべて自分の言葉で答えられたら合格です。</p><div class="md"><ol>${l.questions.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
@@ -617,6 +629,7 @@ function daysPanel(l, st) {
       return `<details class="fold" data-day="${ri}" ${open ? "open" : ""}><summary>${esc(r.day || `${ri + 1}回目`)}（${esc(r.m)}）${ri + 1 >= l.judgeFrom ? "・合格判定" : ""}</summary><div class="md">
         <p>${esc(r.t)}</p>
         ${r.body ? md(r.body) : `<p class="pending">この日の教材は準備中です。</p>`}
+        ${r.see ? `<button type="button" class="btn ghost" data-lesson="${r.see}">「${esc(L(r.see).title)}」を開く</button>` : ""}
         ${r.fill ? `<h4>穴埋め小テスト</h4>
           ${f ? `<div class="toast ${f.score === f.total ? "" : "err"}">${f.score}/${f.total}問正解（${esc(f.date)}）</div>` : ""}
           <form class="marks" data-fillform="${ri}">${r.fill.map((q, qi) => { const ans = f?.answers?.[qi] ?? "", graded = q.a.length, ok = graded && q.a.some(a => norm(a) === norm(ans));
@@ -624,7 +637,7 @@ function daysPanel(l, st) {
               ${f ? `<span class="res ${!graded ? "na" : ok ? "ok" : "ng"}">${!graded ? "答えは準備中（採点なし）" : ok ? "○ 正解" : `× 答え：${esc(q.a[0])}`}</span>` : ""}</div>`; }).join("")}
             ${route.uid ? "" : `<button class="btn" type="submit">答え合わせ</button>`}</form>` : ""}
         ${r.times ? `<h4>タイム記録</h4><div class="marks">${r.times.map((goal, ti) => { const v = st.times?.[ri]?.[ti] ?? "";
-            return `<div class="mark"><span>${ti + 1}回目（目標 ${goal}分）${v !== "" ? (Number(v) <= goal ? ' <b style="color:var(--ok)">○ 目標クリア</b>' : ' <b style="color:var(--ng)">あと' + (Math.round((Number(v) - goal) * 10) / 10) + '分</b>') : ""}</span>
+            return `<div class="mark"><span>${ti + 1}回目（目標 ${goal}分${r.allow ? `・${r.allow}分の超過までOK` : ""}）${v !== "" ? (Number(v) <= goal ? ' <b style="color:var(--ok)">○ 目標クリア</b>' : Number(v) <= goal + (r.allow || 0) ? ' <b style="color:var(--wait)">○ ' + r.allow + '分までの超過なのでOK</b>' : ' <b style="color:var(--ng)">あと' + (Math.round((Number(v) - goal - (r.allow || 0)) * 10) / 10) + '分</b>') : ""}</span>
               <input type="number" inputmode="decimal" min="0" step="0.5" data-time="${ri}-${ti}" value="${esc(v)}" aria-label="${ti + 1}回目のタイム（分）" style="width:76px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px" ${route.uid ? "disabled" : ""}> 分</div>`; }).join("")}</div>` : ""}
         ${r.memo ? `<h4>先輩からの課題</h4><textarea data-memo="${ri}" rows="2" placeholder="先輩に言われたことをメモ" style="width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px" ${route.uid ? "disabled" : ""}>${esc(st.memo?.[ri] || "")}</textarea>` : ""}
         ${r.selfCheck ? `<h4>自己評価</h4><div class="marks">${r.selfCheck.map((s, si) => `<label class="mark ck"><input type="checkbox" data-self="${ri}-${si}" ${(self[ri] || []).includes(si) ? "checked" : ""} ${route.uid ? "disabled" : ""}><span>${esc(s)}できた</span></label>`).join("")}</div>` : ""}
@@ -704,7 +717,7 @@ function checkPanel(l, st, leadView) {
     const nextRound = Math.min((st.records.at(-1)?.round || 0) + 1, l.rounds.length);
     body = `<div class="field"><label for="ckRound">何回目？</label><select id="ckRound">${l.rounds.map((r, i) => `<option value="${i + 1}" ${nextRound === i + 1 ? "selected" : ""}>${esc(r.day || `${i + 1}回目`)}（${esc(r.m)}）${i + 1 >= l.judgeFrom ? "・合格判定" : ""}</option>`).join("")}</select></div>
       ${(l.judgeExtra || []).length ? `<p class="note">合格判定の日は、こちらも確認してください。</p>${oxList(l.judgeExtra, false)}` : ""}
-      ${l.maxJudge ? `<p class="note">合格判定のテストは${l.maxJudge}回まで（いま${judgeCount(st, l)}回）。</p>` : ""}
+      ${l.maxJudge ? `<p class="note">合格判定のテストは1日${l.maxJudge}回まで（今日${judgeCount(st, l)}回）。</p>` : ""}
       <div class="marks">${l.score.map(([g, p, pt, req], i) => `<div class="mark"><span>${req ? '<span class="star">★</span> ' : ""}${esc(p)}</span><select data-score="${i}" aria-label="${esc(p)}">${Array.from({ length: pt + 1 }, (_, v) => pt - v).map(v => `<option value="${v}">${v}/${pt}</option>`).join("")}</select></div>`).join("")}</div>
       <div class="total"><span>合計</span><b id="scoreTotal">100</b></div>`;
   }
@@ -717,7 +730,7 @@ function checkPanel(l, st, leadView) {
     : `<p class="pending">幹部・オーナーがまだ登録されていません。</p>`}
   </form>`;
 }
-const judgeCount = (st, l) => st.records.filter(r => r.round >= l.judgeFrom).length;
+const judgeCount = (st, l) => st.records.filter(r => r.round >= l.judgeFrom && r.date === today()).length;   // 今日の合格判定の回数
 function oxList(items, required = true) {
   return `<div class="marks">${items.map((t, i) => `<div class="mark"><span>${esc(t)}</span><div class="ox">
     <label><input type="radio" name="ox${i}" value="1" ${required ? "required" : ""}>○</label><label><input type="radio" name="ox${i}" value="0">×</label></div></div>`).join("")}</div>`;
@@ -792,7 +805,7 @@ function bindLesson() {
     if (l.type === "shampoo") {
       rec.marks = $$("[data-score]").map(s => Number(s.value)); rec.score = sumScore(); rec.round = Number($("#ckRound").value);
       const judging = rec.round >= l.judgeFrom;
-      if (judging && l.maxJudge && judgeCount(st, l) >= l.maxJudge) { route.open = true; route.msg = `合格判定のテストは${l.maxJudge}回までです。オーナーに相談してください`; route.err = true; render(); return; }
+      if (judging && l.maxJudge && judgeCount(st, l) >= l.maxJudge) { route.open = true; route.msg = `今日のテストは${l.maxJudge}回までです。${l.retryNote || "別の日に再テストしましょう"}`; route.err = true; render(); return; }
       rec.extra = (l.judgeExtra || []).map((_, i) => $(`input[name=ox${i}]:checked`)?.value === "1");
       const extraOk = !judging || rec.extra.every(Boolean);
       const reqOk = l.score.every(([, , pt, req], i) => !req || rec.marks[i] === pt);
@@ -801,7 +814,7 @@ function bindLesson() {
       if (rec.pass) pass(lead.name); else st.status = "prac";
       st.records.push(rec);
       const left = l.maxJudge ? l.maxJudge - judgeCount(st, l) : null;
-      return flash(rec.pass ? `${rec.score}点、合格です！` : `${rec.score}点。${!judging ? "練習の採点として記録しました。" : !reqOk ? "★必須がまだ満点ではありません。" : !extraOk ? "トリートメントのおすすめまでできたら合格です。" : `合格は${l.passScore}点以上です。`}${judging && left != null ? `（テストはあと${left}回）` : ""}`, !rec.pass);
+      return flash(rec.pass ? `${rec.score}点、合格です！` : `${rec.score}点。${!judging ? "練習の採点として記録しました。" : !reqOk ? "★必須がまだ満点ではありません。" : !extraOk ? "トリートメントのおすすめまでできたら合格です。" : `合格は${l.passScore}点以上です。`}${judging && left != null ? (left > 0 ? `（今日のテストはあと${left}回）` : `（今日のテストは終わり。${l.retryNote || "別の日に再テスト"}）`) : ""}`, !rec.pass);
     }
     rec.marks = $$(".marks .mark").map((_, i) => $(`input[name=ox${i}]:checked`)?.value === "1");
     const allOk = rec.marks.every(Boolean);
