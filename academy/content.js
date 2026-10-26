@@ -68,7 +68,7 @@ window.ENU = {
       { id: "treatment", title: "トリートメント", sub: "メニューと説明・オージュアのホームケア", lessons: ["treatment-menu", "aujua"] },
       { id: "headspa", title: "ヘッドスパ", sub: "手順・圧・声かけ", lessons: ["headspa"] },
       { id: "dry", title: "ドライ", sub: "事前資料・シャンプー後のドライヤー", lessons: ["dry-reading", "dry-basic"] },
-      { id: "finish", title: "仕上げ", sub: "セッティングブロー（ほかは準備中）", lessons: ["setting-blow"], state: "一部準備中" },
+      { id: "finish", title: "仕上げ", sub: "セッティングブロー・巻き3スタイル・ストレート仕上げ", lessons: ["setting-blow", "finish-inward", "finish-outward", "finish-kubire", "finish-straight"], state: "一部準備中" },
       { id: "color", title: "カラー", sub: "塗布・ブリーチリタッチ・理論", lessons: ["color-fashion", "color-gray", "color-theory", "bleach-retouch"] },
       { id: "straight", title: "縮毛矯正", sub: "ストレート塗布・ストレートブロー・アイロン・二液・理論", note: "お客様への説明は、カウンセリング＆接客マニュアルの「7｜縮毛矯正：カウンセリング台本」「8｜縮毛矯正：必ず伝える注意事項」を使います。", lessons: ["straight-apply", "straight-stretch", "straight-iron", "straight-second", "straight-theory"] },
       { id: "perm", title: "パーマ", sub: "", lessons: [], planned: "説明はカウンセリングの9章にあります" },
@@ -1546,6 +1546,12 @@ LTVとは、お客様が長期的に通ってくださる中で生まれる「�
 
 合格後も、実際の新規入客3名は上席がカウンセリング内容とカルテを確認し、教育のブレを修正する。`,
     },
+    // 仕上げ（中身と動画ができたら draft: true を消して、type・body・tasks・checks を入れる）
+    "finish-inward": { title: "内巻きベースの巻き髪", type: "tech", draft: true, practice: 5, stages: ["ウィッグ"], tool: "カールアイロン、またはコテ", body: "", checks: [] },
+    "finish-outward": { title: "外ハネベースの巻き髪", type: "tech", draft: true, practice: 5, stages: ["ウィッグ"], tool: "カールアイロン、またはコテ", body: "", checks: [] },
+    "finish-kubire": { title: "くびれ巻き", type: "tech", draft: true, practice: 5, stages: ["ウィッグ"], tool: "カールアイロン、またはコテ", body: "", checks: [] },
+    "finish-straight": { title: "ストレート仕上げ", type: "tech", draft: true, practice: 5, stages: ["ウィッグ"], tool: "ストレートアイロン", body: "", checks: [] },
+
     // カット（中身ができたら draft: true を消して、type・body・tasks・checks を入れる）
     "cut-onelength": { title: "ワンレングス", type: "tech", draft: true, practice: 5, stages: ["ウィッグ"], body: "", checks: [] },
     "cut-graduation": { title: "グラデーションボブ", type: "tech", draft: true, practice: 5, stages: ["ウィッグ"], body: "", checks: [] },

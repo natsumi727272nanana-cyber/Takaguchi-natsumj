@@ -593,7 +593,7 @@ function viewCat() {
   ${c.note ? `<section class="section"><p class="note" style="font-size:13.5px;color:var(--ink)">${esc(c.note)}</p></section>` : ""}
   ${c.lessons.length ? `<section class="group"><h2>レッスン</h2><p class="note">中身はいつでも見られます。合格は上から順番に進みます。</p><div class="list">
     ${c.lessons.map((id, i) => { const l = L(id), locked = lessonLocked(u, c, i);
-      return `<button class="row" data-lesson="${id}"><span class="n">${i + 1}</span><span class="t">${esc(l.title)}<small>${l.draft ? "中身を作成中" : TYPE[l.type] + (l.target ? "・" + esc(l.target) : "")}</small></span>${l.draft ? `<span class="chip soon">準備中</span>` : chip(u, id, locked)}</button>`; }).join("")}
+      return `<button class="row" data-lesson="${id}"><span class="n">${i + 1}</span><span class="t">${esc(l.title)}<small>${l.draft ? (l.tool ? esc(l.tool) + "・" : "") + "中身を作成中" : TYPE[l.type] + (l.target ? "・" + esc(l.target) : "")}</small></span>${l.draft ? `<span class="chip soon">準備中</span>` : chip(u, id, locked)}</button>`; }).join("")}
   </div></section>`
   : `<section class="section"><h3>準備中</h3><p class="pending">この項目の中身は作成中です。${c.planned ? esc(c.planned) : ""}</p></section>`}`;
 }
@@ -605,7 +605,8 @@ function videoBox(l) {
 }
 function viewLesson() {
   const u = subject(), l = L(route.id), st = prog(u, l.id), [label, cls] = STATUS[st.status];
-  if (l.draft) return `<section class="ptitle"><div class="eyebrow">準備中</div><h1>${esc(l.title)}</h1></section>
+  if (l.draft) return `<section class="ptitle"><div class="eyebrow">準備中</div><h1>${esc(l.title)}</h1>
+    ${l.tool ? `<div class="meta"><span class="chip info">使うもの：${esc(l.tool)}</span></div>` : ""}</section>
   ${videoBox(l)}
   <section class="section"><h3>やり方</h3><p class="pending">やり方・課題・チェックポイントは作成中です。できたらここに入ります。</p></section>`;
   const leadView = isLead(me());
