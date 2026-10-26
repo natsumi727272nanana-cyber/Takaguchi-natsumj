@@ -48,10 +48,13 @@ window.ENU = {
   ],
 
   // 項目の並び。page: "work" は「アシスタントのしごと」、"lesson" は「レッスン」のページに出ます。lessons は下の lessons の id
+  // 画面下のタブ（目的別）。groups の page で、どのタブに出るかが決まります
   pages: {
-    work: { eyebrow: "ASSISTANT WORK", title: "アシスタントのしごと", lead: "お店の毎日の仕事。やり方を見て覚えます。" },
-    lesson: { eyebrow: "LESSONS", title: "レッスン", lead: "動画とやり方を見る → ウィッグで練習 → 先輩のチェックに合格したら次へ。" },
+    work: { tab: "アシスタント", eyebrow: "ASSISTANT", title: "アシスタント業務", lead: "4月からの毎日の仕事と、施術のアシスト。動画とやり方を見る → 練習 → 先輩のチェックに合格したら次へ。" },
+    stylist: { tab: "スタイリスト", eyebrow: "STYLIST", title: "スタイリストになるために", lead: "12月のスタイリストデビューまでに身につけること。" },
+    million: { tab: "100万円", eyebrow: "1,000,000 YEN", title: "100万円に行くために", lead: "デビュー後、月売上100万円のスタイリストになるために。" },
   },
+  newGrad: { tab: "新卒", eyebrow: "2027年4月入社", title: "2027年新卒のみなさんへ", lead: "4月の入社までに「合格すること」と「予習すること」です。上から順番に進めましょう。" },
 
   groups: [
     { name: "基本・お店のしごと", page: "work", categories: [
@@ -63,7 +66,7 @@ window.ENU = {
       { id: "greet", title: "挨拶", sub: "お客様ご案内", lessons: ["greeting"] },
       { id: "rules", title: "ルール", sub: "シフト提出", lessons: ["shift"] },
     ]},
-    { name: "施術の技術", page: "lesson", categories: [
+    { name: "施術のアシスト", page: "work", categories: [
       { id: "shampoo", title: "シャンプー", sub: "入社前レッスン全5回・採点表", lessons: ["shampoo"] },
       { id: "treatment", title: "トリートメント", sub: "メニューと説明・オージュアのホームケア", lessons: ["treatment-menu", "aujua"] },
       { id: "headspa", title: "ヘッドスパ", sub: "手順・圧・声かけ", lessons: ["headspa"] },
@@ -73,11 +76,13 @@ window.ENU = {
       { id: "straight", title: "縮毛矯正", sub: "ストレート塗布・ストレートブロー・アイロン・二液・理論", note: "お客様への説明は、カウンセリング＆接客マニュアルの「7｜縮毛矯正：カウンセリング台本」「8｜縮毛矯正：必ず伝える注意事項」を使います。", lessons: ["straight-apply", "straight-stretch", "straight-iron", "straight-second", "straight-theory"] },
       { id: "perm", title: "パーマ", sub: "", lessons: [], planned: "説明はカウンセリングの9章にあります" },
     ]},
-    { name: "カット", page: "lesson", categories: [
+    { name: "カット", page: "stylist", categories: [
       { id: "cut", title: "カット", sub: "ワンレングス・グラデーションボブ・レイヤー・ショート", lessons: ["cut-onelength", "cut-graduation", "cut-layer", "cut-short"] },
     ]},
-    { name: "スタイリストへの道", page: "lesson", categories: [
+    { name: "カウンセリング", page: "stylist", categories: [
       { id: "counsel", title: "カウンセリング", sub: "カウンセリング＆接客マニュアル", lessons: ["counseling"] },
+    ]},
+    { name: "お客様を増やす・売上をつくる", page: "million", categories: [
       { id: "attract", title: "集客", sub: "", lessons: [], planned: "メソッドを作成中" },
       { id: "repeat", title: "再来", sub: "再来術マニュアル", lessons: ["repeat-manual"] },
       { id: "sales", title: "売上管理", sub: "", lessons: [] },
@@ -85,10 +90,12 @@ window.ENU = {
   ],
 
   // 入社前に合格させるレッスン
-  preEntry: ["enu-about", "phone", "greeting", "shampoo", "dry-reading", "dry-basic"],
+  preEntry: ["enu-about", "phone", "greeting", "dry-reading", "shampoo", "dry-basic", "setting-blow"],
 
   // 入社前は動画を見ておくだけ（家では練習しない）。入社したらすぐ練習して、1ヶ月以内に合格
   preVideo: ["setting-blow", "color-fashion", "color-gray", "straight-apply"],
+  // 4月の初日からできるようにしておくこと（入社前に読んでおく）
+  firstDay: ["register", "cloth", "opening", "closing"],
 
   lessons: {
 
