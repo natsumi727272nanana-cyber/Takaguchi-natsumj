@@ -312,13 +312,18 @@ const LESSON_IDS = [...new Set(CATS.flatMap(c => c.lessons))].filter(id => !C.le
 const L = id => ({ id, ...C.lessons[id] });
 const pageLessons = page => [...new Set(C.groups.filter(g => g.page === page).flatMap(g => g.categories.flatMap(c => c.lessons)))].filter(id => !C.lessons[id].draft);
 
-/* ---------- 保存（いまはこの端末のブラウザ。あとでサーバーに差し替えられるようにここだけで読み書き） ---------- */
+/* ---------- 保存 ----------
+   claude.ai で開くと、全員の記録を共有の場所（db）に保存する（cloud モード）。
+   それ以外（ファイルを直接開いたときなど）は、この端末のブラウザに保存する（local モード）。 */
 const KEY = "enu-academy-v2";
+let mode = window.claude?.use ? "loading" : "local";
+let cloud = null, myUid = null, cloudNote = "";
+const cloudState = { loaded: false, isOwner: false, members: {}, roles: {}, checks: {}, subs: {}, mine: null, ownerRoleWritten: false };
 const store = {
   load() { try { return JSON.parse(localStorage.getItem(KEY)) || { users: {}, current: null }; } catch { return { users: {}, current: null }; } },
-  save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch {} },
+  save() { if (mode === "cloud") return cloudSave(); try { localStorage.setItem(KEY, JSON.stringify(db)); } catch {} },
 };
-let db = store.load();
+let db = mode === "local" ? store.load() : { users: {}, current: null };
 let route = { name: "home" }, stack = [];
 
 const $ = s => document.querySelector(s);
@@ -327,9 +332,116 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const today = () => { const d = new Date(); return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`; };
 const me = () => db.users[db.current];
 const isLead = u => u && (u.role === "owner" || u.role === "lead");
-const prog = (u, id) => (u.progress[id] ||= { status: "todo", practice: 0, records: [], stages: [] });
+const prog = (u, id) => { const st = u.progress[id] ||= { status: "todo", practice: 0 }; st.records ||= []; st.stages ||= []; return st; };
 const passed = (u, id) => u.progress[id]?.status === "ok";
 const subject = () => route.uid ? db.users[route.uid] : me();   // 幹部が他の人の記録を見る時
+
+/* ---------- 共有の記録（cloud モード） ----------
+   members/<id>   … 本人だけが書く（名前・店舗・自分の練習記録）
+   roles/<id>     … オーナーだけが書く（幹部・オーナー）
+   checks/<幹部のid>/records/<id> … 幹部・オーナーが書く合格チェック。合格はここからだけ決まる */
+const CHECK_TYPES = ["tech", "theory", "shampoo", "roleplay"];
+const validChecker = uid => ["owner", "lead"].includes(cloudState.roles[uid]?.role);
+function deriveProgress(uid, progress) {
+  const byLesson = {};
+  Object.entries(cloudState.checks).filter(([lid]) => validChecker(lid)).forEach(([, rs]) => rs.filter(r => r.member === uid).forEach(r => (byLesson[r.lesson] ||= []).push(r)));
+  for (const id of Object.keys(C.lessons)) {
+    const l = C.lessons[id];
+    if (!CHECK_TYPES.includes(l.type)) continue;
+    const rs = (byLesson[id] || []).slice().sort((a, b) => (a.at || 0) - (b.at || 0));
+    if (!progress[id] && !rs.length) continue;
+    const st = progress[id] ||= { status: "todo", practice: 0 };
+    const ok = rs.filter(r => r.pass);
+    st.records = rs;
+    st.stages = l.type === "tech" ? [...new Set(ok.map(r => r.stage))] : l.type === "roleplay" ? [...new Set(ok.map(r => String(r.round)))] : [];
+    const done = l.type === "tech" ? l.stages.every(s => st.stages.includes(s)) : l.type === "roleplay" ? l.rounds.every((_, i) => st.stages.includes(String(i + 1))) : ok.length > 0;
+    if (done) { const last = ok.at(-1); Object.assign(st, { status: "ok", passedAt: last.date, passedBy: last.by }); continue; }
+    delete st.passedAt; delete st.passedBy;
+    const lastAt = rs.at(-1)?.at || 0;
+    if (st.status === "wait" && (st.requestedAt || 0) > lastAt) continue;
+    if (rs.length || st.status === "ok" || st.status === "wait") st.status = rs.length || st.practice ? "prac" : "todo";
+  }
+}
+function rebuildUsers() {
+  const users = {};
+  for (const [uid, m] of Object.entries(cloudState.members)) {
+    const u = uid === myUid && cloudState.mine ? cloudState.mine : structuredClone(m);
+    u.progress ||= {};
+    u.role = cloudState.roles[uid]?.role || "assistant";
+    deriveProgress(uid, u.progress);
+    users[uid] = u;
+  }
+  if (cloudState.mine && !users[myUid]) { const u = cloudState.mine; u.role = cloudState.roles[myUid]?.role || (cloudState.isOwner ? "owner" : "assistant"); deriveProgress(myUid, u.progress ||= {}); users[myUid] = u; }
+  db = { users, current: users[myUid] ? myUid : null };
+}
+function memberPayload() {
+  const m = cloudState.mine, progress = {};
+  for (const [id, st] of Object.entries(m.progress || {})) {
+    const { records, stages, passedAt, passedBy, ...rest } = st;
+    if (CHECK_TYPES.includes(C.lessons[id]?.type)) { if (rest.status === "ok") rest.status = "prac"; progress[id] = rest; }
+    else progress[id] = { ...rest, ...(passedAt ? { passedAt } : {}), ...(passedBy ? { passedBy } : {}) };
+  }
+  return { name: m.name, store: m.store || "", joined: m.joined || today(), joinDate: m.joinDate || "", debut: m.debut || "", monthGoal: m.monthGoal || "", progress };
+}
+let saveTimer = null, saving = false, saveAgain = false;
+function cloudSave() { clearTimeout(saveTimer); saveTimer = setTimeout(flushSave, 400); }
+async function flushSave() {
+  saveTimer = null;
+  if (!cloudState.mine) return;
+  if (saving) { saveAgain = true; return; }
+  saving = true;
+  try { await cloud.doc("members/" + myUid).set(memberPayload()); }
+  catch (e) { cloudNote = e?.code === "invalid_argument" ? "記録を保存できませんでした。高口さんに「編集者」として招待してもらってください。" : "記録を保存できませんでした。通信を確認して、もう一度やってみてください。"; render(); }
+  saving = false;
+  if (saveAgain) { saveAgain = false; flushSave(); }
+}
+function persistCheck(rec, memberId, lessonId) {
+  if (mode !== "cloud") return;
+  cloud.collection(`checks/${myUid}/records`).add({ ...rec, member: memberId, lesson: lessonId, byId: myUid })
+    .catch(() => { cloudNote = "チェックの記録を保存できませんでした。もう一度記録してください。"; render(); });
+}
+let pendingRender = false;
+const typing = () => { const a = document.activeElement; return a && a.closest?.("#view") && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.type !== "checkbox" && a.type !== "radio"; };
+function refresh() {
+  rebuildUsers();
+  if (typing()) { pendingRender = true; return; }
+  const y = scrollY; render(); scrollTo(0, y);
+}
+document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !typing()) { pendingRender = false; const y = scrollY; render(); scrollTo(0, y); } }, 0));
+function cloudError() { cloudNote = "共有の記録を読み込めませんでした。ページを開き直してください。"; render(); }
+function syncCheckSubs() {
+  for (const uid of Object.keys(cloudState.roles)) {
+    if (!validChecker(uid) || cloudState.subs[uid]) continue;
+    cloudState.subs[uid] = cloud.collection(`checks/${uid}/records`).onSnapshot(s => { cloudState.checks[uid] = s.docs.map(d => ({ id: d.id, ...d.data() })); refresh(); }, cloudError);
+  }
+}
+async function boot() {
+  if (mode !== "loading") return render();
+  render();
+  let cdb = null, cu = null;
+  try { [cdb, cu] = await Promise.all([window.claude.use("db"), window.claude.use("user")]); } catch {}
+  myUid = cu ? await cu.id() : null;
+  const canWrite = cu ? await cu.can("data.write") : null;
+  if (!cdb || !myUid || canWrite === false) {
+    mode = "local"; db = store.load();
+    cloudNote = !cdb ? "" : !myUid ? "サインインしていないため、記録はこの端末だけに保存されます。" : "閲覧のみで開いているため、記録はこの端末だけに保存されます。高口さんに「編集者」として招待してもらってください。";
+    return render();
+  }
+  cloud = cdb; mode = "cloud"; cloudState.isOwner = await cu.isOwner();
+  cloud.collection("roles").onSnapshot(s => {
+    cloudState.roles = Object.fromEntries(s.docs.map(d => [d.id, d.data()]));
+    if (cloudState.isOwner && cloudState.roles[myUid]?.role !== "owner" && !cloudState.ownerRoleWritten) {
+      cloudState.ownerRoleWritten = true; cloud.doc("roles/" + myUid).set({ role: "owner" }).catch(() => { cloudState.ownerRoleWritten = false; });
+    }
+    syncCheckSubs(); refresh();
+  }, cloudError);
+  cloud.collection("members").onSnapshot(s => {
+    cloudState.members = Object.fromEntries(s.docs.map(d => [d.id, d.data()]));
+    const remote = cloudState.members[myUid];
+    if (remote && (!cloudState.mine || (!saving && !saveTimer && !s.metadata.hasPendingWrites))) cloudState.mine = structuredClone(remote);
+    cloudState.loaded = true; refresh();
+  }, cloudError);
+}
 
 function lessonLocked(u, cat, idx) {
   if (isLead(u) || idx === 0 || ["chore", "read"].includes(C.lessons[cat.lessons[idx]].type)) return false;
@@ -420,6 +532,18 @@ $("#backBtn").onclick = back;
 
 /* ---------- ログイン ---------- */
 function viewLogin(msg) {
+  if (mode === "cloud") return `
+  <section class="login ptitle">
+    <div class="eyebrow">ENU ACADEMY</div>
+    <h1>enu アカデミー</h1>
+    <p class="lead">はじめに名前と店舗を登録してください。次からは、開くだけで続きから学べます。</p>
+  </section>
+  <form class="section" id="regForm">
+    <div class="field"><label for="regName">名前</label><input id="regName" required placeholder="例：高口 なつみ" autocomplete="name"></div>
+    <div class="field"><label for="regStore">店舗</label><select id="regStore">${C.stores.map(s => `<option>${esc(s)}</option>`).join("")}</select></div>
+    <p class="note">幹部（監督）は、登録したあとに高口さんが設定します。</p>
+    <button class="btn" type="submit">登録してはじめる</button>
+  </form>`;
   const users = Object.entries(db.users);
   return `
   <section class="login ptitle">
@@ -443,6 +567,15 @@ function viewLogin(msg) {
   </form>`;
 }
 function bindLogin() {
+  if (mode === "cloud") {
+    $("#regForm").onsubmit = e => {
+      e.preventDefault();
+      const name = $("#regName").value.trim(); if (!name) return;
+      cloudState.mine = { name, store: $("#regStore").value, progress: {}, joined: today() };
+      rebuildUsers(); flushSave(); route = { name: "home" }; stack = []; activeTab = "home"; render();
+    };
+    return;
+  }
   $$("[data-login]").forEach(b => b.onclick = () => { db.current = b.dataset.login; store.save(); route = { name: "home" }; stack = []; activeTab = "home"; render(); });
   $$("input[name=role]").forEach(r => r.onchange = () => { $("#pinField").hidden = $("input[name=role]:checked").value === "assistant"; });
   $("#regForm").onsubmit = e => {
@@ -533,7 +666,7 @@ function viewMypage() {
     <button class="tile" data-go="pre"><span class="t"><b>入社前プログラム</b></span><span class="chev">›</span></button>
     <button class="tile" data-go="roadmap"><span class="t"><b>ロードマップ</b></span><span class="chev">›</span></button>
   </nav>
-  <button class="btn ghost" id="logout">ほかの人に切り替える</button>`;
+  ${mode === "cloud" ? `<p class="note">記録は全員で共有されます。幹部・オーナーは、スタッフの進み具合を見られます。</p>` : `<button class="btn ghost" id="logout">ほかの人に切り替える</button>`}`;
 }
 function bindMypage() {
   const u = me();
@@ -542,7 +675,7 @@ function bindMypage() {
     Object.assign(u, { name: $("#myName").value.trim() || u.name, store: $("#myStore").value, joinDate: $("#myJoin").value, debut: $("#myDebut").value, monthGoal: $("#myGoal").value.trim() });
     store.save(); route.msg = "保存しました"; render();
   };
-  $("#logout").onclick = () => { db.current = null; store.save(); route = { name: "home" }; stack = []; activeTab = "home"; render(); };
+  if ($("#logout")) $("#logout").onclick = () => { db.current = null; store.save(); route = { name: "home" }; stack = []; activeTab = "home"; render(); };
 }
 
 /* ---------- 入社前 ---------- */
@@ -738,6 +871,9 @@ function quizPanel(l, st) {
 
 /* 先輩のチェック欄（暗証番号で本人確認） */
 function checkPanel(l, st, leadView) {
+  if (mode === "cloud" && !(isLead(me()) && route.uid && route.uid !== myUid)) return isLead(me())
+    ? `<section class="section"><h3>先輩のチェック</h3><p class="note">アシスタントのチェックは「スタッフ」タブ → 名前 → このレッスン から記録します。</p></section>`
+    : `<section class="section"><h3>先輩のチェック</h3><p class="note">チェックは、幹部・オーナーが自分のスマホで記録します。練習が終わったら「先輩にチェックをお願いする」を押して、声をかけよう。</p></section>`;
   const leads = Object.entries(db.users).filter(([, x]) => isLead(x));
   if (!route.open) return `<section class="section"><h3>先輩のチェック</h3>
     <p class="note">チェックは幹部・オーナーが記入します。</p>
@@ -763,7 +899,7 @@ function checkPanel(l, st, leadView) {
   return `<form class="section" id="checkForm"><h3>${l.type === "shampoo" ? "採点" : "チェック"}を記入</h3>
     ${body}
     <div class="field"><label for="ckComment">コメント</label><textarea id="ckComment" rows="2" placeholder="よかったところ・次に直すところ"></textarea></div>
-    ${leads.length ? `<div class="field"><label for="ckBy">チェックした先輩</label><select id="ckBy">${leads.map(([id, x]) => `<option value="${id}" ${id === db.current ? "selected" : ""}>${esc(x.name)}（${ROLE[x.role]}）</option>`).join("")}</select></div>
+    ${mode === "cloud" ? `<button class="btn" type="submit">${esc(me().name)}として記録する</button>` : leads.length ? `<div class="field"><label for="ckBy">チェックした先輩</label><select id="ckBy">${leads.map(([id, x]) => `<option value="${id}" ${id === db.current ? "selected" : ""}>${esc(x.name)}（${ROLE[x.role]}）</option>`).join("")}</select></div>
     <div class="field"><label for="ckPin">暗証番号</label><input id="ckPin" type="password" inputmode="numeric" maxlength="4" placeholder="4桁"></div>
     <button class="btn" type="submit">記録する</button>`
     : `<p class="pending">幹部・オーナーがまだ登録されていません。</p>`}
@@ -835,7 +971,7 @@ function bindLesson() {
   $("#watched")?.addEventListener("click", () => { st.watched = today(); flash("動画を見たを記録しました"); });
   $("#learned")?.addEventListener("click", () => { pass(""); flash("覚えた！次へ進めます"); });
   $("#practice")?.addEventListener("click", () => { st.practice++; if (st.status === "todo") st.status = "prac"; flash(`練習を記録しました（${st.practice}回目）`); });
-  $("#request")?.addEventListener("click", () => { st.status = "wait"; flash("チェック待ちにしました。先輩に声をかけよう"); });
+  $("#request")?.addEventListener("click", () => { st.status = "wait"; st.requestedAt = Date.now(); flash("チェック待ちにしました。先輩に声をかけよう"); });
   $("#openCheck")?.addEventListener("click", () => { route.open = true; render(); $("#checkForm")?.scrollIntoView({ block: "start" }); });
   $("#quizForm")?.addEventListener("submit", e => {
     e.preventDefault();
@@ -847,9 +983,10 @@ function bindLesson() {
   $$("[data-score]").forEach(s => s.onchange = () => $("#scoreTotal").textContent = sumScore());
   $("#checkForm")?.addEventListener("submit", e => {
     e.preventDefault();
-    const lead = db.users[$("#ckBy").value];
-    if (!lead || lead.pin !== $("#ckPin").value.trim()) { route.open = true; route.msg = "暗証番号がちがいます"; route.err = true; render(); return; }
-    const rec = { date: today(), by: lead.name, comment: $("#ckComment").value.trim() };
+    const lead = mode === "cloud" ? me() : db.users[$("#ckBy").value];
+    if (mode !== "cloud" && (!lead || lead.pin !== $("#ckPin").value.trim())) { route.open = true; route.msg = "暗証番号がちがいます"; route.err = true; render(); return; }
+    const rec = { date: today(), at: Date.now(), by: lead.name, comment: $("#ckComment").value.trim() };
+    const keep = () => { st.records.push(rec); persistCheck(rec, route.uid, l.id); };
     if (l.type === "shampoo") {
       rec.marks = $$("[data-score]").map(s => Number(s.value)); rec.score = sumScore(); rec.round = Number($("#ckRound").value);
       const judging = rec.round >= l.judgeFrom;
@@ -860,31 +997,31 @@ function bindLesson() {
       rec.label = rec.round > l.rounds.length ? "追加の判定" : (l.rounds[rec.round - 1].day || `${rec.round}回目`);
       rec.pass = judging && rec.score >= l.passScore && reqOk && extraOk;
       if (rec.pass) pass(lead.name); else st.status = "prac";
-      st.records.push(rec);
+      keep();
       const left = l.maxJudge ? l.maxJudge - judgeCount(st, l) : null;
       return flash(rec.pass ? `${rec.score}点、合格です！` : `${rec.score}点。${!judging ? "練習の採点として記録しました。" : !reqOk ? "★必須がまだ満点ではありません。" : !extraOk ? "トリートメントのおすすめまでできたら合格です。" : `合格は${l.passScore}点以上です。`}${judging && left != null ? (left > 0 ? `（今日のテストはあと${left}回）` : `（今日のテストは終わり。${l.retryNote || "別の日に再テスト"}）`) : ""}`, !rec.pass);
     }
     rec.marks = $$(".marks .mark").map((_, i) => $(`input[name=ox${i}]:checked`)?.value === "1");
     const allOk = rec.marks.every(Boolean);
     if (l.type === "tech") {
-      rec.label = $("#ckStage").value + "チェック"; rec.pass = allOk;
+      rec.stage = $("#ckStage").value; rec.label = rec.stage + "チェック"; rec.pass = allOk;
       if (allOk) st.stages.push($("#ckStage").value);
       const done = l.stages.every(s => st.stages.includes(s));
       if (done) pass(lead.name); else st.status = "prac";
-      st.records.push(rec);
+      keep();
       return flash(done ? "すべて○、合格！営業でお客様に入れます" : allOk ? `${$("#ckStage").value}は合格。次は${l.stages.find(s => !st.stages.includes(s))}でチェックを受けよう` : "×のところを練習して、もう一度チェックを受けよう", !allOk);
     }
     if (l.type === "roleplay") {
-      const r = $("#ckRound").value; rec.label = `${r}回目：${l.rounds[r - 1]}`; rec.pass = allOk;
+      const r = $("#ckRound").value; rec.round = Number(r); rec.label = `${r}回目：${l.rounds[r - 1]}`; rec.pass = allOk;
       if (allOk && !st.stages.includes(r)) st.stages.push(r);
       const done = l.rounds.every((_, i) => st.stages.includes(String(i + 1)));
       if (done) pass(lead.name); else st.status = "prac";
-      st.records.push(rec);
+      keep();
       return flash(done ? "3回すべて合格！" : allOk ? `${r}回目は合格。次のロープレへ` : "×のところを見直して、もう一度", !allOk);
     }
     rec.label = "口頭チェック"; rec.pass = allOk;
     if (allOk) pass(lead.name); else st.status = "prac";
-    st.records.push(rec);
+    keep();
     flash(allOk ? "すべて答えられました。合格！" : "×の質問を復習して、もう一度", !allOk);
   });
 }
@@ -915,7 +1052,19 @@ function viewTeam() {
     ${rows.length ? `<div class="list">${rows.map(([uid, u]) => { const cur = LESSON_IDS.find(id => !passed(u, id)), pre = C.preEntry.filter(id => passed(u, id)).length;
       return `<button class="row" data-member="${uid}"><span class="t">${esc(u.name)}<small>${esc(u.store || "")}・入社前 ${pre}/${C.preEntry.length}・いま：${cur ? esc(L(cur).title) : "全て合格"}</small></span><span class="chip info">${percent(u)}%</span></button>`; }).join("")}</div>`
     : `<p class="pending">アシスタントはまだ登録されていません。</p>`}
-  </section>`;
+  </section>
+  ${mode === "cloud" && cloudState.isOwner ? `<section class="group"><h2>スタッフと役割</h2>
+    <p class="note">幹部（監督）にした人は、アシスタントの合格チェックを記録できます。役割を決められるのはオーナーだけです。</p>
+    <div class="list">${Object.entries(db.users).filter(([uid]) => uid !== myUid).map(([uid, u]) => `<div class="row"><span class="t">${esc(u.name)}<small>${esc(u.store || "")}</small></span>
+      <select data-role-uid="${uid}" aria-label="${esc(u.name)}さんの役割" style="border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:6px 8px">
+        ${[["assistant", "アシスタント"], ["lead", "幹部（監督）"]].map(([k, v]) => `<option value="${k}" ${u.role === k ? "selected" : ""}>${v}</option>`).join("")}</select></div>`).join("") || `<p class="pending">まだ誰も登録していません。</p>`}</div>
+  </section>` : ""}`;
+}
+function bindTeam() {
+  $$("[data-role-uid]").forEach(s => s.onchange = () => {
+    const ref = cloud.doc("roles/" + s.dataset.roleUid);
+    (s.value === "assistant" ? ref.delete() : ref.set({ role: s.value })).catch(() => { cloudNote = "役割を保存できませんでした。もう一度やってみてください。"; render(); });
+  });
 }
 function viewMember() {
   const u = db.users[route.uid];
@@ -1005,16 +1154,20 @@ function bindChat() {
 /* ---------- 描画 ---------- */
 const VIEWS = {
   home: [viewHome], pre: [viewPre], cats: [viewCats], cat: [viewCat], lesson: [viewLesson, bindLesson],
-  roadmap: [viewRoadmap], team: [viewTeam], member: [viewMember], chat: [viewChat, bindChat], mypage: [viewMypage, bindMypage],
+  roadmap: [viewRoadmap], team: [viewTeam, bindTeam], member: [viewMember], chat: [viewChat, bindChat], mypage: [viewMypage, bindMypage],
 };
 const TITLES = { mypage: "マイページ", pre: "入社前プログラム", roadmap: "ロードマップ", team: "みんなの進み具合", member: "進み具合", chat: "オーナーAIチャット" };
 
 function render() {
+  if (mode === "loading" || (mode === "cloud" && !cloudState.loaded)) {
+    $("#tabs").hidden = true; $("#backBtn").hidden = true; $("#brand").className = "brand logo"; $("#brand").textContent = "enu ACADEMY";
+    $("#view").innerHTML = `<p class="pending" style="padding:40px 0;text-align:center">読み込んでいます…</p>`; return;
+  }
   const u = me();
   if (!u) {
     $("#tabs").hidden = true; $("#brand").className = "brand logo";
     $("#backBtn").hidden = true; $("#who").innerHTML = ""; $("#brand").textContent = "enu ACADEMY";
-    $("#view").innerHTML = viewLogin(); bindLogin(); return;
+    $("#view").innerHTML = (cloudNote ? `<div class="toast err">${esc(cloudNote)}</div>` : "") + viewLogin(); bindLogin(); return;
   }
   const [view, bind] = VIEWS[route.name] || VIEWS.home;
   $("#backBtn").hidden = !stack.length;
@@ -1023,7 +1176,7 @@ function render() {
   $("#brand").className = route.name === "home" ? "brand logo" : !stack.length ? "brand logo small" : "brand";
   $("#brand").textContent = !stack.length ? "enu ACADEMY" : route.name === "cats" ? C.pages[route.page].title : route.name === "cat" ? CATS.find(c => c.id === route.id).title : route.name === "lesson" ? L(route.id).title : TITLES[route.name] || "enu ACADEMY";
   $("#who").innerHTML = "";
-  $("#view").innerHTML = view();
+  $("#view").innerHTML = (cloudNote ? `<div class="toast err">${esc(cloudNote)}</div>` : "") + view();
   $$("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
   $$("[data-tab]").forEach(b => b.onclick = () => tab(b.dataset.tab));
   $$("[data-scroll]").forEach(b => b.onclick = () => $("#" + b.dataset.scroll)?.scrollIntoView({ behavior: "smooth" }));
@@ -1034,5 +1187,5 @@ function render() {
   $$("[data-store]").forEach(b => b.onclick = () => { route.store = b.dataset.store; render(); });
   bind && bind();
 }
-render();
+boot();
 </script>
