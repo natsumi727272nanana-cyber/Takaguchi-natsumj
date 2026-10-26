@@ -106,6 +106,9 @@ window.ENU = {
 
   // 入社前は動画を見ておくだけ（家では練習しない）。入社したらすぐ練習して、1ヶ月以内に合格
   preVideo: ["setting-blow", "color-fashion", "color-gray", "straight-apply"],
+  // モデル実習の「どこから来たか」の選択肢
+  modelSources: ["紹介", "友達", "minimo", "ホットペッパー", "Instagram", "家族", "その他"],
+
   // 4月の初日からできるようにしておくこと（入社前に読んでおく）
   firstDay: ["register", "cloth", "opening", "closing"],
 

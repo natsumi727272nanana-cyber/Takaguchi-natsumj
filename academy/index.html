@@ -289,6 +289,17 @@ button.card:hover { border-color: var(--accent) }
 .sumcard > div { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: grid; gap: 4px }
 .sumcard b { font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums }
 .sumcard span { color: var(--muted); font-size: 12.5px }
+.mentry { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: var(--surface); display: grid; gap: 8px }
+.mentry.okk { border-color: var(--ok); background: var(--ok-soft) }
+.mentry .hd { display: flex; gap: 8px; align-items: center; flex-wrap: wrap }
+.mentry .hd b { font-size: 16px }
+.mentry dl { margin: 0; display: grid; grid-template-columns: 6.5em 1fr; gap: 4px 10px; font-size: 13.5px }
+.mentry dt { color: var(--muted) } .mentry dd { margin: 0; white-space: pre-wrap; min-width: 0 }
+.photos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.photos figure { margin: 0; display: grid; gap: 4px; font-size: 12px; color: var(--muted) }
+.photos img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; background: var(--bg); border: 1px solid var(--line) }
+.photos .ph { aspect-ratio: 3/4; border-radius: 10px; border: 1px dashed var(--line); display: grid; place-items: center; color: var(--muted); font-size: 12px; text-align: center; padding: 6px }
+.evalbox { border-top: 1px solid var(--line); padding-top: 8px; display: grid; gap: 4px; font-size: 13.5px }
 nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px) }
 nav.tabs .in { max-width: 600px; margin: 0 auto; display: flex }
@@ -362,6 +373,7 @@ function deriveProgress(uid, progress) {
     const st = progress[id] ||= { status: "todo", practice: 0 };
     const ok = rs.filter(r => r.pass);
     st.records = rs;
+    if (l.type === "model") { st.stages = []; applyModelStatus(st, l); continue; }
     st.stages = l.type === "tech" ? [...new Set(ok.map(r => r.stage))] : l.type === "roleplay" ? [...new Set(ok.map(r => String(r.round)))] : [];
     const done = l.type === "tech" ? l.stages.every(s => st.stages.includes(s)) : l.type === "roleplay" ? l.rounds.every((_, i) => st.stages.includes(String(i + 1))) : l.type === "model" ? ok.length >= l.models : ok.length > 0;
     if (done) { const last = ok.at(-1); Object.assign(st, { status: "ok", passedAt: last.date, passedBy: last.by }); continue; }
@@ -370,6 +382,15 @@ function deriveProgress(uid, progress) {
     if (st.status === "wait" && (st.requestedAt || 0) > lastAt) continue;
     if (rs.length || st.status === "ok" || st.status === "wait") st.status = rs.length || st.practice ? "prac" : "todo";
   }
+}
+/* モデル実習：アシスタントが書いた記録（entries）ごとに、先輩の評価（records の entryId）で数える */
+function modelEval(st, entryId) { return (st.records || []).filter(r => r.entryId === entryId).sort((a, b) => (a.at || 0) - (b.at || 0)).at(-1); }
+function applyModelStatus(st, l) {
+  const entries = st.entries || [];
+  const okList = entries.map(e => modelEval(st, e.id)).filter(r => r?.pass);
+  if (okList.length >= l.models) { const last = okList.sort((a, b) => a.at - b.at).at(-1); return Object.assign(st, { status: "ok", passedAt: last.date, passedBy: last.by }); }
+  delete st.passedAt; delete st.passedBy;
+  st.status = entries.some(e => !modelEval(st, e.id)) ? "wait" : entries.length ? "prac" : "todo";
 }
 function rebuildUsers() {
   const users = {};
@@ -390,9 +411,9 @@ function memberPayload() {
     if (CHECK_TYPES.includes(C.lessons[id]?.type)) { if (rest.status === "ok") rest.status = "prac"; progress[id] = rest; }
     else progress[id] = { ...rest, ...(passedAt ? { passedAt } : {}), ...(passedBy ? { passedBy } : {}) };
   }
-  return { name: m.name, store: m.store || "", joined: m.joined || today(), joinDate: m.joinDate || "", debut: m.debut || "", monthGoal: m.monthGoal || "", progress };
+  return { rev: lastRev = Math.random().toString(36).slice(2), name: m.name, store: m.store || "", joined: m.joined || today(), joinDate: m.joinDate || "", debut: m.debut || "", monthGoal: m.monthGoal || "", progress };
 }
-let saveTimer = null, saving = false, saveAgain = false;
+let saveTimer = null, saving = false, saveAgain = false, lastRev = null;   // lastRev：自分が最後に保存した版（戻ってきても入れ替えない）
 function cloudSave() { clearTimeout(saveTimer); saveTimer = setTimeout(flushSave, 400); }
 async function flushSave() {
   saveTimer = null;
@@ -450,7 +471,8 @@ async function boot() {
   cloud.collection("members").onSnapshot(s => {
     cloudState.members = Object.fromEntries(s.docs.map(d => [d.id, d.data()]));
     const remote = cloudState.members[myUid];
-    if (remote && (!cloudState.mine || (!saving && !saveTimer && !s.metadata.hasPendingWrites))) cloudState.mine = structuredClone(remote);
+    // 別の端末で直したときだけ取り込む。自分の保存が戻ってきたときは、手元の記録をそのまま使う
+    if (remote && (!cloudState.mine || (!saving && !saveTimer && !s.metadata.hasPendingWrites && remote.rev !== lastRev))) cloudState.mine = structuredClone(remote);
     cloudState.loaded = true; refresh();
   }, cloudError);
 }
@@ -827,7 +849,7 @@ function viewLesson() {
       <button class="btn" type="submit">答え合わせ</button></form>`) : ""}</section>` : ""}
   ${(() => { const b = blockedBy(u, l.id, route.cat); return b && st.status !== "ok"
     ? `<section class="section"><h3>練習とチェック</h3><p class="note" style="font-size:14px">いまは予習の時間です。前のレッスン「${esc(L(b).title)}」に合格すると、練習の記録と先輩のチェックができるようになります。</p><button class="btn ghost" data-lesson="${b}">「${esc(L(b).title)}」へ</button></section>`
-    : progressPanel(l, st, u) + (st.status !== "ok" && CHECK_TYPES.includes(l.type) ? checkPanel(l, st, leadView) : ""); })()}
+    : progressPanel(l, st, u) + (st.status !== "ok" && CHECK_TYPES.includes(l.type) && l.type !== "model" ? checkPanel(l, st, leadView) : ""); })()}
   ${recordsPanel(l, st)}
   ${nextButton(l, u)}`;
 }
@@ -908,13 +930,7 @@ function progressPanel(l, st, u) {
       ${st.status === "ok" ? `<p class="toast">合格。営業でお客様に入れます。</p>` : ""}
     </section>`;
   }
-  if (l.type === "model") { const okN = st.records.filter(r => r.pass).length;
-    return `<section class="section"><h3>モデル</h3>
-    <div class="count"><b>${Math.min(okN, l.models)}</b><small>/ ${l.models}人 OK</small></div>
-    <div class="meter"><i style="width:${Math.min(100, okN / l.models * 100)}%"></i></div>
-    <p class="note">モデルさんの施術が終わったら、その日のうちに先輩にチェックしてもらいます。OKが${l.models}人そろったら合格です。</p>
-    ${self && !["ok", "wait"].includes(st.status) ? `<button class="btn" id="request">モデルが終わった。チェックをお願いする</button>` : ""}
-    ${st.status === "ok" ? `<p class="toast">${l.models}人そろいました。合格！</p>` : ""}</section>`; }
+  if (l.type === "model") return modelPanel(l, st);
   if (l.type === "roleplay") return `<section class="section"><h3>ロープレ</h3>
     <div class="list">${l.rounds.map((r, i) => `<div class="row"><span class="n">${i + 1}</span><span class="t">${esc(r)}</span>${st.stages.includes(String(i + 1)) ? `<span class="chip ok">○</span>` : `<span class="chip todo">未</span>`}</div>`).join("")}</div>
     ${self && !["ok", "wait"].includes(st.status) ? `<button class="btn" id="request">先輩にロープレをお願いする</button>` : ""}
@@ -931,6 +947,90 @@ function quizPanel(l, st) {
     ${l.quiz.map((q, qi) => `<div class="q"><p>Q${qi + 1}. ${esc(q.q)}</p>${q.options.map((o, oi) => `<label class="opt"><input type="radio" name="q${qi}" value="${oi}" required><span>${esc(o)}</span></label>`).join("")}</div>`).join("")}
     ${route.uid ? "" : `<button class="btn" type="submit">答え合わせ</button>`}
   </form>`;
+}
+
+/* ---------- モデル実習の記録 ---------- */
+function authFields(label) {
+  if (mode === "cloud") return `<button class="btn" type="submit">${esc(me().name)}として${label}</button>`;
+  const leads = Object.entries(db.users).filter(([, x]) => isLead(x));
+  return leads.length ? `<div class="field"><label for="ckBy">チェックした先輩</label><select id="ckBy">${leads.map(([id, x]) => `<option value="${id}" ${id === db.current ? "selected" : ""}>${esc(x.name)}（${ROLE[x.role]}）</option>`).join("")}</select></div>
+    <div class="field"><label for="ckPin">暗証番号</label><input id="ckPin" type="password" inputmode="numeric" maxlength="4" placeholder="4桁"></div>
+    <button class="btn" type="submit">${label}</button>` : `<p class="pending">幹部・オーナーがまだ登録されていません。</p>`;
+}
+function authLead() {
+  if (mode === "cloud") return isLead(me()) ? me() : null;
+  const lead = db.users[$("#ckBy")?.value];
+  return lead && lead.pin === $("#ckPin").value.trim() ? lead : null;
+}
+const photoBox = (p, label) => p?.url ? `<figure><img src="${esc(p.url)}" alt="${label}の写真" loading="lazy">${label}</figure>` : `<figure><div class="ph">写真なし</div>${label}</figure>`;
+function modelForm(l, e) {
+  const ph = route.mfPhotos || {}, src = C.modelSources || [];
+  return `<form class="section" id="mfForm"><h3>${e ? "モデルの記録を直す" : "モデルを追加"}</h3>
+    <div class="field"><label for="mfName">モデルさんの名前</label><input id="mfName" required value="${esc(e?.name || "")}" placeholder="例：山田 花子"></div>
+    <div class="field"><label for="mfDate">日付</label><input id="mfDate" type="date" required value="${esc(e?.date || new Date().toISOString().slice(0, 10))}"></div>
+    <div class="field"><label for="mfSource">どこから来たか</label><select id="mfSource">${src.map(s => `<option ${e?.source === s ? "selected" : ""}>${esc(s)}</option>`).join("")}</select></div>
+    <div class="field"><label for="mfSourceMemo">くわしく（だれの紹介か など）</label><input id="mfSourceMemo" value="${esc(e?.sourceMemo || "")}"></div>
+    <div class="field"><label for="mfBefore">事前の状態</label><textarea id="mfBefore" rows="3" placeholder="例：肩下10cm、毛先にダメージ、前回カラー3ヶ月前">${esc(e?.before || "")}</textarea></div>
+    <div class="field"><label for="mfChem">使った薬剤</label><textarea id="mfChem" rows="2" placeholder="例：根元 8レベル アッシュ OX6%（カットだけなら空欄でOK）">${esc(e?.chem || "")}</textarea></div>
+    <div class="field"><label for="mfTime">かかった時間</label><input id="mfTime" value="${esc(e?.time || "")}" placeholder="例：1時間30分"></div>
+    <div class="photos">
+      <div class="field"><span class="lbl">事前の状態の写真</span><div id="mfPrev-before">${ph.before?.url ? `<img src="${esc(ph.before.url)}" alt="事前の写真">` : `<div class="ph">まだありません</div>`}</div><input type="file" accept="image/*" data-mf-photo="before" aria-label="事前の状態の写真を選ぶ"></div>
+      <div class="field"><span class="lbl">仕上がりの写真</span><div id="mfPrev-after">${ph.after?.url ? `<img src="${esc(ph.after.url)}" alt="仕上がりの写真">` : `<div class="ph">まだありません</div>`}</div><input type="file" accept="image/*" data-mf-photo="after" aria-label="仕上がりの写真を選ぶ"></div>
+    </div>
+    <p class="note" id="mfPhotoNote"></p>
+    <div class="field"><label for="mfReflect">反省</label><textarea id="mfReflect" rows="3" placeholder="うまくいったこと・次に直すこと">${esc(e?.reflection || "")}</textarea></div>
+    <div class="btns"><button class="btn" type="submit">保存する</button><button class="btn ghost" type="button" id="mfCancel">やめる</button></div>
+  </form>`;
+}
+function modelPanel(l, st) {
+  const self = !route.uid, entries = (st.entries || []).slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  const okN = (st.entries || []).filter(e => modelEval(st, e.id)?.pass).length;
+  const canEval = mode === "cloud" ? isLead(me()) && route.uid && route.uid !== myUid : true;
+  const editing = route.mf ? (st.entries || []).find(e => e.id === route.mf.id) : null;
+  return `<section class="section"><h3>モデル</h3>
+    <div class="count"><b>${Math.min(okN, l.models)}</b><small>/ ${l.models}人 OK</small></div>
+    <div class="meter"><i style="width:${Math.min(100, okN / l.models * 100)}%"></i></div>
+    <p class="note">モデルさん1人ごとに記録を追加します。先輩が評価して、OKが${l.models}人そろったら合格です。</p>
+    ${st.status === "ok" ? `<p class="toast">${l.models}人そろいました。合格！</p>` : ""}
+    ${self && !route.mf ? `<button class="btn" id="mfOpen">＋ モデルを追加</button>` : ""}
+  </section>
+  ${self && route.mf ? modelForm(l, editing) : ""}
+  ${entries.length ? `<section class="group"><h2>モデルの記録（${entries.length}人）</h2>
+    ${entries.map(e => { const ev = modelEval(st, e.id);
+      return `<article class="mentry ${ev?.pass ? "okk" : ""}">
+        <div class="hd"><b>${esc(e.name)}さん</b><span class="chip ${ev ? (ev.pass ? "ok" : "ng") : "wait"}">${ev ? (ev.pass ? "OK" : "もう一度") : "評価待ち"}</span><span class="note">${esc(e.date || "")}</span></div>
+        <dl><dt>どこから</dt><dd>${esc(e.source || "")}${e.sourceMemo ? "（" + esc(e.sourceMemo) + "）" : ""}</dd>
+          <dt>事前の状態</dt><dd>${esc(e.before || "—")}</dd><dt>使った薬剤</dt><dd>${esc(e.chem || "—")}</dd><dt>時間</dt><dd>${esc(e.time || "—")}</dd>
+          <dt>反省</dt><dd>${esc(e.reflection || "—")}</dd></dl>
+        <div class="photos">${photoBox(e.photoBefore, "事前")}${photoBox(e.photoAfter, "仕上がり")}</div>
+        ${ev ? `<div class="evalbox"><b>先輩の評価：${ev.pass ? "OK" : "もう一度"}（${esc(ev.by)}・${esc(ev.date)}）</b>
+          ${ev.marks && l.checks ? `<div class="x">${l.checks.map((t, i) => (ev.marks[i] ? "○ " : "× ") + esc(t)).join("<br>")}</div>` : ""}
+          ${ev.comment ? `<div>${esc(ev.comment)}</div>` : ""}</div>` : ""}
+        <div class="btns">${self ? `<button class="btn ghost" type="button" data-mf-edit="${e.id}">記録を直す</button>` : ""}
+          ${canEval && (!self || mode !== "cloud") && route.evalEntry !== e.id ? `<button class="btn ${ev ? "ghost" : ""}" type="button" data-eval="${e.id}">${ev ? "評価をやり直す" : "評価する"}</button>` : ""}</div>
+        ${route.evalEntry === e.id ? `<form class="marks" id="evalForm" style="border-top:1px solid var(--line);padding-top:10px">
+          <h3>${esc(e.name)}さんの評価</h3>${oxList(l.checks)}
+          <div class="field"><label for="evComment">コメント</label><textarea id="evComment" rows="2" placeholder="よかったところ・次に直すところ"></textarea></div>
+          ${authFields("評価を記録する")}</form>` : ""}
+      </article>`; }).join("")}
+  </section>` : ""}`;
+}
+async function shrinkImage(file, max, quality) {
+  const bmp = await createImageBitmap(file);
+  const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const cv = document.createElement("canvas"); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
+  cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
+  return new Promise(r => cv.toBlob(r, "image/jpeg", quality));
+}
+async function savePhoto(file) {
+  if (mode === "cloud") {
+    const assets = await window.claude.use("assets");
+    if (!assets) throw new Error("写真を保存できません。高口さんに「編集者」として招待してもらってください。");
+    const blob = await shrinkImage(file, 1280, 0.8), r = await assets.upload(blob);
+    return { id: r.id, url: r.url };
+  }
+  const blob = await shrinkImage(file, 640, 0.6);
+  return { url: await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); }) };
 }
 
 /* 先輩のチェック欄（暗証番号で本人確認） */
@@ -979,7 +1079,7 @@ function oxList(items, required = true) {
     <label><input type="radio" name="ox${i}" value="1" ${required ? "required" : ""}>○</label><label><input type="radio" name="ox${i}" value="0">×</label></div></div>`).join("")}</div>`;
 }
 function recordsPanel(l, st) {
-  if (!st.records.length) return "";
+  if (!st.records.length || l.type === "model") return "";
   const items = l.type === "shampoo" ? null : ["tech", "roleplay", "model"].includes(l.type) ? l.checks : l.questions;
   return `<section class="section"><h3>チェックの記録</h3><div style="display:grid;gap:10px">
     ${st.records.slice().reverse().map(r => {
@@ -1035,6 +1135,39 @@ function bindLesson() {
     const n = l.preQuiz.filter((q, i) => Number($(`input[name=pq${i}]:checked`)?.value) === q.answer).length;
     if (n === l.preQuiz.length) { st.preQuiz = today(); route.pq = null; flash("全問正解！予習完了です"); }
     else { route.pq = n; route.msg = null; store.save(); render(); $("#preQuizForm")?.scrollIntoView({ block: "start" }); }
+  });
+  // モデル実習
+  $("#mfOpen")?.addEventListener("click", () => { route.mf = { id: null }; route.mfPhotos = {}; render(); $("#mfForm")?.scrollIntoView({ block: "start" }); });
+  $$("[data-mf-edit]").forEach(b => b.onclick = () => { const e = st.entries.find(x => x.id === b.dataset.mfEdit); route.mf = { id: e.id }; route.mfPhotos = { before: e.photoBefore, after: e.photoAfter }; render(); $("#mfForm")?.scrollIntoView({ block: "start" }); });
+  $("#mfCancel")?.addEventListener("click", () => { route.mf = null; render(); });
+  $$("[data-mf-photo]").forEach(inp => inp.onchange = async () => {
+    const k = inp.dataset.mfPhoto, f = inp.files?.[0]; if (!f) return;
+    const note = $("#mfPhotoNote"); note.textContent = "写真を保存しています…";
+    try { const ph = await savePhoto(f); (route.mfPhotos ||= {})[k] = ph; $("#mfPrev-" + k).innerHTML = `<img src="${esc(ph.url)}" alt="">`; note.textContent = "写真を保存しました"; }
+    catch (err) { note.textContent = err?.message?.startsWith("写真") ? err.message : "写真を保存できませんでした。もう一度選んでください。"; }
+  });
+  $("#mfForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    const v = id => $(id).value.trim(), ph = route.mfPhotos || {};
+    const data = { name: v("#mfName"), date: v("#mfDate"), source: v("#mfSource"), sourceMemo: v("#mfSourceMemo"), before: v("#mfBefore"), chem: v("#mfChem"), time: v("#mfTime"), reflection: v("#mfReflect"), photoBefore: ph.before || null, photoAfter: ph.after || null };
+    st.entries ||= [];
+    const cur = route.mf?.id && st.entries.find(x => x.id === route.mf.id);
+    if (cur) Object.assign(cur, data); else st.entries.push({ id: "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), createdAt: Date.now(), ...data });
+    route.mf = null; applyModelStatus(st, l);
+    flash(cur ? "記録を直しました" : "モデルを追加しました。先輩に評価をお願いしよう");
+  });
+  $$("[data-eval]").forEach(b => b.onclick = () => { route.evalEntry = b.dataset.eval; render(); $("#evalForm")?.scrollIntoView({ block: "center" }); });
+  $("#evalForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    const lead = authLead();
+    if (!lead) { route.msg = mode === "cloud" ? "評価できるのは幹部・オーナーだけです" : "暗証番号がちがいます"; route.err = true; render(); return; }
+    const entry = st.entries.find(x => x.id === route.evalEntry);
+    const marks = l.checks.map((_, i) => $(`input[name=ox${i}]:checked`)?.value === "1");
+    const rec = { date: today(), at: Date.now(), by: lead.name, comment: $("#evComment").value.trim(), entryId: entry.id, marks, pass: marks.every(Boolean), label: entry.name + "さん" };
+    st.records.push(rec); persistCheck(rec, route.uid, l.id);
+    route.evalEntry = null; applyModelStatus(st, l);
+    const okN = st.entries.filter(x => modelEval(st, x.id)?.pass).length;
+    flash(st.status === "ok" ? `${l.models}人そろいました。合格！` : rec.pass ? `${entry.name}さん OK。あと${l.models - okN}人` : `${entry.name}さんは「もう一度」。×のところを次のモデルさんで`, !rec.pass);
   });
   $("#watched")?.addEventListener("click", () => { st.watched = today(); flash("動画を見たを記録しました"); });
   $("#learned")?.addEventListener("click", () => { pass(""); flash("覚えた！次へ進めます"); });
