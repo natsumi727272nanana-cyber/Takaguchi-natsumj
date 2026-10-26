@@ -1,0 +1,595 @@
+<title>enu 経営ノート</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 上部タブ + 1カラムの作業面。店舗は色で識別（本店=藍 / 茶屋町=深緑 / アイラッシュ=薔薇） */
+:root{
+  --bg:#f6f5f2; --surface:#ffffff; --ink:#22242a; --muted:#6b6e78; --line:#e3e1dc;
+  --accent:#3d4a7a; --accent-ink:#ffffff;
+  --s-honten:#3d4a7a; --s-chaya:#2f6b5b; --s-eye:#a84d6a;
+  --good:#2f7a4f; --warn:#b07414; --bad:#b23a3a; --chip:#eeece7;
+  --f-display:"Zen Maru Gothic","Hiragino Maru Gothic ProN",system-ui,sans-serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#17181c; --surface:#202228; --ink:#e9e8e4; --muted:#9a9ca5; --line:#33353d;
+  --accent:#8f9de0; --accent-ink:#141522;
+  --s-honten:#8f9de0; --s-chaya:#6cc2a8; --s-eye:#e48aa6;
+  --good:#6cc28f; --warn:#e0a94a; --bad:#ec7a7a; --chip:#2a2c33; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17181c; --surface:#202228; --ink:#e9e8e4; --muted:#9a9ca5; --line:#33353d;
+  --accent:#8f9de0; --accent-ink:#141522;
+  --s-honten:#8f9de0; --s-chaya:#6cc2a8; --s-eye:#e48aa6;
+  --good:#6cc28f; --warn:#e0a94a; --bad:#ec7a7a; --chip:#2a2c33; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;padding-top:20px}
+h1{font-family:var(--f-display);font-size:1.6rem;margin:0;letter-spacing:.02em}
+h1 small{font-size:.8rem;color:var(--muted);font-family:var(--f-body);margin-left:8px;font-weight:400}
+h2{font-family:var(--f-display);font-size:1.15rem;margin:0;text-wrap:balance}
+h3{font-size:.95rem;margin:0}
+.mode{font-size:.78rem;color:var(--muted)}
+nav{display:flex;gap:6px;overflow-x:auto;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:8px;z-index:5;border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 14px;border-radius:999px;font:inherit;font-size:.9rem;cursor:pointer}
+nav button[aria-current="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+section.view{display:flex;flex-direction:column;gap:18px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.row.between{justify-content:space-between}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.store{border-top:4px solid var(--sc)}
+.store h3{color:var(--sc)}
+.tap{cursor:pointer;transition:transform .12s}.tap:hover{transform:translateY(-2px)}.tap:focus-visible{outline:2px solid var(--sc);outline-offset:2px}
+.sc-honten{--sc:var(--s-honten)} .sc-chayamachi{--sc:var(--s-chaya)} .sc-eyelash{--sc:var(--s-eye)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--sc);margin-right:6px;vertical-align:middle}
+dl.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
+dl.kv dt{color:var(--muted);font-size:.85rem}
+dl.kv dd{margin:0;text-align:right}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.big{font-family:var(--f-num);font-size:1.6rem;font-weight:500;font-variant-numeric:tabular-nums}
+.lbl{font-size:.78rem;color:var(--muted);letter-spacing:.06em}
+.good{color:var(--good)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.75rem;background:var(--chip);color:var(--muted);white-space:nowrap}
+.pill.bad{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
+.pill.good{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}
+th{font-weight:500;color:var(--muted);font-size:.8rem}
+td.r,th.r{text-align:right}
+tfoot td{font-weight:700}
+label{display:flex;flex-direction:column;gap:3px;font-size:.8rem;color:var(--muted)}
+input,select,textarea{font:inherit;font-size:.95rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;min-width:0}
+input.amt{font-family:var(--f-num);text-align:right;width:9.5em}
+textarea{width:100%;min-height:60px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn{font:inherit;font-size:.9rem;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);padding:7px 14px;border-radius:6px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.sm{padding:3px 9px;font-size:.8rem}
+.btn.danger{border-color:var(--bad);color:var(--bad);background:transparent}
+.btn.danger.armed{background:var(--bad);color:#fff}
+.empty{color:var(--muted);font-size:.9rem;padding:8px 0}
+.bar{height:8px;border-radius:4px;background:var(--sc);min-width:2px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:.88rem;z-index:20}
+.note{font-size:.82rem;color:var(--muted)}
+.ev{display:grid;grid-template-columns:5.5em 1fr auto;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px dashed var(--line)}
+.ev:last-child{border-bottom:0}
+.ev .d{font-family:var(--f-num);font-size:.85rem}
+.ev .t{min-width:0}
+.example{font-size:.72rem;color:var(--warn);margin-left:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>enu 経営ノート<small>本店・茶屋町・アイラッシュ</small></h1>
+    <span class="mode" id="mode">読み込み中…</span>
+  </header>
+  <nav id="tabs">
+    <button data-tab="home">ホーム</button>
+    <button data-tab="monthly">月次（売上・人件費）</button>
+    <button data-tab="invoices">請求書・仕入</button>
+    <button data-tab="schedule">家賃・税の予定</button>
+    <button data-tab="plans">今後の計画</button>
+    <button data-tab="settings">設定・バックアップ</button>
+  </nav>
+
+  <!-- ホーム -->
+  <section class="view" id="v-home">
+    <div class="row between">
+      <h2 id="home-title">今月のまとめ</h2>
+      <label>対象月<input type="month" id="home-month"></label>
+    </div>
+    <div class="grid3" id="home-fy"></div>
+    <div class="grid3" id="home-stores"></div>
+    <div class="panel">
+      <div class="row between"><h2>これからの支払い・予定（45日以内）</h2><span class="note" id="today"></span></div>
+      <div id="home-events"></div>
+    </div>
+    <div class="panel">
+      <div class="row between"><h2>今後の計画（3か月以内）</h2><button class="btn ghost sm" data-goto="plans">計画をすべて見る</button></div>
+      <div id="home-plans"></div>
+    </div>
+    <div class="panel">
+      <h2>今期の月別推移</h2>
+      <div class="tbl" id="home-trend"></div>
+    </div>
+  </section>
+
+  <!-- 店舗の詳細 -->
+  <section class="view" id="v-store" hidden>
+    <div class="row between">
+      <button class="btn ghost sm" data-goto="home">← 3店舗の一覧へ</button>
+      <label>月<input type="month" id="st-month"></label>
+    </div>
+    <div id="st-head"></div>
+    <div class="grid3" id="st-kpi"></div>
+    <div class="grid3">
+      <div class="panel"><h2>お金の流れ</h2><div class="tbl" id="st-break"></div></div>
+      <div class="panel"><h2>仕入（会社別）</h2><div class="tbl" id="st-sup"></div></div>
+    </div>
+    <div class="panel"><h2>この月の請求書</h2><div class="tbl" id="st-inv"></div></div>
+    <div class="panel"><h2>今期の推移</h2><div class="tbl" id="st-trend"></div></div>
+  </section>
+
+  <!-- 月次 -->
+  <section class="view" id="v-monthly" hidden>
+    <div class="panel">
+      <div class="row between">
+        <h2>月次の売上・人件費</h2>
+        <label>月<input type="month" id="m-month"></label>
+      </div>
+      <p class="note">売上・人件費を店舗ごとに入れてください（請求書のない現金払いの経費は「その他」へ）。仕入・光熱費・広告費・雑費は「請求書・仕入」、家賃は「家賃・税の予定」から自動で集計します。人件費は「給与＋社会保険の会社負担＋業務委託費」で毎月同じ基準にすると比較しやすくなります。</p>
+      <div class="tbl" id="m-table"></div>
+      <div class="row"><button class="btn" id="m-save">この月を保存</button></div>
+    </div>
+  </section>
+
+  <!-- 請求書 -->
+  <section class="view" id="v-invoices" hidden>
+    <div class="panel">
+      <h2 id="inv-form-title">請求書を登録</h2>
+      <div class="row">
+        <label>請求日<input type="date" id="inv-date"></label>
+        <label>取引先<input id="inv-supplier" list="sup-list" placeholder="例：〇〇商事"></label>
+        <label>区分<select id="inv-cat"><option>仕入</option><option>光熱費</option><option value="広告費">広告費（ホットペッパー等）</option><option>雑費</option><option>その他経費</option></select></label>
+        <label>支払期限<input type="date" id="inv-due"></label>
+      </div>
+      <div class="row">
+        <label><span><span class="dot sc-honten"></span>enu hair 本店</span><input class="amt" id="inv-a-honten" inputmode="numeric" placeholder="0"></label>
+        <label><span><span class="dot sc-chayamachi"></span>enu hair 茶屋町</span><input class="amt" id="inv-a-chayamachi" inputmode="numeric" placeholder="0"></label>
+        <label><span><span class="dot sc-eyelash"></span>アイラッシュ enu</span><input class="amt" id="inv-a-eyelash" inputmode="numeric" placeholder="0"></label>
+        <div><div class="lbl">合計</div><div class="big" id="inv-total">¥0</div></div>
+      </div>
+      <p class="note">同じ会社の請求書に複数店舗の分が入っている場合は、店舗ごとの金額に分けて入れてください。</p>
+      <label>内容メモ<input id="inv-memo" placeholder="例：カラー剤、シャンプー"></label>
+      <div class="row">
+        <label class="row" style="flex-direction:row;gap:6px"><input type="checkbox" id="inv-paid">支払済み</label>
+        <button class="btn" id="inv-save">登録する</button>
+        <button class="btn ghost" id="inv-cancel" hidden>編集をやめる</button>
+      </div>
+      <datalist id="sup-list"></datalist>
+    </div>
+    <div class="panel">
+      <div class="row between">
+        <h2>請求書一覧</h2>
+        <div class="row">
+          <label>月<input type="month" id="inv-filter-month"></label>
+          <label>表示<select id="inv-filter-paid"><option value="all">すべて</option><option value="unpaid">未払いのみ</option></select></label>
+        </div>
+      </div>
+      <div class="tbl" id="inv-list"></div>
+    </div>
+    <div class="panel">
+      <h2>取引先別の集計（今期・全区分）</h2>
+      <p class="note">同じ取引先から各店がいくら仕入れているかを比べられます。</p>
+      <div class="tbl" id="inv-suppliers"></div>
+    </div>
+  </section>
+
+  <!-- 予定 -->
+  <section class="view" id="v-schedule" hidden>
+    <div class="panel">
+      <h2>家賃（毎月）</h2>
+      <div class="row">
+        <label>店舗<select id="rent-store"></select></label>
+        <label>毎月の振込日<input type="number" id="rent-day" min="1" max="31" placeholder="25" style="width:6em"></label>
+        <label>金額<input class="amt" id="rent-amt" inputmode="numeric" placeholder="0"></label>
+        <label>振込先メモ<input id="rent-memo" placeholder="例：〇〇不動産"></label>
+        <button class="btn" id="rent-save" style="align-self:flex-end">追加</button>
+      </div>
+      <p class="note">31日を指定すると、短い月は月末扱いになります。家賃は月次の利益計算に自動で入ります。</p>
+      <div class="tbl" id="rent-list"></div>
+    </div>
+    <div class="panel">
+      <h2>税金・その他の期日</h2>
+      <div class="row">
+        <label>種類<select id="tax-kind"><option value="tax">税金</option><option value="other">その他</option></select></label>
+        <label>内容<input id="tax-title" placeholder="例：法人税 予定納税"></label>
+        <label>期日<input type="date" id="tax-date"></label>
+        <label>金額（目安）<input class="amt" id="tax-amt" inputmode="numeric" placeholder="0"></label>
+        <button class="btn" id="tax-save" style="align-self:flex-end">追加</button>
+      </div>
+      <div class="row">
+        <button class="btn ghost sm" id="tax-auto-corp">法人の期限を決算月から追加</button>
+        <button class="btn ghost sm" id="tax-auto-indiv">個人事業の予定納税（7月末・11月末）を追加</button>
+      </div>
+      <p class="note">法人：中間申告（予定納税）は事業年度開始から6か月を過ぎた日から2か月以内、確定申告は決算日から2か月以内が原則です。消費税の中間申告は前年の納税額により回数が変わるので、税務署からの通知の日付で入れてください。土日祝の場合は翌平日になります。</p>
+      <div class="tbl" id="tax-list"></div>
+    </div>
+  </section>
+
+  <!-- 計画 -->
+  <section class="view" id="v-plans" hidden>
+    <div class="panel">
+      <h2 id="plan-form-title">計画を追加</h2>
+      <div class="row">
+        <label>種類<select id="plan-kind"><option value="store">出店</option><option value="product">商品づくり</option><option value="event">慰安旅行・イベント経費</option><option value="other">その他</option></select></label>
+        <label>名前<input id="plan-title" placeholder="例：3号店／オリジナルシャンプー／慰安旅行"></label>
+        <label>予定月<input type="month" id="plan-month"></label>
+        <label>予算・かける経費<input class="amt" id="plan-budget" inputmode="numeric" placeholder="0"></label>
+        <label>見込み利益（月）<input class="amt" id="plan-profit" inputmode="numeric" placeholder="0"></label>
+        <label>状況<select id="plan-status"><option>アイデア</option><option>検討中</option><option>準備中</option><option>実行中</option><option>完了</option><option>見送り</option></select></label>
+      </div>
+      <label>メモ（次にやること・条件など）<textarea id="plan-memo" placeholder="例：物件の目安家賃30万円以内、スタイリスト2名確保できたら"></textarea></label>
+      <div class="row"><button class="btn" id="plan-save">保存</button><button class="btn ghost" id="plan-cancel" hidden>編集をやめる</button></div>
+    </div>
+    <div class="panel">
+      <h2>計画の一覧（予定月順）</h2>
+      <div id="plan-list"></div>
+    </div>
+  </section>
+
+  <!-- 設定 -->
+  <section class="view" id="v-settings" hidden>
+    <div class="panel">
+      <h2>決算月</h2>
+      <div class="row">
+        <label>決算月<select id="set-fyend"></select></label>
+        <label>月商の目標（全店合計・任意）<input class="amt" id="set-target" inputmode="numeric" placeholder="0"></label>
+        <button class="btn" id="set-save" style="align-self:flex-end">保存</button>
+      </div>
+      <p class="note">「今期」の年商は、決算月の翌月から決算月までで集計します。</p>
+    </div>
+    <div class="panel">
+      <h2>バックアップ</h2>
+      <p class="note">全データをJSONファイルで保存・復元できます。月に1回の保存をおすすめします。</p>
+      <div class="row">
+        <button class="btn ghost" id="bk-export">JSONで保存</button>
+        <label class="btn ghost" style="flex-direction:row;color:var(--accent);font-size:.9rem">JSONから復元<input type="file" id="bk-import" accept="application/json" hidden></label>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const PLAN_KINDS={store:'出店',product:'商品づくり',event:'慰安旅行・イベント',other:'その他'};
+const STORES=[{id:'honten',name:'enu hair 本店'},{id:'chayamachi',name:'enu hair 茶屋町'},{id:'eyelash',name:'アイラッシュ enu'}];
+const COLS=['monthly','invoices','schedules','plans','settings'];
+const state={monthly:{},invoices:{},schedules:{},plans:{},settings:{}};
+let db=null, mode='local';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=Number(String(v??'').replace(/[,¥円\s]/g,''));return isFinite(n)?n:0};
+const yen=n=>(n<0?'-':'')+'¥'+Math.round(Math.abs(n)).toLocaleString('ja-JP');
+const man=n=>(n<0?'-':'')+(Math.abs(n)/10000).toLocaleString('ja-JP',{maximumFractionDigits:1})+'万円';
+const pct=r=>r==null||!isFinite(r)?'—':(r*100).toFixed(1)+'%';
+const uid=()=>(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
+const pad=n=>String(n).padStart(2,'0');
+const todayStr=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
+const thisMonth=()=>todayStr().slice(0,7);
+const lastDay=(y,m)=>new Date(y,m,0).getDate();
+const addMonths=(ym,k)=>{let [y,m]=ym.split('-').map(Number);m+=k;y+=Math.floor((m-1)/12);m=((m-1)%12+12)%12+1;return `${y}-${pad(m)}`};
+const mLabel=ym=>{const [y,m]=ym.split('-');return `${y}年${Number(m)}月`};
+function toast(t){const el=$('toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2200)}
+
+/* ---------- 保存先（claude.ai上ではクラウド、ファイル直開きならこのブラウザ） ---------- */
+function loadLocal(){try{const s=JSON.parse(localStorage.getItem('enu-keiei')||'{}');COLS.forEach(c=>state[c]=s[c]||{})}catch(e){}}
+function saveLocal(){try{localStorage.setItem('enu-keiei',JSON.stringify(state))}catch(e){toast('このブラウザに保存できませんでした')}}
+async function put(col,id,data){state[col][id]=data;render();
+  if(db){try{await db.collection(col).doc(id).set(data)}catch(e){toast('保存に失敗しました：'+(e.message||e.code))}} else saveLocal()}
+async function del(col,id){delete state[col][id];render();
+  if(db){try{await db.collection(col).doc(id).delete()}catch(e){toast('削除に失敗しました')}} else saveLocal()}
+async function initStore(){
+  if(!window.claude){loadLocal();setMode();render();return}
+  render();
+  try{db=await window.claude.use('db')}catch(e){db=null}
+  if(!db){loadLocal();setMode();render();return}
+  mode='db';setMode();
+  COLS.forEach(c=>db.collection(c).onSnapshot(s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());state[c]=o;render()},
+    e=>toast('読み込みエラー：'+(e.message||e.code))));
+}
+function setMode(){$('mode').textContent=mode==='db'?'クラウドに保存中（どの端末からでも同じデータ）':'このブラウザに保存中（バックアップ推奨）'}
+
+/* ---------- 期・集計 ---------- */
+const fyEnd=()=>Number(state.settings.main?.fyEnd||12);
+function fyMonths(ym){const [y,m]=ym.split('-').map(Number);const e=fyEnd();
+  const endY=m<=e?y:y+1;const end=`${endY}-${pad(e)}`;return Array.from({length:12},(_,i)=>addMonths(end,i-11))}
+const CATS=['仕入','光熱費','広告費','雑費','その他経費'];
+const catOf=inv=>CATS.includes(inv.cat)?inv.cat:inv.cat==='経費'?'その他経費':'仕入';
+const rents=()=>Object.entries(state.schedules).filter(([,s])=>s.kind==='rent');
+function calc(ym,store){
+  const mo=state.monthly[`${ym}_${store}`]||{};
+  const cat=Object.fromEntries(CATS.map(c=>[c,0])),sup={};
+  for(const inv of Object.values(state.invoices)){if((inv.date||'').slice(0,7)!==ym)continue;
+    const a=num(inv.alloc?.[store]);if(!a)continue;const k=catOf(inv);cat[k]+=a;
+    if(k==='仕入'){const n=inv.supplier||'（取引先なし）';sup[n]=(sup[n]||0)+a}}
+  const purchase=cat['仕入'],expense=CATS.slice(1).reduce((t,c)=>t+cat[c],0);
+  // 家賃は売上を入れた月と今月だけ計上（未入力の過去月・未来月で赤字に見えないように）
+  const rent=(state.monthly[`${ym}_${store}`]||ym===thisMonth())?rents().filter(([,s])=>s.store===store).reduce((t,[,s])=>t+num(s.amount),0):0;
+  const sales=num(mo.sales),labor=num(mo.labor),other=num(mo.other);
+  const cost=purchase+expense+labor+rent+other,profit=sales-cost;
+  return {sales,labor,other,purchase,expense,rent,cost,profit,cat,sup,has:mo.sales!=null,
+    margin:sales?profit/sales:null,laborR:sales?labor/sales:null,purR:sales?purchase/sales:null}}
+function sumCalc(list){const t={sales:0,labor:0,other:0,purchase:0,expense:0,rent:0,cost:0,profit:0};
+  list.forEach(c=>Object.keys(t).forEach(k=>t[k]+=c[k]));t.margin=t.sales?t.profit/t.sales:null;return t}
+const mClass=r=>r==null?'':r<0?'bad':r<0.1?'warn':'good';
+
+/* ---------- 予定の展開 ---------- */
+function upcoming(days){
+  const today=todayStr(),lim=new Date();lim.setDate(lim.getDate()+days);
+  const limStr=`${lim.getFullYear()}-${pad(lim.getMonth()+1)}-${pad(lim.getDate())}`;
+  const out=[];const sn=id=>STORES.find(s=>s.id===id)?.name||'';
+  for(const [,s] of rents()){for(let k=0;k<3;k++){const ym=addMonths(thisMonth(),k);const [y,m]=ym.split('-').map(Number);
+    const d=`${ym}-${pad(Math.min(num(s.day)||1,lastDay(y,m)))}`;if(d>=today&&d<=limStr)out.push({d,t:`家賃振込（${sn(s.store)}）`,sub:s.memo,amt:num(s.amount),tag:'家賃'})}}
+  for(const s of Object.values(state.schedules)){if(s.kind==='rent'||!s.date)continue;
+    if(s.date>=today&&s.date<=limStr)out.push({d:s.date,t:s.title,amt:num(s.amount),tag:s.kind==='tax'?'税金':'予定'})}
+  for(const inv of Object.values(state.invoices)){if(inv.paid||!inv.due)continue;
+    if(inv.due<=limStr)out.push({d:inv.due,t:`${inv.supplier} 支払い`,sub:inv.memo,amt:invTotal(inv),tag:inv.due<today?'期限切れ':'請求書'})}
+  return out.sort((a,b)=>a.d.localeCompare(b.d))}
+const invTotal=inv=>STORES.reduce((t,s)=>t+num(inv.alloc?.[s.id]),0);
+const dLabel=d=>{const [y,m,dd]=d.split('-').map(Number);const w='日月火水木金土'[new Date(y,m-1,dd).getDay()];return `${m}/${dd}(${w})`};
+
+/* ---------- 描画 ---------- */
+function render(){renderHome();renderStore();renderMonthly();renderInvoices();renderSchedule();renderPlans();renderSettings()}
+
+function renderHome(){
+  const ym=$('home-month').value||thisMonth();
+  const months=fyMonths(ym),past=months.filter(m=>m<=ym);
+  const fyAll=sumCalc(past.flatMap(m=>STORES.map(s=>calc(m,s.id))));
+  const entered=past.filter(m=>STORES.some(s=>state.monthly[`${m}_${s.id}`]));
+  const forecast=entered.length?fyAll.sales/entered.length*12:0;
+  const target=num(state.settings.main?.target);
+  $('home-fy').innerHTML=`
+    <div class="panel"><span class="lbl">今期の年商（${mLabel(months[0])}〜${mLabel(ym)}）</span><span class="big">${man(fyAll.sales)}</span>
+      <span class="note">入力済み${entered.length}か月・この調子なら年間 <b class="num">${man(forecast)}</b></span></div>
+    <div class="panel"><span class="lbl">今期の利益（全店）</span><span class="big ${mClass(fyAll.margin)}">${man(fyAll.profit)}</span>
+      <span class="note">利益率 <b class="num">${pct(fyAll.margin)}</b>・決算 ${fyEnd()}月</span></div>
+    <div class="panel"><span class="lbl">${mLabel(ym)}の売上（全店）</span><span class="big">${man(sumCalc(STORES.map(s=>calc(ym,s.id))).sales)}</span>
+      <span class="note">${target?`目標 ${man(target)} まで あと <b class="num">${man(Math.max(0,target-sumCalc(STORES.map(s=>calc(ym,s.id))).sales))}</b>`:'目標は「設定」で入れられます'}</span></div>`;
+  $('home-stores').innerHTML=STORES.map(s=>{const c=calc(ym,s.id);return `
+    <div class="panel store tap sc-${s.id}" data-store="${s.id}" role="button" tabindex="0" aria-label="${s.name}の詳細を開く">
+      <div class="row between"><h3>${s.name}</h3>${c.has?`<span class="pill ${mClass(c.margin)}">利益率 ${pct(c.margin)}</span>`:'<span class="pill">売上未入力</span>'}</div>
+      <dl class="kv">
+        <dt>売上</dt><dd class="num">${yen(c.sales)}</dd>
+        <dt>仕入</dt><dd class="num">${yen(c.purchase)} <span class="note">${pct(c.purR)}</span></dd>
+        <dt>人件費</dt><dd class="num">${yen(c.labor)} <span class="note">${pct(c.laborR)}</span></dd>
+        <dt>家賃</dt><dd class="num">${yen(c.rent)}</dd>
+        <dt>光熱費</dt><dd class="num">${yen(c.cat['光熱費'])}</dd>
+        <dt>広告費</dt><dd class="num">${yen(c.cat['広告費'])}</dd>
+        <dt>雑費・その他</dt><dd class="num">${yen(c.cat['雑費']+c.cat['その他経費']+c.other)}</dd>
+        <dt><b>経費を引いた利益</b></dt><dd class="num ${mClass(c.margin)}"><b>${yen(c.profit)}</b></dd>
+      </dl><span class="note" style="text-align:right">くわしく見る →</span></div>`}).join('');
+  $('home-title').textContent=ym===thisMonth()?'今月のまとめ（'+mLabel(ym)+'）':mLabel(ym)+'のまとめ';
+  const soon=Object.values(state.plans).filter(x=>x.month&&x.month>=thisMonth()&&x.month<=addMonths(thisMonth(),3)&&x.status!=='見送り'&&x.status!=='完了').sort((a,b)=>a.month.localeCompare(b.month));
+  const spend=soon.reduce((t,x)=>t+num(x.budget),0);
+  $('home-plans').innerHTML=soon.length?soon.map(x=>`<div class="ev"><span class="d">${mLabel(x.month).slice(5)}</span><span class="t"><span class="pill">${PLAN_KINDS[x.kind]||''}</span> ${esc(x.title)} <span class="note">${esc(x.status)}</span></span><span class="num">${num(x.budget)?yen(num(x.budget)):''}</span></div>`).join('')+`<p class="note">3か月以内に予定している出費の合計 <b class="num">${yen(spend)}</b></p>`
+    :'<p class="empty">3か月以内の計画はありません。「今後の計画」で出店・商品づくり・慰安旅行などを入れるとここに出ます。</p>';
+  $('today').textContent='今日 '+dLabel(todayStr());
+  const ev=upcoming(45);
+  $('home-events').innerHTML=ev.length?ev.map(e=>`<div class="ev"><span class="d">${dLabel(e.d)}</span>
+    <span class="t">${esc(e.t)} <span class="pill ${e.tag==='期限切れ'?'bad':e.tag==='税金'?'warn':''}">${e.tag}</span>${e.sub?`<br><span class="note">${esc(e.sub)}</span>`:''}</span>
+    <span class="num">${e.amt?yen(e.amt):''}</span></div>`).join(''):'<p class="empty">45日以内の予定はありません。家賃・税の期日は「家賃・税の予定」、支払期限は請求書に入れると、ここに出ます。</p>';
+  const maxS=Math.max(1,...months.flatMap(m=>STORES.map(s=>calc(m,s.id).sales)));
+  $('home-trend').innerHTML=`<table><thead><tr><th>月</th>${STORES.map(s=>`<th class="sc-${s.id}"><span class="dot"></span>${s.name} 売上</th>`).join('')}<th class="r">全店 売上</th><th class="r">全店 利益</th><th class="r">利益率</th></tr></thead><tbody>
+    ${months.map(m=>{const cs=STORES.map(s=>calc(m,s.id)),t=sumCalc(cs);return `<tr${m===ym?' style="font-weight:700"':''}><td>${mLabel(m)}</td>
+      ${cs.map((c,i)=>`<td class="sc-${STORES[i].id}" style="min-width:120px"><div class="num">${c.sales?man(c.sales):'—'}</div><div class="bar" style="width:${c.sales/maxS*100}%"></div></td>`).join('')}
+      <td class="r num">${t.sales?man(t.sales):'—'}</td><td class="r num ${t.sales?mClass(t.margin):''}">${t.sales?man(t.profit):'—'}</td><td class="r num">${t.sales?pct(t.margin):'—'}</td></tr>`}).join('')}</tbody></table>`;
+}
+
+let curStore='honten';
+function renderStore(){
+  const s=STORES.find(x=>x.id===curStore)||STORES[0],ym=$('st-month').value||thisMonth(),c=calc(ym,s.id);
+  $('v-store').className='view sc-'+s.id;
+  $('st-head').innerHTML=`<h2 style="color:var(--sc);font-size:1.5rem">${s.name}</h2><span class="note">${mLabel(ym)}</span>`;
+  const fy=sumCalc(fyMonths(ym).filter(m=>m<=ym).map(m=>calc(m,s.id)));
+  $('st-kpi').innerHTML=`<div class="panel"><span class="lbl">売上</span><span class="big">${yen(c.sales)}</span>${c.has?'':'<span class="note">「月次」で売上を入れてください</span>'}</div>
+    <div class="panel"><span class="lbl">経費を引いた利益</span><span class="big ${mClass(c.margin)}">${yen(c.profit)}</span><span class="note">利益率 <b class="num">${pct(c.margin)}</b></span></div>
+    <div class="panel"><span class="lbl">今期の年商（この店）</span><span class="big">${man(fy.sales)}</span><span class="note">今期の利益 <b class="num">${man(fy.profit)}</b></span></div>`;
+  const rowsB=[['仕入',c.purchase],['人件費',c.labor],['家賃',c.rent],['光熱費',c.cat['光熱費']],['広告費（HPB等）',c.cat['広告費']],['雑費',c.cat['雑費']],['その他経費',c.cat['その他経費']+c.other]];
+  $('st-break').innerHTML=`<table><tbody><tr><td><b>売上</b></td><td class="r num"><b>${yen(c.sales)}</b></td><td class="r note">100%</td></tr>
+    ${rowsB.map(([k,v])=>`<tr><td>− ${k}</td><td class="r num">${yen(v)}</td><td class="r note num">${c.sales?pct(v/c.sales):''}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td>経費合計</td><td class="r num">${yen(c.cost)}</td><td class="r note num">${c.sales?pct(c.cost/c.sales):''}</td></tr>
+    <tr><td>利益</td><td class="r num ${mClass(c.margin)}">${yen(c.profit)}</td><td class="r num ${mClass(c.margin)}">${pct(c.margin)}</td></tr></tfoot></table>`;
+  const sup=Object.entries(c.sup).sort((a,b)=>b[1]-a[1]);
+  $('st-sup').innerHTML=sup.length?`<table><thead><tr><th>会社</th><th class="r">金額</th><th class="r">売上比</th></tr></thead><tbody>${sup.map(([n,v])=>`<tr><td>${esc(n)}</td><td class="r num">${yen(v)}</td><td class="r note num">${c.sales?pct(v/c.sales):''}</td></tr>`).join('')}</tbody><tfoot><tr><td>仕入合計</td><td class="r num">${yen(c.purchase)}</td><td class="r num">${pct(c.purR)}</td></tr></tfoot></table>`
+    :'<p class="empty">この月の仕入はまだありません。「請求書・仕入」で登録してください。</p>';
+  const inv=Object.values(state.invoices).filter(i=>(i.date||'').startsWith(ym)&&num(i.alloc?.[s.id])).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  $('st-inv').innerHTML=inv.length?`<table><thead><tr><th>請求日</th><th>会社</th><th>区分</th><th class="r">この店の分</th><th>状態</th></tr></thead><tbody>${inv.map(i=>`<tr><td class="num">${esc(i.date)}</td><td>${esc(i.supplier)}${i.memo?`<br><span class="note">${esc(i.memo)}</span>`:''}</td><td>${catOf(i)}</td><td class="r num">${yen(num(i.alloc[s.id]))}</td><td>${i.paid?'<span class="pill good">支払済</span>':'<span class="pill warn">未払い</span>'}</td></tr>`).join('')}</tbody></table>`
+    :'<p class="empty">この月の請求書はありません。</p>';
+  const ms=fyMonths(ym);
+  $('st-trend').innerHTML=`<table><thead><tr><th>月</th><th class="r">売上</th><th class="r">仕入</th><th class="r">人件費</th><th class="r">家賃</th><th class="r">光熱費</th><th class="r">広告費</th><th class="r">雑費他</th><th class="r">利益</th><th class="r">利益率</th></tr></thead><tbody>
+    ${ms.map(m=>{const x=calc(m,s.id);return `<tr${m===ym?' style="font-weight:700"':''}><td>${mLabel(m)}</td>${[x.sales,x.purchase,x.labor,x.rent,x.cat['光熱費'],x.cat['広告費'],x.cat['雑費']+x.cat['その他経費']+x.other].map(v=>`<td class="r num">${v?man(v):'—'}</td>`).join('')}<td class="r num ${x.sales?mClass(x.margin):''}">${x.sales||x.cost?man(x.profit):'—'}</td><td class="r num">${x.sales?pct(x.margin):'—'}</td></tr>`}).join('')}</tbody></table>`;
+}
+function openStore(id){curStore=id;$('st-month').value=$('home-month').value||thisMonth();try{localStorage.setItem('enu-store',id)}catch(e){}renderStore();showTab('store');scrollTo(0,0)}
+
+let mDraftKey=null;
+function renderMonthly(){
+  const ym=$('m-month').value||thisMonth();
+  const active=document.activeElement&&document.activeElement.closest('#m-table');
+  if(active&&mDraftKey===ym)return; // 入力中は上書きしない
+  mDraftKey=ym;
+  const rows=STORES.map(s=>{const mo=state.monthly[`${ym}_${s.id}`]||{},c=calc(ym,s.id);return `<tr class="sc-${s.id}">
+    <td><span class="dot"></span>${s.name}</td>
+    <td><input class="amt" data-m="${s.id}" data-f="sales" inputmode="numeric" value="${mo.sales??''}" aria-label="${s.name} 売上"></td>
+    <td><input class="amt" data-m="${s.id}" data-f="labor" inputmode="numeric" value="${mo.labor??''}" aria-label="${s.name} 人件費"></td>
+    <td><input class="amt" data-m="${s.id}" data-f="other" inputmode="numeric" value="${mo.other??''}" aria-label="${s.name} その他経費"></td>
+    <td class="r num">${yen(c.purchase)}</td><td class="r num">${yen(c.expense)}</td><td class="r num">${yen(c.rent)}</td>
+    <td class="r num ${mClass(c.margin)}">${yen(c.profit)}</td><td class="r num">${pct(c.margin)}</td></tr>`}).join('');
+  const t=sumCalc(STORES.map(s=>calc(ym,s.id)));
+  $('m-table').innerHTML=`<table><thead><tr><th>店舗</th><th>売上</th><th>人件費</th><th>その他（請求書なし）</th><th class="r">仕入（自動）</th><th class="r">光熱・広告・雑費（自動）</th><th class="r">家賃</th><th class="r">利益</th><th class="r">利益率</th></tr></thead>
+    <tbody>${rows}</tbody><tfoot><tr><td>全店</td><td class="num">${yen(t.sales)}</td><td class="num">${yen(t.labor)}</td><td class="num">${yen(t.other)}</td><td class="r num">${yen(t.purchase)}</td><td class="r num">${yen(t.expense)}</td><td class="r num">${yen(t.rent)}</td><td class="r num ${mClass(t.margin)}">${yen(t.profit)}</td><td class="r num">${pct(t.margin)}</td></tr></tfoot></table>`;
+}
+
+let invEdit=null;
+function renderInvoices(){
+  const sups=[...new Set(Object.values(state.invoices).map(i=>i.supplier).filter(Boolean))].sort();
+  $('sup-list').innerHTML=sups.map(s=>`<option value="${esc(s)}">`).join('');
+  const fm=$('inv-filter-month').value,fp=$('inv-filter-paid').value,today=todayStr();
+  const list=Object.entries(state.invoices).filter(([,i])=>(!fm||(i.date||'').startsWith(fm))&&(fp==='all'||!i.paid))
+    .sort((a,b)=>(b[1].date||'').localeCompare(a[1].date||''));
+  const tot={honten:0,chayamachi:0,eyelash:0};list.forEach(([,i])=>STORES.forEach(s=>tot[s.id]+=num(i.alloc?.[s.id])));
+  $('inv-list').innerHTML=list.length?`<table><thead><tr><th>請求日</th><th>取引先</th><th>区分</th>${STORES.map(s=>`<th class="r sc-${s.id}"><span class="dot"></span>${s.name}</th>`).join('')}<th class="r">合計</th><th>支払期限</th><th>状態</th><th></th></tr></thead><tbody>
+    ${list.map(([id,i])=>`<tr><td class="num">${esc(i.date)}</td><td>${esc(i.supplier)}${i.example?'<span class="example">例</span>':''}${i.memo?`<br><span class="note">${esc(i.memo)}</span>`:''}</td><td>${esc(i.cat)}</td>
+      ${STORES.map(s=>`<td class="r num">${num(i.alloc?.[s.id])?yen(num(i.alloc[s.id])):''}</td>`).join('')}<td class="r num"><b>${yen(invTotal(i))}</b></td>
+      <td class="num">${esc(i.due||'')}</td><td>${i.paid?'<span class="pill good">支払済</span>':i.due&&i.due<today?'<span class="pill bad">期限切れ</span>':'<span class="pill warn">未払い</span>'}</td>
+      <td><div class="row" style="flex-wrap:nowrap;gap:4px"><button class="btn ghost sm" data-paid="${id}">${i.paid?'未払いに戻す':'支払済みにする'}</button><button class="btn ghost sm" data-edit-inv="${id}">編集</button><button class="btn danger sm" data-del="invoices:${id}">削除</button></div></td></tr>`).join('')}
+    </tbody><tfoot><tr><td colspan="3">表示中の合計</td>${STORES.map(s=>`<td class="r num">${yen(tot[s.id])}</td>`).join('')}<td class="r num">${yen(tot.honten+tot.chayamachi+tot.eyelash)}</td><td colspan="3"></td></tr></tfoot></table>`
+    :'<p class="empty">この条件の請求書はありません。上のフォームから登録してください。</p>';
+  const months=fyMonths(thisMonth());const agg={};
+  for(const i of Object.values(state.invoices)){if(!months.includes((i.date||'').slice(0,7)))continue;
+    const a=agg[i.supplier||'（取引先なし）']??={honten:0,chayamachi:0,eyelash:0,n:0};a.n++;STORES.forEach(s=>a[s.id]+=num(i.alloc?.[s.id]))}
+  const ents=Object.entries(agg).sort((a,b)=>(b[1].honten+b[1].chayamachi+b[1].eyelash)-(a[1].honten+a[1].chayamachi+a[1].eyelash));
+  $('inv-suppliers').innerHTML=ents.length?`<table><thead><tr><th>取引先</th><th class="r">件数</th>${STORES.map(s=>`<th class="r sc-${s.id}"><span class="dot"></span>${s.name}</th>`).join('')}<th class="r">合計</th></tr></thead><tbody>
+    ${ents.map(([n,a])=>`<tr><td>${esc(n)}</td><td class="r num">${a.n}</td>${STORES.map(s=>`<td class="r num">${a[s.id]?yen(a[s.id]):''}</td>`).join('')}<td class="r num"><b>${yen(a.honten+a.chayamachi+a.eyelash)}</b></td></tr>`).join('')}</tbody></table>`
+    :'<p class="empty">今期の請求書はまだありません。</p>';
+}
+
+function renderSchedule(){
+  if(!$('rent-store').options.length)$('rent-store').innerHTML=STORES.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  const r=rents();
+  $('rent-list').innerHTML=r.length?`<table><thead><tr><th>店舗</th><th>振込日</th><th class="r">金額</th><th>振込先</th><th></th></tr></thead><tbody>
+    ${r.map(([id,s])=>`<tr class="sc-${s.store}"><td><span class="dot"></span>${STORES.find(x=>x.id===s.store)?.name||''}${s.example?'<span class="example">例</span>':''}</td><td>毎月 ${num(s.day)}日</td><td class="r num">${yen(num(s.amount))}</td><td>${esc(s.memo)}</td><td><button class="btn danger sm" data-del="schedules:${id}">削除</button></td></tr>`).join('')}
+    </tbody></table>`:'<p class="empty">家賃はまだ登録されていません。</p>';
+  const t=Object.entries(state.schedules).filter(([,s])=>s.kind!=='rent').sort((a,b)=>(a[1].date||'').localeCompare(b[1].date||''));
+  const today=todayStr();
+  $('tax-list').innerHTML=t.length?`<table><thead><tr><th>期日</th><th>内容</th><th class="r">金額</th><th></th><th></th></tr></thead><tbody>
+    ${t.map(([id,s])=>`<tr><td class="num">${esc(s.date)}</td><td>${esc(s.title)}${s.example?'<span class="example">例</span>':''}</td><td class="r num">${num(s.amount)?yen(num(s.amount)):''}</td><td>${s.date<today?'<span class="pill">済/過去</span>':`<span class="pill ${s.kind==='tax'?'warn':''}">${s.kind==='tax'?'税金':'予定'}</span>`}</td><td><button class="btn danger sm" data-del="schedules:${id}">削除</button></td></tr>`).join('')}
+    </tbody></table>`:'<p class="empty">期日はまだありません。上のボタンで目安の期限を追加できます。</p>';
+}
+
+let planEdit=null;
+function renderPlans(){
+  const kinds=PLAN_KINDS;
+  const st={'アイデア':'','検討中':'','準備中':'warn','実行中':'warn','完了':'good','見送り':''};
+  const p=Object.entries(state.plans).sort((a,b)=>(a[1].month||'9999').localeCompare(b[1].month||'9999'));
+  const now=thisMonth();
+  $('plan-list').innerHTML=p.length?p.map(([id,x])=>{const left=x.month?((+x.month.slice(0,4)-+now.slice(0,4))*12+(+x.month.slice(5)-+now.slice(5))):null;
+    return `<div class="ev" style="grid-template-columns:7em 1fr auto"><span class="d">${x.month?mLabel(x.month):'時期未定'}<br><span class="note">${left==null?'':left>0?`あと${left}か月`:left===0?'今月':''}</span></span>
+    <span class="t"><span class="pill">${kinds[x.kind]||''}</span> <b>${esc(x.title)}</b>${x.example?'<span class="example">例</span>':''} <span class="pill ${st[x.status]||''}">${esc(x.status)}</span>${num(x.budget)?` <span class="note num">予算 ${man(num(x.budget))}</span>`:''}${num(x.profit)?` <span class="note num good">見込み利益 月${man(num(x.profit))}</span>`:''}${x.memo?`<br><span class="note" style="white-space:pre-wrap">${esc(x.memo)}</span>`:''}</span>
+    <span class="row" style="flex-wrap:nowrap;gap:4px"><button class="btn ghost sm" data-edit-plan="${id}">編集</button><button class="btn danger sm" data-del="plans:${id}">削除</button></span></div>`}).join('')
+    :'<p class="empty">まだ計画はありません。「〇月に3号店」「オリジナル商品を〇月発売」などを入れておくと、時期と予算をひと目で追えます。</p>';
+}
+
+function renderSettings(){
+  const sel=$('set-fyend');
+  if(!sel.options.length)sel.innerHTML=Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}月</option>`).join('');
+  if(document.activeElement!==sel)sel.value=String(fyEnd());
+  if(document.activeElement!==$('set-target'))$('set-target').value=state.settings.main?.target||'';
+}
+
+/* ---------- 操作 ---------- */
+function showTab(t){document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===t));
+  document.querySelectorAll('section.view').forEach(v=>v.hidden=v.id!=='v-'+t);try{localStorage.setItem('enu-tab',t)}catch(e){}}
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)showTab(b.dataset.tab)});
+document.addEventListener('click',e=>{const g=e.target.closest('[data-goto]');if(g){showTab(g.dataset.goto);scrollTo(0,0)}});
+
+$('home-month').addEventListener('change',renderHome);
+$('st-month').addEventListener('change',renderStore);
+document.addEventListener('click',e=>{const t=e.target.closest('[data-store]');if(t)openStore(t.dataset.store)});
+document.addEventListener('keydown',e=>{const t=e.target.closest&&e.target.closest('[data-store]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openStore(t.dataset.store)}});
+$('m-month').addEventListener('change',()=>{mDraftKey=null;renderMonthly()});
+$('m-save').addEventListener('click',async()=>{const ym=$('m-month').value||thisMonth();
+  for(const s of STORES){const v={};document.querySelectorAll(`#m-table input[data-m="${s.id}"]`).forEach(i=>v[i.dataset.f]=i.value.trim());
+    if(!v.sales&&!v.labor&&!v.other){continue}
+    document.activeElement.blur();
+    await put('monthly',`${ym}_${s.id}`,{month:ym,store:s.id,sales:num(v.sales),labor:num(v.labor),other:num(v.other)})}
+  mDraftKey=null;renderMonthly();toast(mLabel(ym)+'を保存しました')});
+
+const invAmtIds=STORES.map(s=>'inv-a-'+s.id);
+const updInvTotal=()=>$('inv-total').textContent=yen(invAmtIds.reduce((t,id)=>t+num($(id).value),0));
+invAmtIds.forEach(id=>$(id).addEventListener('input',updInvTotal));
+function resetInv(){invEdit=null;['inv-supplier','inv-memo','inv-due',...invAmtIds].forEach(id=>$(id).value='');$('inv-paid').checked=false;$('inv-date').value=todayStr();
+  $('inv-form-title').textContent='請求書を登録';$('inv-save').textContent='登録する';$('inv-cancel').hidden=true;updInvTotal()}
+$('inv-save').addEventListener('click',async()=>{
+  const d={date:$('inv-date').value,supplier:$('inv-supplier').value.trim(),cat:$('inv-cat').value,due:$('inv-due').value,memo:$('inv-memo').value.trim(),paid:$('inv-paid').checked,alloc:{}};
+  STORES.forEach(s=>d.alloc[s.id]=num($('inv-a-'+s.id).value));
+  if(!d.date||!d.supplier){toast('請求日と取引先を入れてください');return}
+  if(!invTotal(d)){toast('どこかの店舗に金額を入れてください');return}
+  await put('invoices',invEdit||uid(),d);toast(invEdit?'更新しました':'登録しました');resetInv()});
+$('inv-cancel').addEventListener('click',resetInv);
+$('inv-filter-month').addEventListener('change',renderInvoices);$('inv-filter-paid').addEventListener('change',renderInvoices);
+
+$('rent-save').addEventListener('click',async()=>{const day=num($('rent-day').value),amount=num($('rent-amt').value);
+  if(day<1||day>31){toast('振込日は1〜31で入れてください');return}
+  await put('schedules',uid(),{kind:'rent',store:$('rent-store').value,day,amount,memo:$('rent-memo').value.trim()});
+  ['rent-day','rent-amt','rent-memo'].forEach(id=>$(id).value='');toast('家賃を追加しました')});
+$('tax-save').addEventListener('click',async()=>{const title=$('tax-title').value.trim(),date=$('tax-date').value;
+  if(!title||!date){toast('内容と期日を入れてください');return}
+  await put('schedules',uid(),{kind:$('tax-kind').value,title,date,amount:num($('tax-amt').value)});
+  ['tax-title','tax-date','tax-amt'].forEach(id=>$(id).value='');toast('追加しました')});
+const monthEnd=ym=>{const [y,m]=ym.split('-').map(Number);return `${ym}-${pad(lastDay(y,m))}`};
+$('tax-auto-corp').addEventListener('click',async()=>{
+  const months=fyMonths(thisMonth()),end=months[11];
+  const items=[{title:'法人税・住民税・事業税 中間申告（予定納税）期限',date:monthEnd(addMonths(months[0],7))},
+    {title:'消費税 中間申告期限（年1回の場合）',date:monthEnd(addMonths(months[0],7))},
+    {title:'法人税・消費税 確定申告・納付期限',date:monthEnd(addMonths(end,2))}];
+  for(const it of items){if(Object.values(state.schedules).some(s=>s.title===it.title&&s.date===it.date))continue;await put('schedules',uid(),{kind:'tax',amount:0,...it})}
+  toast(`決算${fyEnd()}月で期限を追加しました`)});
+$('tax-auto-indiv').addEventListener('click',async()=>{const y=new Date().getFullYear();
+  for(const [title,date] of [[`所得税 予定納税 第1期（${y}年）`,`${y}-07-31`],[`所得税 予定納税 第2期（${y}年）`,`${y}-11-30`]]){
+    if(Object.values(state.schedules).some(s=>s.title===title))continue;await put('schedules',uid(),{kind:'tax',title,date,amount:0})}
+  toast('予定納税の期日を追加しました')});
+
+function resetPlan(){planEdit=null;['plan-title','plan-month','plan-budget','plan-profit','plan-memo'].forEach(id=>$(id).value='');$('plan-status').value='アイデア';
+  $('plan-form-title').textContent='計画を追加';$('plan-cancel').hidden=true}
+$('plan-save').addEventListener('click',async()=>{const d={kind:$('plan-kind').value,title:$('plan-title').value.trim(),month:$('plan-month').value,
+  budget:num($('plan-budget').value),profit:num($('plan-profit').value),status:$('plan-status').value,memo:$('plan-memo').value.trim()};
+  if(!d.title){toast('名前を入れてください');return}
+  await put('plans',planEdit||uid(),d);toast('保存しました');resetPlan()});
+$('plan-cancel').addEventListener('click',resetPlan);
+
+$('set-save').addEventListener('click',async()=>{await put('settings','main',{fyEnd:Number($('set-fyend').value),target:num($('set-target').value)});toast('設定を保存しました')});
+
+document.addEventListener('click',async e=>{
+  const delB=e.target.closest('[data-del]');
+  if(delB){if(!delB.classList.contains('armed')){delB.classList.add('armed');delB.textContent='本当に削除';setTimeout(()=>{delB.classList.remove('armed');delB.textContent='削除'},3000);return}
+    const [c,id]=delB.dataset.del.split(':');await del(c,id);toast('削除しました');return}
+  const pb=e.target.closest('[data-paid]');
+  if(pb){const id=pb.dataset.paid,i=state.invoices[id];await put('invoices',id,{...i,paid:!i.paid});return}
+  const ei=e.target.closest('[data-edit-inv]');
+  if(ei){const id=ei.dataset.editInv,i=state.invoices[id];invEdit=id;$('inv-date').value=i.date||'';$('inv-supplier').value=i.supplier||'';$('inv-cat').value=i.cat||'仕入';
+    $('inv-due').value=i.due||'';$('inv-memo').value=i.memo||'';$('inv-paid').checked=!!i.paid;STORES.forEach(s=>$('inv-a-'+s.id).value=num(i.alloc?.[s.id])||'');
+    updInvTotal();$('inv-form-title').textContent='請求書を編集';$('inv-save').textContent='更新する';$('inv-cancel').hidden=false;$('inv-form-title').scrollIntoView({behavior:'smooth'});return}
+  const ep=e.target.closest('[data-edit-plan]');
+  if(ep){const id=ep.dataset.editPlan,p=state.plans[id];planEdit=id;$('plan-kind').value=p.kind||'store';$('plan-title').value=p.title||'';$('plan-month').value=p.month||'';
+    $('plan-budget').value=num(p.budget)||'';$('plan-profit').value=num(p.profit)||'';$('plan-status').value=p.status||'アイデア';$('plan-memo').value=p.memo||'';
+    $('plan-form-title').textContent='計画を編集';$('plan-cancel').hidden=false;$('plan-form-title').scrollIntoView({behavior:'smooth'})}
+});
+
+$('bk-export').addEventListener('click',async()=>{
+  const data=JSON.stringify({app:'enu-keiei',exportedAt:new Date().toISOString(),...state},null,2),filename=`enu-keiei-${todayStr()}.json`;
+  try{const dl=window.claude?await window.claude.use('downloads'):null;
+    if(dl){await dl.save({filename,data});return}
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download=filename;a.click();
+  }catch(e){toast('保存できませんでした')}});
+$('bk-import').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;
+  try{const d=JSON.parse(await f.text());if(d.app!=='enu-keiei')throw 0;let n=0;
+    for(const c of COLS)for(const [id,v] of Object.entries(d[c]||{})){await put(c,id,v);n++}
+    toast(`${n}件を復元しました`)}catch(err){toast('このファイルは読み込めませんでした')}e.target.value=''});
+
+/* ---------- 起動 ---------- */
+$('home-month').value=thisMonth();$('m-month').value=thisMonth();$('inv-date').value=todayStr();
+let tab='home';try{tab=localStorage.getItem('enu-tab')||'home';curStore=localStorage.getItem('enu-store')||'honten'}catch(e){}
+$('st-month').value=thisMonth();
+showTab(tab);
+initStore();
+</script>

@@ -132,3 +132,16 @@ python samples/make_sample.py samples/data          # 架空データ生成
 python -m salon_kpi build --month 2026-09 --data samples/data --out samples/output
 python -m unittest                                   # KPI定義のテスト
 ```
+
+---
+
+## 経営ノート（keiei_app/）
+
+`keiei_app/index.html` は、enu hair 本店・enu hair 茶屋町・アイラッシュ enu の3店舗の
+売上・仕入（会社別）・人件費・家賃・光熱費・広告費・雑費・利益率、家賃の振込日、予定納税の期日、
+今期の年商、今後の計画（出店・商品づくり・慰安旅行など）を1画面で見るためのアプリです。
+
+- ホーム：今月の3店舗カード → タップでその店の詳細（会社別仕入・経費内訳・今期推移）
+- 請求書は1枚を店舗ごとの金額に分けて登録できる（同じ会社から複数店舗へ仕入れる場合）
+- claude.ai 上で開くとデータはクラウドに保存。ファイルを直接開いた場合はそのブラウザに保存
+- 「設定・バックアップ」から JSON で保存・復元
