@@ -614,7 +614,7 @@ function viewLesson() {
   ${l.type === "shampoo" ? daysPanel(l, st) : ""}
   ${l.menu ? `<section class="section"><h3>メニュー</h3><div class="tmenu">${l.menu.map(t => `<div class="tm ${t.core ? "core" : ""}">
       <div class="price">${t.price.toLocaleString()}<small>円</small></div><div class="nm">${esc(t.name)}</div>
-      <div class="tags">${t.mix ? `<span class="chip info">カラー剤に混ぜる</span>` : ""}${t.core ? `<span class="chip prac">新卒が説明できる</span>` : ""}</div>
+      <div class="tags">${t.brand ? `<span class="chip info">${esc(t.brand)}</span>` : ""}${t.mix ? `<span class="chip info">カラー剤に混ぜる</span>` : ""}${t.core ? `<span class="chip prac">新卒が説明できる</span>` : ""}</div>
       ${t.note ? `<div class="sc" style="font-weight:700">${esc(t.note)}</div>` : ""}<p>${esc(t.desc)}</p></div>`).join("")}</div></section>` : ""}
   ${l.products ? productsPanel(l) : ""}
   ${l.checklist ? checklistPanel(l, u) : !l.body ? "" : `<section class="section"><h3>${l.menu ? "あわせて覚えること" : l.type === "theory" ? "覚えること" : l.fold ? "マニュアル（章をタップで開く）" : "やり方"}</h3>${md(l.body, l.fold)}</section>`}
