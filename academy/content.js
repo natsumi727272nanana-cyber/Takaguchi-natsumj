@@ -10,6 +10,7 @@
      shampoo  シャンプー：100点満点の採点表。judgeFrom 回目以降で80点以上＋★必須が満点なら合格
      roleplay ロープレ：3回。言葉・判断・カルテを教育者が確認
      read     読んで覚える（スタイリスト向けのマニュアルなど）。チェックなし
+     model    モデル実習：1人ごとに先輩がチェック。OKが models 人そろったら合格
 
    checklist を入れたレッスンは、やり方の番号リストが毎日チェックできるリストになります（日付が変わると空に戻る）
    noVideo: true で動画の枠を出しません
@@ -78,6 +79,12 @@ window.ENU = {
     ]},
     { name: "カット", page: "stylist", categories: [
       { id: "cut", title: "カット", sub: "ワンレングス・グラデーションボブ・レイヤー・ショート", lessons: ["cut-onelength", "cut-graduation", "cut-layer", "cut-short"] },
+    ]},
+    { name: "カラー剤の調合", page: "stylist", categories: [
+      { id: "color-mix", title: "カラー剤の調合", sub: "夏実のカラー調合（資料を作成中）", lessons: [], planned: "夏実のこだわりのカラー調合をデータ化します（資料を作成中）" },
+    ]},
+    { name: "モデル実習", page: "stylist", categories: [
+      { id: "models", title: "モデル", sub: "カラー・縮毛矯正・カット4種 各5人", free: true, lessons: ["model-color", "model-straight", "model-long", "model-bob", "model-layer", "model-short"] },
     ]},
     { name: "カウンセリング", page: "stylist", categories: [
       { id: "counsel", title: "カウンセリング", sub: "カウンセリング＆接客マニュアル", lessons: ["counseling"] },
@@ -1558,6 +1565,14 @@ LTVとは、お客様が長期的に通ってくださる中で生まれる「�
 
 合格後も、実際の新規入客3名は上席がカウンセリング内容とカルテを確認し、教育のブレを修正する。`,
     },
+    // モデル実習（チェック項目は仮。enuの基準ができたら checks を書き換える）
+    "model-color": { title: "カラーモデル", type: "model", models: 5, target: "スタイリストデビューまで", due: 8, noVideo: true, body: "", checks: ["カウンセリングで希望と履歴を確認できた", "施術の手順どおりにできた", "時間内に終わった", "お客様に出せる仕上がり"] },
+    "model-straight": { title: "縮毛矯正モデル", type: "model", models: 5, target: "スタイリストデビューまで", due: 8, noVideo: true, body: "", checks: ["カウンセリングで希望と履歴を確認できた", "施術の手順どおりにできた", "時間内に終わった", "お客様に出せる仕上がり"] },
+    "model-long": { title: "ロングカット（整えカット）モデル", type: "model", models: 5, target: "スタイリストデビューまで", due: 8, noVideo: true, body: "", checks: ["カウンセリングで長さ（何cm）をすり合わせた", "施術の手順どおりにできた", "時間内に終わった", "お客様に出せる仕上がり"] },
+    "model-bob": { title: "ボブモデル", type: "model", models: 5, target: "スタイリストデビューまで", due: 8, noVideo: true, body: "", checks: ["カウンセリングで長さとスタイルをすり合わせた", "施術の手順どおりにできた", "時間内に終わった", "お客様に出せる仕上がり"] },
+    "model-layer": { title: "レイヤーカットモデル", type: "model", models: 5, target: "スタイリストデビューまで", due: 8, noVideo: true, body: "", checks: ["カウンセリングでレイヤーの入れ方をすり合わせた", "施術の手順どおりにできた", "時間内に終わった", "お客様に出せる仕上がり"] },
+    "model-short": { title: "ショートカットモデル", type: "model", models: 5, target: "スタイリストデビューまで", due: 8, noVideo: true, body: "", checks: ["カウンセリングで長さとスタイルをすり合わせた", "施術の手順どおりにできた", "時間内に終わった", "お客様に出せる仕上がり"] },
+
     // 仕上げ（中身と動画ができたら draft: true を消して、type・body・tasks・checks を入れる）
     "finish-inward": { title: "内巻きベースの巻き髪", type: "tech", draft: true, practice: 5, stages: ["ウィッグ"], tool: "カールアイロン、またはコテ", body: "", checks: [] },
     "finish-outward": { title: "外ハネベースの巻き髪", type: "tech", draft: true, practice: 5, stages: ["ウィッグ"], tool: "カールアイロン、またはコテ", body: "", checks: [] },

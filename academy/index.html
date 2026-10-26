@@ -313,7 +313,7 @@ const C = window.ENU;
 const ROLE = { owner: "オーナー", lead: "幹部（監督）", assistant: "アシスタント" };
 const TYPE = {
   chore: "雑務：見て覚える", quiz: "アプリのテストで合格", tech: "技術：練習 → 先輩チェック",
-  theory: "理論：口頭で答えて合格", shampoo: "採点表：80点以上＋★必須", roleplay: "ロープレ3回", read: "読んで覚える",
+  theory: "理論：口頭で答えて合格", shampoo: "採点表：80点以上＋★必須", roleplay: "ロープレ3回", read: "読んで覚える", model: "モデル実習：先輩のOKが人数分そろったら合格",
 };
 const STATUS = { todo: ["未着手", "todo"], prac: ["練習中", "prac"], wait: ["チェック待ち", "wait"], ok: ["合格", "ok"] };
 const CATS = C.groups.flatMap(g => g.categories.map(c => ({ ...c, group: g.name, page: g.page })));
@@ -349,7 +349,7 @@ const subject = () => route.uid ? db.users[route.uid] : me();   // 幹部が他�
    members/<id>   … 本人だけが書く（名前・店舗・自分の練習記録）
    roles/<id>     … オーナーだけが書く（幹部・オーナー）
    checks/<幹部のid>/records/<id> … 幹部・オーナーが書く合格チェック。合格はここからだけ決まる */
-const CHECK_TYPES = ["tech", "theory", "shampoo", "roleplay"];
+const CHECK_TYPES = ["tech", "theory", "shampoo", "roleplay", "model"];
 const validChecker = uid => ["owner", "lead"].includes(cloudState.roles[uid]?.role);
 function deriveProgress(uid, progress) {
   const byLesson = {};
@@ -363,7 +363,7 @@ function deriveProgress(uid, progress) {
     const ok = rs.filter(r => r.pass);
     st.records = rs;
     st.stages = l.type === "tech" ? [...new Set(ok.map(r => r.stage))] : l.type === "roleplay" ? [...new Set(ok.map(r => String(r.round)))] : [];
-    const done = l.type === "tech" ? l.stages.every(s => st.stages.includes(s)) : l.type === "roleplay" ? l.rounds.every((_, i) => st.stages.includes(String(i + 1))) : ok.length > 0;
+    const done = l.type === "tech" ? l.stages.every(s => st.stages.includes(s)) : l.type === "roleplay" ? l.rounds.every((_, i) => st.stages.includes(String(i + 1))) : l.type === "model" ? ok.length >= l.models : ok.length > 0;
     if (done) { const last = ok.at(-1); Object.assign(st, { status: "ok", passedAt: last.date, passedBy: last.by }); continue; }
     delete st.passedAt; delete st.passedBy;
     const lastAt = rs.at(-1)?.at || 0;
@@ -409,14 +409,17 @@ function persistCheck(rec, memberId, lessonId) {
   cloud.collection(`checks/${myUid}/records`).add({ ...rec, member: memberId, lesson: lessonId, byId: myUid })
     .catch(() => { cloudNote = "チェックの記録を保存できませんでした。もう一度記録してください。"; render(); });
 }
-let pendingRender = false;
+let pendingRender = false, formDirty = false;
+// フォームに入力している途中（○×・点数・文字）は、ほかの人の保存で画面を描き直さない
+document.addEventListener("input", e => { if (e.target.closest?.("#view form")) formDirty = true; });
+document.addEventListener("change", e => { if (e.target.closest?.("#view form")) formDirty = true; });
 const typing = () => { const a = document.activeElement; return a && a.closest?.("#view") && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.type !== "checkbox" && a.type !== "radio"; };
 function refresh() {
   rebuildUsers();
-  if (typing()) { pendingRender = true; return; }
+  if (typing() || formDirty) { pendingRender = true; return; }
   const y = scrollY; render(); scrollTo(0, y);
 }
-document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !typing()) { pendingRender = false; const y = scrollY; render(); scrollTo(0, y); } }, 0));
+document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !typing() && !formDirty) { pendingRender = false; const y = scrollY; render(); scrollTo(0, y); } }, 0));
 function cloudError() { cloudNote = "共有の記録を読み込めませんでした。ページを開き直してください。"; render(); }
 function syncCheckSubs() {
   for (const uid of Object.keys(cloudState.roles)) {
@@ -453,7 +456,7 @@ async function boot() {
 }
 
 function lessonLocked(u, cat, idx) {
-  if (isLead(u) || idx === 0 || ["chore", "read"].includes(C.lessons[cat.lessons[idx]].type)) return false;
+  if (isLead(u) || idx === 0 || cat.free || ["chore", "read"].includes(C.lessons[cat.lessons[idx]].type)) return false;
   return !passed(u, cat.lessons[idx - 1]);
 }
 // 前のレッスンに合格していないとき、そのレッスン名を返す（中身は見られる。練習とチェックだけ止める）
@@ -461,7 +464,7 @@ function blockedBy(u, id, catId) {
   if (isLead(me()) || ["chore", "read"].includes(C.lessons[id].type)) return null;   // 雑務はチェックなしなので順番待ちにしない
   const c = CATS.find(x => x.id === catId && x.lessons.includes(id)) || CATS.find(x => x.lessons.includes(id));
   const i = c.lessons.indexOf(id);
-  return i > 0 && !passed(u, c.lessons[i - 1]) ? c.lessons[i - 1] : null;
+  return i > 0 && !c.free && !passed(u, c.lessons[i - 1]) ? c.lessons[i - 1] : null;
 }
 // 毎日のチェックリスト（日付が変わると空に戻る）
 const WEEK = ["日", "月", "火", "水", "木", "金", "土"];
@@ -812,7 +815,7 @@ function viewLesson() {
   ${l.products ? productsPanel(l) : ""}
   ${l.checklist ? checklistPanel(l, u) : !l.body ? "" : `<section class="section"><h3>${l.menu ? "あわせて覚えること" : l.type === "theory" ? "覚えること" : l.fold ? "マニュアル（章をタップで開く）" : "やり方"}</h3>${md(l.body, l.fold)}</section>`}
   ${l.tasks ? `<section class="section"><h3>課題</h3><div class="md"><ol>${l.tasks.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
-  ${l.checks && l.type === "tech" ? `<section class="section"><h3>チェックポイント</h3><p class="note">${l.stages.join("と")}でチェックし、すべて○になれば合格です。</p><div class="md"><ul>${l.checks.map(t => `<li>${inline(t)}</li>`).join("")}</ul></div></section>` : ""}
+  ${l.checks && ["tech", "model"].includes(l.type) ? `<section class="section"><h3>チェックポイント</h3><p class="note">${l.type === "model" ? "モデルさん1人ごとにチェックし、すべて○ならOK" : l.stages.join("と") + "でチェックし、すべて○になれば合格"}です。</p><div class="md"><ul>${l.checks.map(t => `<li>${inline(t)}</li>`).join("")}</ul></div></section>` : ""}
   ${l.questions ? `<section class="section"><h3>チェック（先輩が口頭で質問）</h3><p class="note">すべて自分の言葉で答えられたら合格です。</p><div class="md"><ol>${l.questions.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
   ${l.type === "shampoo" ? scoreSheetInfo(l) : ""}
   ${(C.preVideo || []).includes(l.id) ? `<section class="section"><h3>入社前の予習</h3>
@@ -824,7 +827,7 @@ function viewLesson() {
       <button class="btn" type="submit">答え合わせ</button></form>`) : ""}</section>` : ""}
   ${(() => { const b = blockedBy(u, l.id, route.cat); return b && st.status !== "ok"
     ? `<section class="section"><h3>練習とチェック</h3><p class="note" style="font-size:14px">いまは予習の時間です。前のレッスン「${esc(L(b).title)}」に合格すると、練習の記録と先輩のチェックができるようになります。</p><button class="btn ghost" data-lesson="${b}">「${esc(L(b).title)}」へ</button></section>`
-    : progressPanel(l, st, u) + (st.status !== "ok" && ["tech", "theory", "shampoo", "roleplay"].includes(l.type) ? checkPanel(l, st, leadView) : ""); })()}
+    : progressPanel(l, st, u) + (st.status !== "ok" && CHECK_TYPES.includes(l.type) ? checkPanel(l, st, leadView) : ""); })()}
   ${recordsPanel(l, st)}
   ${nextButton(l, u)}`;
 }
@@ -905,6 +908,13 @@ function progressPanel(l, st, u) {
       ${st.status === "ok" ? `<p class="toast">合格。営業でお客様に入れます。</p>` : ""}
     </section>`;
   }
+  if (l.type === "model") { const okN = st.records.filter(r => r.pass).length;
+    return `<section class="section"><h3>モデル</h3>
+    <div class="count"><b>${Math.min(okN, l.models)}</b><small>/ ${l.models}人 OK</small></div>
+    <div class="meter"><i style="width:${Math.min(100, okN / l.models * 100)}%"></i></div>
+    <p class="note">モデルさんの施術が終わったら、その日のうちに先輩にチェックしてもらいます。OKが${l.models}人そろったら合格です。</p>
+    ${self && !["ok", "wait"].includes(st.status) ? `<button class="btn" id="request">モデルが終わった。チェックをお願いする</button>` : ""}
+    ${st.status === "ok" ? `<p class="toast">${l.models}人そろいました。合格！</p>` : ""}</section>`; }
   if (l.type === "roleplay") return `<section class="section"><h3>ロープレ</h3>
     <div class="list">${l.rounds.map((r, i) => `<div class="row"><span class="n">${i + 1}</span><span class="t">${esc(r)}</span>${st.stages.includes(String(i + 1)) ? `<span class="chip ok">○</span>` : `<span class="chip todo">未</span>`}</div>`).join("")}</div>
     ${self && !["ok", "wait"].includes(st.status) ? `<button class="btn" id="request">先輩にロープレをお願いする</button>` : ""}
@@ -937,6 +947,10 @@ function checkPanel(l, st, leadView) {
     const remain = l.stages.filter(s => !st.stages.includes(s));
     body = `<div class="field"><label for="ckStage">どこでチェック？</label><select id="ckStage">${remain.map(s => `<option>${esc(s)}</option>`).join("")}</select></div>
       ${oxList(l.checks)}`;
+  } else if (l.type === "model") {
+    body = `<p class="note">${st.records.filter(r => r.pass).length + 1}人目のチェックです。</p>
+      <div class="field"><label for="ckModel">モデルさん（名前や特徴のメモ）</label><input id="ckModel" placeholder="例：Aさん・肩下ロング"></div>
+      ${oxList(l.checks)}`;
   } else if (l.type === "theory") {
     body = oxList(l.questions);
   } else if (l.type === "roleplay") {
@@ -966,14 +980,14 @@ function oxList(items, required = true) {
 }
 function recordsPanel(l, st) {
   if (!st.records.length) return "";
-  const items = l.type === "shampoo" ? null : l.type === "tech" || l.type === "roleplay" ? l.checks : l.questions;
+  const items = l.type === "shampoo" ? null : ["tech", "roleplay", "model"].includes(l.type) ? l.checks : l.questions;
   return `<section class="section"><h3>チェックの記録</h3><div style="display:grid;gap:10px">
     ${st.records.slice().reverse().map(r => {
       const ng = items ? r.marks.map((v, i) => v ? null : items[i]).filter(Boolean) : l.score.map(([, p, pt], i) => r.marks[i] < pt ? `${p}（${r.marks[i]}/${pt}）` : null).filter(Boolean);
       return `<div class="rec"><div class="h"><span class="chip ${r.pass ? "ok" : "ng"}">${r.pass ? "合格" : "もう一度"}</span>
         <b>${esc(r.label)}</b>${r.score != null ? `<b>${r.score}点</b>` : ""}<span>${esc(r.date)}・${esc(r.by)}</span></div>
         ${ng.length ? `<div class="x">× ${ng.map(esc).join("／")}</div>` : ""}
-        ${r.comment ? `<div>${esc(r.comment)}</div>` : ""}</div>`; }).join("")}
+        ${r.model ? `<div>モデル：${esc(r.model)}</div>` : ""}${r.comment ? `<div>${esc(r.comment)}</div>` : ""}</div>`; }).join("")}
   </div></section>`;
 }
 function nextButton(l, u) {
@@ -1064,6 +1078,14 @@ function bindLesson() {
       if (done) pass(lead.name); else st.status = "prac";
       keep();
       return flash(done ? "すべて○、合格！営業でお客様に入れます" : allOk ? `${$("#ckStage").value}は合格。次は${l.stages.find(s => !st.stages.includes(s))}でチェックを受けよう` : "×のところを練習して、もう一度チェックを受けよう", !allOk);
+    }
+    if (l.type === "model") {
+      const n = st.records.filter(x => x.pass).length + 1;
+      rec.model = $("#ckModel").value.trim(); rec.pass = allOk; rec.label = allOk ? `${n}人目 OK` : `${n}人目（もう一度）`;
+      keep();
+      const okN = st.records.filter(x => x.pass).length, done = okN >= l.models;
+      if (done) pass(lead.name); else st.status = "prac";
+      return flash(done ? `${l.models}人そろいました。合格！` : allOk ? `${okN}人目 OK。あと${l.models - okN}人` : "×のところを見直して、次のモデルさんで", !allOk);
     }
     if (l.type === "roleplay") {
       const r = $("#ckRound").value; rec.round = Number(r); rec.label = `${r}回目：${l.rounds[r - 1]}`; rec.pass = allOk;
@@ -1213,6 +1235,7 @@ const VIEWS = {
 const TITLES = { mypage: "マイページ", pre: C.newGrad.title, roadmap: "ロードマップ", team: "みんなの進み具合", member: "進み具合", chat: "オーナーAIチャット" };
 
 function render() {
+  formDirty = false;
   if (mode === "loading" || (mode === "cloud" && !cloudState.loaded)) {
     $("#tabs").hidden = true; $("#backBtn").hidden = true; $("#brand").className = "brand logo"; $("#brand").textContent = "enu ACADEMY";
     $("#view").innerHTML = `<p class="pending" style="padding:40px 0;text-align:center">読み込んでいます…</p>`; return;
