@@ -97,8 +97,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     <button data-tab="ledger">会社全体（試算表）</button>
     <button data-tab="monthly">月次（売上・人件費）</button>
     <button data-tab="invoices">請求書・仕入</button>
-    <button data-tab="schedule">家賃・税の予定</button>
+    <button data-tab="cash">お金の残り</button>
+    <button data-tab="schedule">家賃・税金カレンダー</button>
+    <button data-tab="promo">広告・販促</button>
     <button data-tab="plans">今後の計画</button>
+    <button data-tab="guide">使い方・用語</button>
     <button data-tab="settings">設定・バックアップ</button>
   </nav>
 
@@ -209,6 +212,71 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     </div>
   </section>
 
+  <!-- お金の残り -->
+  <section class="view" id="v-cash" hidden>
+    <div class="panel">
+      <h2>お金の残り（資金繰り）</h2>
+      <p class="note">「毎月いくら入って、いくら出て、月末に預金がいくら残りそうか」を見る表です。利益が出ていても、税金や借入の返済・出店費用が重なる月はお金が足りなくなることがあります。それを前もって見つけるための表です。</p>
+      <div class="row">
+        <label>今の預金残高（全口座の合計）<input class="amt" id="cash-start" inputmode="numeric" placeholder="0"></label>
+        <label>いつ時点（その月の初め）<input type="month" id="cash-start-month"></label>
+        <label>毎月の借入返済（元本）<input class="amt" id="cash-loan" inputmode="numeric" placeholder="0"></label>
+        <label>安全ライン（出金の何か月分）<select id="cash-safe"><option value="1">1か月分</option><option value="2">2か月分</option><option value="3">3か月分</option><option value="4">4か月分</option><option value="6">6か月分</option></select></label>
+        <button class="btn" id="cash-save" style="align-self:flex-end">保存</button>
+      </div>
+    </div>
+    <div class="grid3" id="cash-kpi"></div>
+    <div class="panel">
+      <h2>12か月の見通し</h2>
+      <p class="note">「預かり金など」の印がついた税金（源泉所得税・従業員の住民税・社会保険料など）は、給料などの経費にすでに含まれているので、ここでは二重に引いていません。</p>
+      <p class="note" id="cash-basis"></p>
+      <div class="tbl" id="cash-table"></div>
+    </div>
+  </section>
+
+  <!-- 広告・販促 -->
+  <section class="view" id="v-promo" hidden>
+    <div class="panel">
+      <h2 id="promo-form-title">広告・販促の施策を追加</h2>
+      <p class="note">ホットペッパーやInstagram広告など、毎月お金をかけている集客を1行ずつ入れます。予算は「お金の残り」の見通しに自動で入ります。</p>
+      <div class="row" id="promo-quick"></div>
+      <div class="row">
+        <label>施策名<input id="promo-title" placeholder="例：ホットペッパー掲載"></label>
+        <label>店舗<select id="promo-store"></select></label>
+        <label>月の予算<input class="amt" id="promo-monthly" inputmode="numeric" placeholder="0"></label>
+        <label>開始月<input type="month" id="promo-start"></label>
+        <label>終了月（続けるなら空）<input type="month" id="promo-end"></label>
+        <label>目標の新規客数（月）<input class="amt" id="promo-goal" inputmode="numeric" placeholder="0" style="width:6em"></label>
+      </div>
+      <label>メモ（クーポン内容・効果など）<input id="promo-memo"></label>
+      <div class="row"><button class="btn" id="promo-save">保存</button><button class="btn ghost" id="promo-cancel" hidden>編集をやめる</button></div>
+    </div>
+    <div class="panel">
+      <h2>施策の一覧</h2>
+      <p class="note">「新規1人あたり」は、月の予算 ÷ 目標の新規客数です。新規のお客様1人を呼ぶのにいくらかかっているかの目安になります。</p>
+      <div class="tbl" id="promo-list"></div>
+    </div>
+    <div class="panel"><h2>月別の広告・販促費（予定）</h2><div class="tbl" id="promo-months"></div></div>
+  </section>
+
+  <!-- 使い方・用語 -->
+  <section class="view" id="v-guide" hidden>
+    <div class="panel">
+      <h2>毎月やること</h2>
+      <ol style="margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px">
+        <li>税理士さんから<b>試算表</b>が届いたら、写真をClaudeに送るか、「会社全体（試算表）」に入力する</li>
+        <li>届いた<b>請求書</b>を「請求書・仕入」に登録する（同じ会社の分は店舗ごとに金額を分ける）</li>
+        <li>各店の<b>売上と人件費</b>を「月次」に入れる</li>
+        <li>「家賃・税金カレンダー」で今月の<b>支払い</b>を確認する。金額がわかったら入れる</li>
+        <li>「お金の残り」で、この先<b>預金が足りなくなる月</b>がないか見る</li>
+      </ol>
+    </div>
+    <div class="panel">
+      <h2>言葉の意味</h2>
+      <dl class="kv" style="grid-template-columns:minmax(7em,auto) 1fr;gap:10px 16px" id="glossary"></dl>
+    </div>
+  </section>
+
   <!-- 予定 -->
   <section class="view" id="v-schedule" hidden>
     <div class="panel">
@@ -232,11 +300,21 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
         <label>金額（目安）<input class="amt" id="tax-amt" inputmode="numeric" placeholder="0"></label>
         <button class="btn" id="tax-save" style="align-self:flex-end">追加</button>
       </div>
-      <div class="row">
+      <div class="panel" style="background:var(--bg)">
+        <h3>enuの税金・支払いの予定をまとめて入れる</h3>
+        <div class="row">
+          <label>源泉所得税の「納期の特例」<select id="tx-gensen"><option value="no">なし（毎月10日に納付）</option><option value="yes">あり（1月20日・7月10日）</option></select></label>
+          <label>住民税（従業員分）の納期の特例<select id="tx-jumin"><option value="no">なし（毎月10日）</option><option value="yes">あり（6月10日・12月10日）</option></select></label>
+          <label>消費税の中間申告の回数<select id="tx-ctax"><option value="0">なし</option><option value="1">年1回</option><option value="3">年3回</option><option value="11">年11回</option></select></label>
+          <button class="btn" id="tx-gen" style="align-self:flex-end">今期の予定を入れる</button>
+        </div>
+        <p class="note">わからないところは税理士さんに「源泉の納期の特例は使っていますか」「消費税の中間申告は年何回ですか」と聞けばすぐわかります。前の年の消費税が48万円以下ならなし、400万円以下なら年1回、4,800万円以下なら年3回が目安です。もう一度押しても同じ予定が重なることはありません。</p>
+      </div>
+      <div class="row" hidden>
         <button class="btn ghost sm" id="tax-auto-corp">法人の期限を決算月から追加</button>
         <button class="btn ghost sm" id="tax-auto-indiv">個人事業の予定納税（7月末・11月末）を追加</button>
       </div>
-      <p class="note">法人：中間申告（予定納税）は事業年度開始から6か月を過ぎた日から2か月以内、確定申告は決算日から2か月以内が原則です。消費税の中間申告は前年の納税額により回数が変わるので、税務署からの通知の日付で入れてください。土日祝の場合は翌平日になります。</p>
+      <p class="note">日付は法律で決まっている期限の目安です（土日は翌月曜にずらしています。祝日は自分で確認してください）。金額がわかったら右の欄に入れると「お金の残り」に反映されます。</p>
       <div class="tbl" id="tax-list"></div>
     </div>
   </section>
@@ -288,8 +366,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 <script>
 const PLAN_KINDS={store:'出店',product:'商品づくり',event:'慰安旅行・イベント',other:'その他'};
 const STORES=[{id:'honten',name:'enu hair 本店'},{id:'chayamachi',name:'enu hair 茶屋町'},{id:'eyelash',name:'アイラッシュ enu'}];
-const COLS=['ledger','monthly','invoices','schedules','plans','settings'];
-const state={ledger:{},monthly:{},invoices:{},schedules:{},plans:{},settings:{}};
+const COLS=['promos','cashm','ledger','monthly','invoices','schedules','plans','settings'];
+const state={promos:{},cashm:{},ledger:{},monthly:{},invoices:{},schedules:{},plans:{},settings:{}};
 let db=null, mode='local';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -364,7 +442,7 @@ const invTotal=inv=>STORES.reduce((t,s)=>t+num(inv.alloc?.[s.id]),0);
 const dLabel=d=>{const [y,m,dd]=d.split('-').map(Number);const w='日月火水木金土'[new Date(y,m-1,dd).getDay()];return `${m}/${dd}(${w})`};
 
 /* ---------- 描画 ---------- */
-function render(){renderHome();renderLedger();renderStore();renderMonthly();renderInvoices();renderSchedule();renderPlans();renderSettings()}
+function render(){renderCash();renderPromo();renderGuide();renderHome();renderLedger();renderStore();renderMonthly();renderInvoices();renderSchedule();renderPlans();renderSettings()}
 
 function renderHome(){
   const ym=$('home-month').value||thisMonth();
@@ -517,12 +595,135 @@ function renderSchedule(){
   $('rent-list').innerHTML=r.length?`<table><thead><tr><th>店舗</th><th>振込日</th><th class="r">金額</th><th>振込先</th><th></th></tr></thead><tbody>
     ${r.map(([id,s])=>`<tr class="sc-${s.store}"><td><span class="dot"></span>${STORES.find(x=>x.id===s.store)?.name||''}${s.example?'<span class="example">例</span>':''}</td><td>毎月 ${num(s.day)}日</td><td class="r num">${yen(num(s.amount))}</td><td>${esc(s.memo)}</td><td><button class="btn danger sm" data-del="schedules:${id}">削除</button></td></tr>`).join('')}
     </tbody></table>`:'<p class="empty">家賃はまだ登録されていません。</p>';
+  if(document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.schedAmt)return;
   const t=Object.entries(state.schedules).filter(([,s])=>s.kind!=='rent').sort((a,b)=>(a[1].date||'').localeCompare(b[1].date||''));
   const today=todayStr();
   $('tax-list').innerHTML=t.length?`<table><thead><tr><th>期日</th><th>内容</th><th class="r">金額</th><th></th><th></th></tr></thead><tbody>
-    ${t.map(([id,s])=>`<tr><td class="num">${esc(s.date)}</td><td>${esc(s.title)}${s.example?'<span class="example">例</span>':''}</td><td class="r num">${num(s.amount)?yen(num(s.amount)):''}</td><td>${s.date<today?'<span class="pill">済/過去</span>':`<span class="pill ${s.kind==='tax'?'warn':''}">${s.kind==='tax'?'税金':'予定'}</span>`}</td><td><button class="btn danger sm" data-del="schedules:${id}">削除</button></td></tr>`).join('')}
+    ${t.map(([id,s])=>`<tr${s.date<today?' style="opacity:.55"':''}><td class="num">${esc(s.date)}</td><td style="white-space:normal;min-width:14em">${esc(s.title)}${s.example?'<span class="example">例</span>':''}${s.help?`<br><span class="note">${esc(s.help)}</span>`:''}${s.noCash?' <span class="pill">預かり金など</span>':''}</td><td class="r"><input class="amt" data-sched-amt="${id}" inputmode="numeric" value="${num(s.amount)||''}" placeholder="金額" aria-label="${esc(s.title)} の金額"></td><td>${s.date<today?'<span class="pill">済/過去</span>':`<span class="pill ${s.kind==='tax'?'warn':''}">${s.kind==='tax'?'税金':'予定'}</span>`}</td><td><button class="btn danger sm" data-del="schedules:${id}">削除</button></td></tr>`).join('')}
     </tbody></table>`:'<p class="empty">期日はまだありません。上のボタンで目安の期限を追加できます。</p>';
 }
+
+/* ---------- 税金カレンダー自動作成 ---------- */
+const bizDay=d=>{const [y,m,dd]=d.split('-').map(Number);const t=new Date(y,m-1,dd);const w=t.getDay();if(w===6)t.setDate(t.getDate()+2);else if(w===0)t.setDate(t.getDate()+1);
+  return `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`};
+const dayOf=(ym,d)=>`${ym}-${pad(d)}`;
+function taxPlan(){
+  const set=state.settings.main||{},ms=fyMonths(thisMonth()),st=ms[0],en=ms[11],fyName=`${en.slice(0,4)}年${Number(en.slice(5))}月期`,prev=addMonths(st,-1);
+  const prevName=`${prev.slice(0,4)}年${Number(prev.slice(5))}月期`,L=[];
+  const add=(code,date,title,help,o={})=>L.push({id:`gen_${code}_${date}`,kind:'tax',date:bizDay(date),title,help,...o});
+  add('kakutei_prev',monthEnd(addMonths(prev,2)),`法人税・住民税・事業税・消費税 確定申告と納付（${prevName}）`,'前の期の1年分の税金をまとめて納める日。決算日から2か月以内。');
+  add('chukan_corp',monthEnd(addMonths(st,7)),`法人税・住民税・事業税 中間申告（予定納税）（${fyName}）`,'今期の税金の前払い。ふつうは前期の税金の半分くらい。税務署から届く用紙の金額を入れる。');
+  const ct=Number(set.ctaxTimes||0);
+  if(ct===1)add('ctax1',monthEnd(addMonths(st,7)),'消費税 中間申告（年1回）','消費税の前払い。前期の消費税の半分が目安。');
+  if(ct===3)[2,5,8].forEach((k,i)=>add('ctax3_'+(i+1),monthEnd(addMonths(st,k+2)),`消費税 中間申告（年3回・第${i+1}回）`,'消費税の前払い。前期の消費税の4分の1が目安。'));
+  if(ct===11)for(let k=1;k<=11;k++)add('ctax11_'+k,monthEnd(addMonths(st,k+1)),`消費税 中間申告（年11回・第${k}回）`,'消費税の前払い。前期の消費税の12分の1が目安。');
+  add('kakutei_now',monthEnd(addMonths(en,2)),`法人税・住民税・事業税・消費税 確定申告と納付（${fyName}）`,'今期の税金の残りをまとめて納める日。中間で払った分は差し引かれる。');
+  if(set.gensenTokurei)ms.forEach(m=>{if(m.endsWith('-01'))add('gensen_t',dayOf(m,20),'源泉所得税（納期の特例・7〜12月分）','給料や外注費から預かった所得税を半年分まとめて国に納める。',{noCash:true});
+      if(m.endsWith('-07'))add('gensen_t',dayOf(m,10),'源泉所得税（納期の特例・1〜6月分）','給料や外注費から預かった所得税を半年分まとめて国に納める。',{noCash:true})});
+  else ms.forEach(m=>add('gensen',dayOf(addMonths(m,1),10),`源泉所得税（${Number(m.slice(5))}月払い分）`,'給料や外注費から預かった所得税を国に納める。',{noCash:true}));
+  if(set.juminTokurei)ms.forEach(m=>{if(m.endsWith('-06')||m.endsWith('-12'))add('jumin_t',dayOf(m,10),'住民税（従業員分・納期の特例）','給料から預かった住民税を半年分まとめて市区町村に納める。',{noCash:true})});
+  else ms.forEach(m=>add('jumin',dayOf(addMonths(m,1),10),`住民税（従業員分・${Number(m.slice(5))}月分）`,'給料から預かった住民税を市区町村に納める。',{noCash:true}));
+  ms.forEach(m=>add('shaho',monthEnd(m),`社会保険料（${Number(addMonths(m,-1).slice(5))}月分）`,'健康保険・厚生年金。会社負担分＋給料から預かった本人分を口座振替で納める。',{noCash:true}));
+  ms.forEach(m=>{const mm=m.slice(5);
+    if(mm==='07')add('roudou',dayOf(m,10),'労働保険 年度更新（労災・雇用保険）','1年分の労働保険料を申告して納める。分割（延納）なら10月末・1月末にも。',{noCash:true});
+    if(mm==='01')add('shokyaku',monthEnd(m),'償却資産の申告（市区町村）','店の設備（いす・シャンプー台など）を市区町村に申告する。申告だけで納付は別。',{noCash:true});
+    if(mm==='01')add('hoteichosho',monthEnd(m),'法定調書・給与支払報告書の提出','前年の給料や報酬の支払いを税務署・市区町村に報告する（納付はなし）。',{noCash:true});});
+  return L}
+$('tx-gen').addEventListener('click',async()=>{
+  const main={...(state.settings.main||{}),gensenTokurei:$('tx-gensen').value==='yes',juminTokurei:$('tx-jumin').value==='yes',ctaxTimes:Number($('tx-ctax').value)};
+  await put('settings','main',main);
+  const L=taxPlan();let n=0;
+  for(const it of L){const {id,...d}=it;if(state.schedules[id])continue;await put('schedules',id,{...d,amount:0});n++}
+  toast(n?`${n}件の予定を入れました`:'すでに全部入っています')});
+document.addEventListener('change',async e=>{const id=e.target.dataset&&e.target.dataset.schedAmt;if(!id)return;
+  const s=state.schedules[id];if(!s)return;e.target.blur();await put('schedules',id,{...s,amount:num(e.target.value)});toast('金額を保存しました')});
+
+/* ---------- お金の残り ---------- */
+const NONCASH=['減価償却費','長期前払費用償却'],ADACC=['広告宣伝費','販売促進費'];
+function cashBase(){
+  const have=Object.keys(state.ledger).sort().slice(-6);
+  const act=m=>{const it=state.ledger[m]?.items;if(!it)return null;let out=0,inc=num(it['売上高']),ad=0,oth=num(it['受取利息'])+num(it['雑収入']);
+    ACC.forEach(([k,c])=>{if(['売上','外収','税'].includes(c)||NONCASH.includes(k))return;out+=num(it[k]);if(ADACC.includes(k))ad+=num(it[k])});return {inc,out,ad,oth}};
+  const A=have.map(act);const avg=k=>A.length?A.reduce((t,x)=>t+x[k],0)/A.length:0;
+  return {act,avgInc:avg('inc'),avgOut:avg('out'),avgAd:avg('ad'),avgOth:avg('oth'),n:A.length}}
+function promoMonth(m){return Object.values(state.promos).filter(p=>p.start&&p.start<=m&&(!p.end||p.end>=m)).reduce((t,p)=>t+num(p.monthly),0)}
+function cashRows(){
+  const set=state.settings.main||{},start=set.cashStartMonth||thisMonth(),B=cashBase(),hasPromo=Object.keys(state.promos).length>0;
+  let bal=num(set.cashStart);const rows=[];
+  for(let k=0;k<12;k++){const m=addMonths(start,k),a=B.act(m),o=state.cashm[m]||{};
+    const forecast=!a;
+    const inc=o.inc!=null&&o.inc!==''?num(o.inc):a?a.inc+a.oth:B.avgInc+B.avgOth;
+    let cost;if(o.out!=null&&o.out!=='')cost=num(o.out);else if(a)cost=a.out;else cost=hasPromo?B.avgOut-B.avgAd+promoMonth(m):B.avgOut;
+    const tax=Object.values(state.schedules).filter(s=>s.kind==='tax'&&!s.noCash&&(s.date||'').startsWith(m)).reduce((t,s)=>t+num(s.amount),0);
+    const plan=Object.values(state.plans).filter(p=>p.month===m&&p.status!=='見送り').reduce((t,p)=>t+num(p.budget),0);
+    const loan=num(set.cashLoan),outAll=cost+tax+plan+loan,open=bal;bal=open+inc-outAll;
+    rows.push({m,forecast,inc,cost,tax,plan,loan,outAll,open,close:bal,edited:o.inc!=null||o.out!=null})}
+  const avgOut=rows.reduce((t,r)=>t+r.outAll,0)/rows.length,line=avgOut*Number(set.safeMonths||2);
+  rows.forEach(r=>r.state=r.close<0?'bad':r.close<line?'warn':'good');
+  return {rows,line,B,set}}
+function renderCash(){
+  const {rows,line,B,set}=cashRows(),act=document.activeElement;
+  if(!(act&&act.closest&&act.closest('.view#v-cash .row'))){$('cash-start').value=set.cashStart||'';$('cash-start-month').value=set.cashStartMonth||thisMonth();$('cash-loan').value=set.cashLoan||'';$('cash-safe').value=String(set.safeMonths||2)}
+  const hasStart=set.cashStart!=null&&set.cashStart!=='';
+  const worst=rows.reduce((a,r)=>r.close<a.close?r:a,rows[0]);const lab={good:'安心',warn:'要注意',bad:'足りない'};
+  $('cash-kpi').innerHTML=hasStart?`
+    <div class="panel"><span class="lbl">12か月後の預金（見込み）</span><span class="big ${rows[11].state}">${man(rows[11].close)}</span><span class="note">${mLabel(rows[11].m)}末</span></div>
+    <div class="panel"><span class="lbl">いちばん少なくなる月</span><span class="big ${worst.state}">${man(worst.close)}</span><span class="note">${mLabel(worst.m)}末・<span class="pill ${worst.state}">${lab[worst.state]}</span></span></div>
+    <div class="panel"><span class="lbl">安全ライン</span><span class="big">${man(line)}</span><span class="note">毎月の出金 × ${set.safeMonths||2}か月分。これを下回ると「要注意」</span></div>`
+    :'<div class="panel"><p class="empty">上に「今の預金残高」を入れると、月末にいくら残りそうかが出ます。</p></div>';
+  $('cash-basis').textContent=B.n?`実績の月は試算表の数字、見込みの月は試算表${B.n}か月の平均（入金 ${man(B.avgInc+B.avgOth)}／出金 ${man(B.avgOut)}）を使っています。減価償却費はお金が出ていかないので除いています。見込みの金額は表の中で直せます。`:'試算表が入ると、その平均から見込みを作ります。それまでは表の中に見込みを直接入れてください。';
+  if(act&&act.dataset&&act.dataset.cashm)return;
+  $('cash-table').innerHTML=`<table><thead><tr><th>月</th><th></th><th class="r">月初の残高</th><th class="r">入るお金<br><span class="note">売上など</span></th><th class="r">出るお金<br><span class="note">仕入・人件費・家賃・経費</span></th><th class="r">税金</th><th class="r">計画の出費</th><th class="r">借入返済</th><th class="r">月末の残高</th><th>判定</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td>${mLabel(r.m)}</td><td><span class="pill">${r.forecast?'見込み':'実績'}</span></td><td class="r num">${hasStart?yen(r.open):'—'}</td>
+      <td class="r">${r.forecast?`<input class="amt" data-cashm="${r.m}" data-f="inc" value="${Math.round(r.inc)}" inputmode="numeric" aria-label="${mLabel(r.m)} 入るお金">`:`<span class="num">${yen(r.inc)}</span>`}</td>
+      <td class="r">${r.forecast?`<input class="amt" data-cashm="${r.m}" data-f="out" value="${Math.round(r.cost)}" inputmode="numeric" aria-label="${mLabel(r.m)} 出るお金">`:`<span class="num">${yen(r.cost)}</span>`}</td>
+      <td class="r num">${r.tax?yen(r.tax):''}</td><td class="r num">${r.plan?yen(r.plan):''}</td><td class="r num">${r.loan?yen(r.loan):''}</td>
+      <td class="r num ${hasStart?r.state:''}"><b>${hasStart?yen(r.close):'—'}</b></td><td>${hasStart?`<span class="pill ${r.state}">${lab[r.state]}</span>`:''}</td></tr>`).join('')}</tbody></table>
+    <p class="note">税金は「家賃・税金カレンダー」に入れた金額、計画の出費は「今後の計画」の予算（出店・慰安旅行など）がその月に入ります。${Object.keys(state.promos).length?'広告・販促費は「広告・販促」の予算で見込んでいます。':''}</p>`}
+$('cash-save').addEventListener('click',async()=>{document.activeElement.blur();
+  await put('settings','main',{...(state.settings.main||{}),cashStart:num($('cash-start').value),cashStartMonth:$('cash-start-month').value||thisMonth(),cashLoan:num($('cash-loan').value),safeMonths:Number($('cash-safe').value)});toast('保存しました')});
+document.addEventListener('change',async e=>{const m=e.target.dataset&&e.target.dataset.cashm;if(!m)return;
+  const f=e.target.dataset.f,o={...(state.cashm[m]||{})};o[f]=num(e.target.value);e.target.blur();await put('cashm',m,o);toast(mLabel(m)+'の見込みを直しました')});
+
+/* ---------- 広告・販促 ---------- */
+let promoEdit=null;
+const PROMO_QUICK=['ホットペッパー掲載','Instagram広告','LINE配信','Googleマップ（口コミ・MEO）','紹介キャンペーン','チラシ・ポスティング'];
+function renderPromo(){
+  if(!$('promo-store').options.length){$('promo-store').innerHTML='<option value="all">全店共通</option>'+STORES.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    $('promo-quick').innerHTML=PROMO_QUICK.map(q=>`<button class="btn ghost sm" data-promo-q="${q}">＋${q}</button>`).join('')}
+  const sn=id=>id==='all'?'全店共通':STORES.find(s=>s.id===id)?.name||'';
+  const P=Object.entries(state.promos).sort((a,b)=>num(b[1].monthly)-num(a[1].monthly)),now=thisMonth();
+  $('promo-list').innerHTML=P.length?`<table><thead><tr><th>施策</th><th>店舗</th><th class="r">月の予算</th><th>期間</th><th class="r">目標新規</th><th class="r">新規1人あたり</th><th></th></tr></thead><tbody>
+    ${P.map(([id,p])=>{const live=p.start<=now&&(!p.end||p.end>=now);return `<tr><td style="white-space:normal">${esc(p.title)} ${live?'<span class="pill good">実施中</span>':''}${p.memo?`<br><span class="note">${esc(p.memo)}</span>`:''}</td><td class="sc-${p.store}">${p.store!=='all'?'<span class="dot"></span>':''}${sn(p.store)}</td>
+      <td class="r num">${yen(num(p.monthly))}</td><td class="num">${p.start?mLabel(p.start):''}〜${p.end?mLabel(p.end):'継続'}</td><td class="r num">${num(p.goal)?num(p.goal)+'人':''}</td><td class="r num">${num(p.goal)?yen(num(p.monthly)/num(p.goal)):''}</td>
+      <td><div class="row" style="flex-wrap:nowrap;gap:4px"><button class="btn ghost sm" data-edit-promo="${id}">編集</button><button class="btn danger sm" data-del="promos:${id}">削除</button></div></td></tr>`}).join('')}</tbody></table>`
+    :'<p class="empty">まだ施策がありません。上の「＋ホットペッパー掲載」などを押すと名前が入ります。</p>';
+  const ms=Array.from({length:12},(_,k)=>addMonths(now,k)),lgAd=m=>{const it=state.ledger[m]?.items;return it?num(it['広告宣伝費'])+num(it['販売促進費']):null};
+  $('promo-months').innerHTML=P.length?`<table><thead><tr><th>月</th><th class="r">予算の合計</th></tr></thead><tbody>${ms.map(m=>`<tr><td>${mLabel(m)}</td><td class="r num">${yen(promoMonth(m))}</td></tr>`).join('')}</tbody></table>`
+    +(Object.keys(state.ledger).length?`<p class="note">参考：試算表の広告宣伝費＋販売促進費は ${Object.keys(state.ledger).sort().map(m=>`${Number(m.slice(5))}月 ${man(lgAd(m))}`).join('・')}</p>`:''):'';
+}
+function resetPromo(){promoEdit=null;['promo-title','promo-monthly','promo-end','promo-goal','promo-memo'].forEach(id=>$(id).value='');$('promo-start').value=thisMonth();$('promo-store').value='all';
+  $('promo-form-title').textContent='広告・販促の施策を追加';$('promo-cancel').hidden=true}
+$('promo-save').addEventListener('click',async()=>{const d={title:$('promo-title').value.trim(),store:$('promo-store').value,monthly:num($('promo-monthly').value),start:$('promo-start').value,end:$('promo-end').value,goal:num($('promo-goal').value),memo:$('promo-memo').value.trim()};
+  if(!d.title||!d.start){toast('施策名と開始月を入れてください');return}
+  await put('promos',promoEdit||uid(),d);toast('保存しました');resetPromo()});
+$('promo-cancel').addEventListener('click',resetPromo);
+document.addEventListener('click',e=>{const q=e.target.closest('[data-promo-q]');if(q){$('promo-title').value=q.dataset.promoQ;$('promo-monthly').focus();return}
+  const ed=e.target.closest('[data-edit-promo]');if(ed){const id=ed.dataset.editPromo,p=state.promos[id];promoEdit=id;
+    $('promo-title').value=p.title||'';$('promo-store').value=p.store||'all';$('promo-monthly').value=num(p.monthly)||'';$('promo-start').value=p.start||'';$('promo-end').value=p.end||'';$('promo-goal').value=num(p.goal)||'';$('promo-memo').value=p.memo||'';
+    $('promo-form-title').textContent='施策を編集';$('promo-cancel').hidden=false;$('promo-form-title').scrollIntoView({behavior:'smooth'})}});
+
+/* ---------- 用語 ---------- */
+const GLOSSARY=[['売上','お客様からいただいたお金の合計。'],['粗利（売上総利益）','売上 − 仕入。商品や薬剤の代金を引いたあとに残るお金。'],
+ ['営業利益','粗利 − 人件費・家賃・広告費などの経費。お店の本業でいくらもうかったか。'],['経常利益','営業利益 ＋ 利息や雑収入 − 借入の利息。'],
+ ['当期純利益','最後に税金まで引いて残った利益。'],['利益率','利益 ÷ 売上。100円の売上で何円残るか。'],['人件費率','人件費 ÷ 売上。美容室は40〜50%くらいが多い。'],
+ ['原価率','仕入 ÷ 売上。'],['試算表','税理士さんが毎月作る、会社のお金の成績表。決算書の途中経過。'],['決算月','会社の1年の区切りの月。enuは6月（7月〜翌6月が1年）。'],
+ ['確定申告（法人）','1年分の利益をもとに税金を計算して納めること。決算月から2か月以内。'],['中間申告・予定納税','今期の税金の一部を途中で前払いすること。'],
+ ['消費税の中間申告','消費税の前払い。前の年の消費税が多いほど回数が増える。'],['源泉所得税','給料や外注費から会社が預かった所得税。会社がまとめて国に納める。'],
+ ['住民税（特別徴収）','給料から会社が預かった従業員の住民税。会社がまとめて市区町村に納める。'],['納期の特例','10人未満の会社なら、源泉所得税などを毎月ではなく年2回にまとめて納められる仕組み。'],
+ ['法定福利費','社会保険料などの会社負担分。'],['外注費','業務委託のスタッフへの支払いなど。'],['減価償却費','高い設備を何年かに分けて経費にしたもの。お金はもう払い済みなので、資金繰りでは除く。'],
+ ['資金繰り','預金がいくら残るかの見通し。利益が出ていても税金や返済が重なると足りなくなることがある。'],['安全ライン','もしもの時のために、毎月の出金の何か月分の預金を持っておくかの目安。']];
+function renderGuide(){if(!$('glossary').children.length)$('glossary').innerHTML=GLOSSARY.map(([k,v])=>`<dt style="color:var(--ink);font-weight:700">${k}</dt><dd style="text-align:left">${v}</dd>`).join('')}
 
 let planEdit=null;
 function renderPlans(){
@@ -538,6 +739,7 @@ function renderPlans(){
 }
 
 function renderSettings(){
+  const st=state.settings.main||{};if(document.activeElement&&!document.activeElement.closest('#v-schedule')){$('tx-gensen').value=st.gensenTokurei?'yes':'no';$('tx-jumin').value=st.juminTokurei?'yes':'no';$('tx-ctax').value=String(st.ctaxTimes||0)}
   const sel=$('set-fyend');
   if(!sel.options.length)sel.innerHTML=Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}月</option>`).join('');
   if(document.activeElement!==sel)sel.value=String(fyEnd());
@@ -640,7 +842,7 @@ $('bk-import').addEventListener('change',async e=>{const f=e.target.files[0];if(
     toast(`${n}件を復元しました`)}catch(err){toast('このファイルは読み込めませんでした')}e.target.value=''});
 
 /* ---------- 起動 ---------- */
-$('home-month').value=thisMonth();$('lg-month').value=thisMonth();$('m-month').value=thisMonth();$('inv-date').value=todayStr();
+$('home-month').value=thisMonth();$('promo-start').value=thisMonth();$('lg-month').value=thisMonth();$('m-month').value=thisMonth();$('inv-date').value=todayStr();
 let tab='home';try{tab=localStorage.getItem('enu-tab')||'home';curStore=localStorage.getItem('enu-store')||'honten'}catch(e){}
 $('st-month').value=thisMonth();
 showTab(tab);
