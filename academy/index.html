@@ -1321,7 +1321,7 @@ function searchManual(text) {
 function viewChat() {
   return `
   <section class="ptitle"><div class="eyebrow">ASK THE OWNER</div><h1>オーナーAIチャット</h1>
-  <p class="note" id="chatMode">${sample ? "AIが、カウンセリング＆接客マニュアルと再来術マニュアルをもとに答えます。" : "マニュアルの中から、近い答えを探して表示します。"}</p></section>
+  <p class="note" id="chatMode">${sample ? "AIが、理念・カウンセリング・カラー調合・再来術のマニュアルをもとに答えます。" : "マニュアルの中から、近い答えを探して表示します。"}</p></section>
   <section class="chat" id="chatLogEl">${chatLog.map(m => m.who === "me" ? `<div class="msg me">${esc(m.text)}</div>` : `<div class="msg ai">${m.html || esc(m.text)}</div>`).join("")}</section>
   <div class="sugg">${["次回予約を「また連絡します」と言われた", "ブリーチしないと出ない色の写真を見せられた", "仕上がりに微妙な顔をされた", "値段が高いと言われた", "仕事が終わったら？"].map(s => `<button data-sugg="${esc(s)}">${esc(s)}</button>`).join("")}</div>
   <form class="chatform" id="chatForm"><input id="chatInput" placeholder="質問を入力" autocomplete="off"><button class="btn" type="submit" id="chatSend">送信</button></form>`;
@@ -1365,7 +1365,7 @@ function bindChat() {
 }
 (async () => {
   try { sample = window.claude?.use ? await window.claude.use("sample") : null; } catch { sample = null; }
-  if (route.name === "chat" && $("#chatMode")) $("#chatMode").textContent = sample ? "AIが、カウンセリング＆接客マニュアルと再来術マニュアルをもとに答えます。" : "マニュアルの中から、近い答えを探して表示します。";
+  if (route.name === "chat" && $("#chatMode")) $("#chatMode").textContent = sample ? "AIが、理念・カウンセリング・カラー調合・再来術のマニュアルをもとに答えます。" : "マニュアルの中から、近い答えを探して表示します。";
 })();
 
 /* ---------- 描画 ---------- */
