@@ -257,6 +257,12 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
       <div class="tbl" id="promo-list"></div>
     </div>
     <div class="panel"><h2>月別の広告・販促費（予定）</h2><div class="tbl" id="promo-months"></div></div>
+    <div class="panel">
+      <div class="row between"><h2>検索で見つけてもらう（SEO・Googleマップ）</h2><span class="pill" id="seo-count"></span></div>
+      <p class="note">Googleの「SEOスターターガイド」の考え方を、enuの3店舗向けにやることリストにしました。お金をかけずにできる集客です。できたらチェックを入れてください（チェックは保存されます）。変えてから検索結果に出るまで、数時間〜数か月かかります。</p>
+      <div class="bar" style="--sc:var(--good);height:6px"><div id="seo-bar" style="height:100%;background:var(--good);border-radius:4px;width:0"></div></div>
+      <div id="seo-list" style="display:flex;flex-direction:column;gap:14px"></div>
+    </div>
   </section>
 
   <!-- 使い方・用語 -->
@@ -366,8 +372,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 <script>
 const PLAN_KINDS={store:'出店',product:'商品づくり',event:'慰安旅行・イベント',other:'その他'};
 const STORES=[{id:'honten',name:'enu hair 本店'},{id:'chayamachi',name:'enu hair 茶屋町'},{id:'eyelash',name:'アイラッシュ enu'}];
-const COLS=['promos','cashm','ledger','monthly','invoices','schedules','plans','settings'];
-const state={promos:{},cashm:{},ledger:{},monthly:{},invoices:{},schedules:{},plans:{},settings:{}};
+const COLS=['checks','promos','cashm','ledger','monthly','invoices','schedules','plans','settings'];
+const state={checks:{},promos:{},cashm:{},ledger:{},monthly:{},invoices:{},schedules:{},plans:{},settings:{}};
 let db=null, mode='local';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -442,7 +448,7 @@ const invTotal=inv=>STORES.reduce((t,s)=>t+num(inv.alloc?.[s.id]),0);
 const dLabel=d=>{const [y,m,dd]=d.split('-').map(Number);const w='日月火水木金土'[new Date(y,m-1,dd).getDay()];return `${m}/${dd}(${w})`};
 
 /* ---------- 描画 ---------- */
-function render(){renderCash();renderPromo();renderGuide();renderHome();renderLedger();renderStore();renderMonthly();renderInvoices();renderSchedule();renderPlans();renderSettings()}
+function render(){renderCash();renderPromo();renderSeo();renderGuide();renderHome();renderLedger();renderStore();renderMonthly();renderInvoices();renderSchedule();renderPlans();renderSettings()}
 
 function renderHome(){
   const ym=$('home-month').value||thisMonth();
@@ -713,6 +719,43 @@ document.addEventListener('click',e=>{const q=e.target.closest('[data-promo-q]')
     $('promo-title').value=p.title||'';$('promo-store').value=p.store||'all';$('promo-monthly').value=num(p.monthly)||'';$('promo-start').value=p.start||'';$('promo-end').value=p.end||'';$('promo-goal').value=num(p.goal)||'';$('promo-memo').value=p.memo||'';
     $('promo-form-title').textContent='施策を編集';$('promo-cancel').hidden=false;$('promo-form-title').scrollIntoView({behavior:'smooth'})}});
 
+/* ---------- SEO・Googleマップ チェックリスト ---------- */
+const SEO=[
+ ['Googleに見つけてもらう',[
+  ['gbp','Googleビジネスプロフィール（Googleマップ）を3店舗それぞれ登録し、オーナー確認をする','「茶屋町 美容室」などで探す人の多くはマップから選びます。店ごとに別々に登録します。'],
+  ['gbpinfo','営業時間・定休日・電話番号・予約リンク（ホットペッパー）を正しく入れ、臨時休業も更新する','情報が古いと、来たのに閉まっていたという悪い口コミにつながります。'],
+  ['gbpphoto','店内・スタイル・スタッフの写真を月に数枚ずつ追加する','新しい写真があるお店は選ばれやすくなります。'],
+  ['review','来店後のお客様に口コミをお願いし、すべての口コミに返信する','悪い口コミにもていねいに返すと、読んだ人の安心につながります。'],
+  ['siteq','Googleで「site:（ホームページのアドレス）」と検索して、自分のページが出てくるか確かめる','出てこないページはGoogleにまだ知られていません。'],
+  ['gsc','Google Search Consoleにホームページを登録する（無料）','どんな言葉で検索されて何回表示されたか、問題がないかがわかります。ホームページを作った会社に頼めばすぐできます。']]],
+ ['ホームページの中身',[
+  ['pages','本店・茶屋町・アイラッシュで、それぞれ別のページを作る','1ページにまとめるより、店ごとのページの方が「地名＋美容室」で見つけてもらいやすくなります。'],
+  ['title','ページのタイトルを「地名＋何の店か＋店名」にする。例：茶屋町の美容室｜enu hair 茶屋町','タイトルは検索結果に大きく出る部分です。ページごとに違うタイトルにします。'],
+  ['desc','ページの説明文（メタディスクリプション）に、お店の特徴を1〜2文で書く','検索結果でタイトルの下に出ることがあります。「駅から何分」「得意なメニュー」など選ぶ理由を入れます。'],
+  ['words','お客様が実際に検索する言葉で書く。例：「梅田 縮毛矯正」「茶屋町 まつ毛パーマ」','専門用語だけでなく、お客様の言い方も入れます。'],
+  ['text','メニュー・料金・アクセス・営業時間を、画像ではなく文字で書く','画像の中の文字はGoogleが読み取りにくいからです。'],
+  ['unique','各店の紹介文を、ほかのページからコピーせずにそれぞれ書く','同じ文章が何ページにもあると、どれを出せばいいかGoogleが迷います。'],
+  ['fresh','キャンペーン・新メニュー・スタイル写真などを定期的に更新する','役に立つ新しい情報があるお店は、お客様にもGoogleにも好まれます。'],
+  ['staff','スタイリストの紹介（経験年数・得意な技術・資格）を載せる','誰がやってくれるのかがわかると信頼につながります。'],
+  ['alt','ヘアスタイル写真に、何の写真かの説明（代替テキスト）を付ける。例：「ミディアムのレイヤーカット」','写真は関係する文章の近くに置きます。Google画像検索から来る人もいます。'],
+  ['link','リンクの文字を「こちら」ではなく「茶屋町店のメニュー」のように中身がわかる言葉にする','読む人もGoogleも、リンクの先に何があるかがわかります。'],
+  ['url','ページのアドレスを、意味のわかる短い英単語にする。例：…/chayamachi/','意味のない数字や記号だけのアドレスより、わかりやすくなります。'],
+  ['sns','ホームページ・ホットペッパー・Instagram・Googleマップをお互いにリンクでつなぐ','どこから見ても予約までたどり着けるようにします。']]],
+ ['気にしなくていいこと（ガイドに書かれていること）',[
+  ['nokw','「メタキーワード」の設定はしなくてよい','Googleは使っていません。'],
+  ['nostuff','同じキーワードを何度もくり返して詰め込まなくてよい','読みにくくなるだけで、逆効果になることもあります。'],
+  ['nolen','文字数の決まりはない。ドメイン名にキーワードを入れる必要もない','お客様の役に立つことが一番大事です。']]]];
+function renderSeo(){
+  const c=state.checks.seo||{},all=SEO.flatMap(g=>g[1]),done=all.filter(i=>c[i[0]]).length;
+  $('seo-count').textContent=`${done} / ${all.length} できた`;$('seo-bar').style.width=(done/all.length*100)+'%';
+  $('seo-list').innerHTML=SEO.map(([g,items])=>`<div><h3 style="margin-bottom:6px">${g}</h3>${items.map(([id,t,h])=>`
+    <label style="flex-direction:row;align-items:flex-start;gap:10px;color:var(--ink);font-size:.92rem;padding:6px 0;border-bottom:1px dashed var(--line);cursor:pointer">
+      <input type="checkbox" data-seo="${id}" ${c[id]?'checked':''} style="margin-top:4px;flex:none">
+      <span${c[id]?' style="opacity:.6"':''}>${t}<br><span class="note">${h}</span></span></label>`).join('')}</div>`).join('');
+}
+document.addEventListener('change',async e=>{const id=e.target.dataset&&e.target.dataset.seo;if(!id)return;
+  const c={...(state.checks.seo||{})};if(e.target.checked)c[id]=true;else delete c[id];await put('checks','seo',c)});
+
 /* ---------- 用語 ---------- */
 const GLOSSARY=[['売上','お客様からいただいたお金の合計。'],['粗利（売上総利益）','売上 − 仕入。商品や薬剤の代金を引いたあとに残るお金。'],
  ['営業利益','粗利 − 人件費・家賃・広告費などの経費。お店の本業でいくらもうかったか。'],['経常利益','営業利益 ＋ 利息や雑収入 − 借入の利息。'],
@@ -722,7 +765,8 @@ const GLOSSARY=[['売上','お客様からいただいたお金の合計。'],['
  ['消費税の中間申告','消費税の前払い。前の年の消費税が多いほど回数が増える。'],['源泉所得税','給料や外注費から会社が預かった所得税。会社がまとめて国に納める。'],
  ['住民税（特別徴収）','給料から会社が預かった従業員の住民税。会社がまとめて市区町村に納める。'],['納期の特例','10人未満の会社なら、源泉所得税などを毎月ではなく年2回にまとめて納められる仕組み。'],
  ['法定福利費','社会保険料などの会社負担分。'],['外注費','業務委託のスタッフへの支払いなど。'],['減価償却費','高い設備を何年かに分けて経費にしたもの。お金はもう払い済みなので、資金繰りでは除く。'],
- ['資金繰り','預金がいくら残るかの見通し。利益が出ていても税金や返済が重なると足りなくなることがある。'],['安全ライン','もしもの時のために、毎月の出金の何か月分の預金を持っておくかの目安。']];
+ ['資金繰り','預金がいくら残るかの見通し。利益が出ていても税金や返済が重なると足りなくなることがある。'],['安全ライン','もしもの時のために、毎月の出金の何か月分の預金を持っておくかの目安。'],
+ ['SEO','Googleなどの検索で、お店のページを見つけてもらいやすくする工夫。広告費はかからない。'],['MEO（Googleマップ）','Googleマップで上の方に出てもらうための工夫。口コミ・写真・正しい店舗情報が大事。']];
 function renderGuide(){if(!$('glossary').children.length)$('glossary').innerHTML=GLOSSARY.map(([k,v])=>`<dt style="color:var(--ink);font-weight:700">${k}</dt><dd style="text-align:left">${v}</dd>`).join('')}
 
 let planEdit=null;
