@@ -560,7 +560,7 @@ function md(src, fold) {
   }
   if (!fold) return `<div class="md">${cur.html}</div>`;
   sections.push(cur);
-  return sections.map(s => s.title ? `<details class="fold"><summary>${inline(s.title)}</summary><div class="md">${s.html}</div></details>` : `<div class="md">${s.html}</div>`).join("");
+  return sections.map((s, i) => s.title ? `<details class="fold"${i === 0 || (i === 1 && !sections[0].title) ? " open" : ""}><summary>${inline(s.title)}</summary><div class="md">${s.html}</div></details>` : `<div class="md">${s.html}</div>`).join("");
 }
 
 /* ---------- 画面遷移 ---------- */
@@ -813,7 +813,7 @@ function viewCat() {
   ${c.note ? `<section class="section"><p class="note" style="font-size:13.5px;color:var(--ink)">${esc(c.note)}</p></section>` : ""}
   ${c.lessons.length ? `<section class="group"><h2>レッスン</h2><p class="note">中身はいつでも見られます。合格は上から順番に進みます。</p><div class="list">
     ${c.lessons.map((id, i) => { const l = L(id), locked = lessonLocked(u, c, i);
-      return `<button class="row${doneCls(u, id)}" data-lesson="${id}"><span class="n">${i + 1}</span><span class="t">${esc(l.title)}<small>${l.draft ? (l.tool ? esc(l.tool) + "・" : "") + "中身を作成中" : TYPE[l.type] + (l.target ? "・" + esc(l.target) : "")}</small></span>${l.draft ? `<span class="chip soon">準備中</span>` : chip(u, id, locked)}</button>`; }).join("")}
+      return `<button class="row${doneCls(u, id)}" data-lesson="${id}"><span class="n">${i + 1}</span><span class="t">${esc(l.title)}<small>${l.draft ? (l.tool ? esc(l.tool) + "・" : "") + "中身を作成中" : (l.typeLabel || TYPE[l.type]) + (l.target ? "・" + esc(l.target) : "")}</small></span>${l.draft ? `<span class="chip soon">準備中</span>` : chip(u, id, locked)}</button>`; }).join("")}
   </div></section>`
   : `<section class="section"><h3>準備中</h3><p class="pending">この項目の中身は作成中です。${c.planned ? esc(c.planned) : ""}</p></section>`}`;
 }
@@ -831,7 +831,7 @@ function viewLesson() {
   <section class="section"><h3>やり方</h3><p class="pending">やり方・課題・チェックポイントは作成中です。できたらここに入ります。</p></section>`;
   const leadView = isLead(me());
   return `
-  <section class="ptitle"><div class="eyebrow">${TYPE[l.type]}</div><h1>${esc(l.title)}</h1>
+  <section class="ptitle"><div class="eyebrow">${esc(l.typeLabel || TYPE[l.type])}</div><h1>${esc(l.title)}</h1>
     <div class="meta"><span class="chip ${cls}">${label}</span>${l.target ? `<span class="chip info">目標 ${esc(l.target)}</span>` : ""}${l.time ? `<span class="chip info">目安 ${esc(l.time)}</span>` : ""}</div>
     ${route.uid ? `<p class="note">${esc(u.name)}さんの記録を見ています</p>` : ""}</section>
   ${route.msg ? `<div class="toast ${route.err ? "err" : ""}">${esc(route.msg)}</div>` : ""}
@@ -855,11 +855,22 @@ function viewLesson() {
       ${route.pq ? `<div class="toast err">${route.pq}/${l.preQuiz.length}問正解。動画とやり方を見直して、もう一度</div>` : ""}
       ${l.preQuiz.map((q, qi) => `<div class="q"><p>Q${qi + 1}. ${esc(q.q)}</p>${q.options.map((o, oi) => `<label class="opt"><input type="radio" name="pq${qi}" value="${oi}" required><span>${esc(o)}</span></label>`).join("")}</div>`).join("")}
       <button class="btn" type="submit">答え合わせ</button></form>`) : ""}</section>` : ""}
-  ${(() => { const b = blockedBy(u, l.id, route.cat); return b && st.status !== "ok"
+  ${l.miniQuiz ? miniQuizPanel(l, st) : ""}
+  ${(() => { const b = blockedBy(u, l.id, route.cat);
+    if (l.miniQuiz && !st.miniOk && st.status !== "ok") return route.uid ? "" : `<section class="section"><h3>ロープレとチェック</h3><p class="note" style="font-size:14px">小テストに全問正解すると、ロープレの練習と先輩のチェックに進めます。</p></section>`; return b && st.status !== "ok"
     ? `<section class="section"><h3>練習とチェック</h3><p class="note" style="font-size:14px">いまは予習の時間です。前のレッスン「${esc(L(b).title)}」に合格すると、練習の記録と先輩のチェックができるようになります。</p><button class="btn ghost" data-lesson="${b}">「${esc(L(b).title)}」へ</button></section>`
     : progressPanel(l, st, u) + (st.status !== "ok" && CHECK_TYPES.includes(l.type) && l.type !== "model" ? checkPanel(l, st, leadView) : ""); })()}
   ${recordsPanel(l, st)}
   ${nextButton(l, u)}`;
+}
+/* 小テスト（全問正解で、練習とチェックに進める） */
+function miniQuizPanel(l, st) {
+  if (st.miniOk) return `<section class="section"><h3>小テスト</h3><p class="toast">合格（${esc(st.miniOk)}）</p></section>`;
+  if (route.uid) return `<section class="section"><h3>小テスト</h3><p class="pending">まだ合格していません</p></section>`;
+  return `<form class="section" id="miniForm"><h3>小テスト（全問正解で合格）</h3>
+    ${route.mq != null ? `<div class="toast err">${route.mq}/${l.miniQuiz.length}問正解。マニュアルを読み直して、もう一度</div>` : ""}
+    ${l.miniQuiz.map((q, qi) => `<div class="q"><p>Q${qi + 1}. ${esc(q.q)}</p>${q.options.map((o, oi) => `<label class="opt"><input type="radio" name="mq${qi}" value="${oi}" required><span>${esc(o)}</span></label>`).join("")}</div>`).join("")}
+    <button class="btn" type="submit">答え合わせ</button></form>`;
 }
 /* シャンプー：日ごとの教材・穴埋め小テスト・自己評価 */
 const norm = s => String(s || "").normalize("NFKC").replace(/[\s［］\[\]　]/g, "").toLowerCase();
@@ -935,7 +946,7 @@ function progressPanel(l, st, u) {
       ${self && st.status !== "ok" ? `<div class="btns"><button class="btn ghost" id="practice">${esc(l.practiceLabel || "ウィッグで練習した")} ＋1</button>
       ${st.status !== "wait" ? `<button class="btn" id="request" ${enough ? "" : "disabled"}>先輩にチェックをお願いする</button>` : ""}</div>
       ${!enough ? `<p class="note">${goal}回練習すると、チェックをお願いできます。</p>` : ""}` : ""}
-      ${st.status === "ok" ? `<p class="toast">合格。営業でお客様に入れます。</p>` : ""}
+      ${st.status === "ok" ? `<p class="toast">${esc(l.passMsg || "合格。営業でお客様に入れます。")}</p>` : ""}
     </section>`;
   }
   if (l.type === "model") return modelPanel(l, st);
@@ -1177,6 +1188,12 @@ function bindLesson() {
     const okN = st.entries.filter(x => modelEval(st, x.id)?.pass).length;
     flash(st.status === "ok" ? `${l.models}人そろいました。合格！` : rec.pass ? `${entry.name}さん OK。あと${l.models - okN}人` : `${entry.name}さんは「もう一度」。×のところを次のモデルさんで`, !rec.pass);
   });
+  $("#miniForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    const n = l.miniQuiz.filter((q, i) => Number($(`input[name=mq${i}]:checked`)?.value) === q.answer).length;
+    if (n === l.miniQuiz.length) { st.miniOk = today(); route.mq = null; if (st.status === "todo") st.status = "prac"; flash("小テスト合格！ロープレの練習に進もう"); }
+    else { route.mq = n; route.msg = null; store.save(); render(); $("#miniForm")?.scrollIntoView({ block: "start" }); }
+  });
   $("#watched")?.addEventListener("click", () => { st.watched = today(); flash("動画を見たを記録しました"); });
   $("#learned")?.addEventListener("click", () => { pass(""); flash("覚えた！次へ進めます"); });
   $("#practice")?.addEventListener("click", () => { st.practice++; if (st.status === "todo") st.status = "prac"; flash(`練習を記録しました（${st.practice}回目）`); });
@@ -1218,7 +1235,7 @@ function bindLesson() {
       const done = l.stages.every(s => st.stages.includes(s));
       if (done) pass(lead.name); else st.status = "prac";
       keep();
-      return flash(done ? "すべて○、合格！営業でお客様に入れます" : allOk ? `${$("#ckStage").value}は合格。次は${l.stages.find(s => !st.stages.includes(s))}でチェックを受けよう` : "×のところを練習して、もう一度チェックを受けよう", !allOk);
+      return flash(done ? (l.passMsg ? "すべて○、" + l.passMsg : "すべて○、合格！営業でお客様に入れます") : allOk ? `${$("#ckStage").value}は合格。次は${l.stages.find(s => !st.stages.includes(s))}でチェックを受けよう` : "×のところを練習して、もう一度チェックを受けよう", !allOk);
     }
     if (l.type === "model") {
       const n = st.records.filter(x => x.pass).length + 1;
