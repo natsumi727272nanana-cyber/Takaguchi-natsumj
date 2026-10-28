@@ -94,6 +94,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
   </header>
   <nav id="tabs">
     <button data-tab="home">ホーム</button>
+    <button data-tab="ledger">会社全体（試算表）</button>
     <button data-tab="monthly">月次（売上・人件費）</button>
     <button data-tab="invoices">請求書・仕入</button>
     <button data-tab="schedule">家賃・税の予定</button>
@@ -137,6 +138,20 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     </div>
     <div class="panel"><h2>この月の請求書</h2><div class="tbl" id="st-inv"></div></div>
     <div class="panel"><h2>今期の推移</h2><div class="tbl" id="st-trend"></div></div>
+  </section>
+
+  <!-- 会社全体（試算表） -->
+  <section class="view" id="v-ledger" hidden>
+    <div class="row between"><h2>会社全体（残高試算表より）</h2><span class="note" id="lg-src"></span></div>
+    <div class="grid3" id="lg-kpi"></div>
+    <div class="panel"><h2>月別のまとめ</h2><p class="note">人件費＝役員報酬＋給料手当＋外注費＋法定福利費＋福利厚生費、家賃＝地代家賃＋賃借料。</p><div class="tbl" id="lg-sum"></div></div>
+    <div class="panel"><h2>勘定科目ごと</h2><div class="tbl" id="lg-detail"></div></div>
+    <div class="panel">
+      <div class="row between"><h2>試算表を入力・修正</h2><label>月<input type="month" id="lg-month"></label></div>
+      <p class="note">税理士さんから届いた試算表の数字を、その月の列に入れて保存してください。</p>
+      <div class="grid3" id="lg-form" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"></div>
+      <div class="row"><button class="btn" id="lg-save">この月を保存</button></div>
+    </div>
   </section>
 
   <!-- 月次 -->
@@ -273,8 +288,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 <script>
 const PLAN_KINDS={store:'出店',product:'商品づくり',event:'慰安旅行・イベント',other:'その他'};
 const STORES=[{id:'honten',name:'enu hair 本店'},{id:'chayamachi',name:'enu hair 茶屋町'},{id:'eyelash',name:'アイラッシュ enu'}];
-const COLS=['monthly','invoices','schedules','plans','settings'];
-const state={monthly:{},invoices:{},schedules:{},plans:{},settings:{}};
+const COLS=['ledger','monthly','invoices','schedules','plans','settings'];
+const state={ledger:{},monthly:{},invoices:{},schedules:{},plans:{},settings:{}};
 let db=null, mode='local';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -349,7 +364,7 @@ const invTotal=inv=>STORES.reduce((t,s)=>t+num(inv.alloc?.[s.id]),0);
 const dLabel=d=>{const [y,m,dd]=d.split('-').map(Number);const w='日月火水木金土'[new Date(y,m-1,dd).getDay()];return `${m}/${dd}(${w})`};
 
 /* ---------- 描画 ---------- */
-function render(){renderHome();renderStore();renderMonthly();renderInvoices();renderSchedule();renderPlans();renderSettings()}
+function render(){renderHome();renderLedger();renderStore();renderMonthly();renderInvoices();renderSchedule();renderPlans();renderSettings()}
 
 function renderHome(){
   const ym=$('home-month').value||thisMonth();
@@ -358,7 +373,10 @@ function renderHome(){
   const entered=past.filter(m=>STORES.some(s=>state.monthly[`${m}_${s.id}`]));
   const forecast=entered.length?fyAll.sales/entered.length*12:0;
   const target=num(state.settings.main?.target);
-  $('home-fy').innerHTML=`
+  const lgHave=fyMonths(ym).filter(m=>m<=ym&&state.ledger[m]).map(lg);
+  const lgS=lgHave.reduce((t,x)=>t+x.sales,0),lgN=lgHave.reduce((t,x)=>t+x.net,0);
+  $('home-fy').innerHTML=(lgHave.length?`<div class="panel tap" data-goto="ledger" role="button" tabindex="0"><span class="lbl">会社全体・試算表の今期累計（${lgHave.length}か月）</span><span class="big">${man(lgS)}</span>
+      <span class="note">当期純利益 <b class="num ${lgN<0?'bad':'good'}">${man(lgN)}</b>・年間ペース <b class="num">${man(lgS/lgHave.length*12)}</b>・くわしく見る →</span></div>`:'')+`
     <div class="panel"><span class="lbl">今期の年商（${mLabel(months[0])}〜${mLabel(ym)}）</span><span class="big">${man(fyAll.sales)}</span>
       <span class="note">入力済み${entered.length}か月・この調子なら年間 <b class="num">${man(forecast)}</b></span></div>
     <div class="panel"><span class="lbl">今期の利益（全店）</span><span class="big ${mClass(fyAll.margin)}">${man(fyAll.profit)}</span>
@@ -393,6 +411,36 @@ function renderHome(){
     ${months.map(m=>{const cs=STORES.map(s=>calc(m,s.id)),t=sumCalc(cs);return `<tr${m===ym?' style="font-weight:700"':''}><td>${mLabel(m)}</td>
       ${cs.map((c,i)=>`<td class="sc-${STORES[i].id}" style="min-width:120px"><div class="num">${c.sales?man(c.sales):'—'}</div><div class="bar" style="width:${c.sales/maxS*100}%"></div></td>`).join('')}
       <td class="r num">${t.sales?man(t.sales):'—'}</td><td class="r num ${t.sales?mClass(t.margin):''}">${t.sales?man(t.profit):'—'}</td><td class="r num">${t.sales?pct(t.margin):'—'}</td></tr>`}).join('')}</tbody></table>`;
+}
+
+const ACC=[['売上高','売上'],['仕入高','原価'],['店販仕入','原価'],
+  ['役員報酬','人件費'],['給料手当','人件費'],['外注費','人件費'],['法定福利費','人件費'],['福利厚生費','人件費'],
+  ['採用教育費','販管'],['広告宣伝費','広告'],['交際費','販管'],['会議費','販管'],['旅費交通費','販管'],['通信費','販管'],['販売促進費','広告'],
+  ['消耗品費','販管'],['水道光熱費','光熱'],['諸会費','販管'],['支払手数料','販管'],['地代家賃','家賃'],['賃借料','家賃'],['租税公課','販管'],
+  ['支払報酬料','販管'],['減価償却費','販管'],['長期前払費用償却','販管'],['受取利息','外収'],['雑収入','外収'],['支払利息','外費'],['法人税等','税']];
+function lg(m){const it=state.ledger[m]?.items;if(!it)return null;const g={};ACC.forEach(([k,c])=>g[c]=(g[c]||0)+num(it[k]));
+  const sales=g['売上'],gross=sales-g['原価'],sga=g['人件費']+g['販管']+g['広告']+g['光熱']+g['家賃'],op=gross-sga,ord=op+g['外収']-g['外費'],net=ord-g['税'];
+  return {sales,cogs:g['原価'],gross,labor:g['人件費'],rent:g['家賃'],ad:g['広告'],util:g['光熱'],otherSga:g['販管'],sga,op,ord,net,margin:sales?net/sales:null,laborR:sales?g['人件費']/sales:null,items:it}}
+function renderLedger(){
+  const ms=fyMonths(thisMonth()),have=ms.filter(m=>state.ledger[m]);
+  const L=have.map(m=>[m,lg(m)]),T={};L.forEach(([,x])=>['sales','cogs','gross','labor','rent','ad','util','otherSga','sga','op','ord','net'].forEach(k=>T[k]=(T[k]||0)+x[k]));
+  $('lg-src').textContent=have.length?`入力済み：${have.map(m=>Number(m.slice(5))+'月').join('・')}`:'';
+  $('lg-kpi').innerHTML=have.length?`
+    <div class="panel"><span class="lbl">今期の売上累計（${have.length}か月）</span><span class="big">${man(T.sales)}</span><span class="note">このペースなら年間 <b class="num">${man(T.sales/have.length*12)}</b></span></div>
+    <div class="panel"><span class="lbl">営業利益 累計</span><span class="big ${mClass(T.sales?T.op/T.sales:null)}">${man(T.op)}</span><span class="note">営業利益率 <b class="num">${pct(T.sales?T.op/T.sales:null)}</b></span></div>
+    <div class="panel"><span class="lbl">当期純利益 累計</span><span class="big ${mClass(T.sales?T.net/T.sales:null)}">${man(T.net)}</span><span class="note">人件費率 <b class="num">${pct(T.sales?T.labor/T.sales:null)}</b>・原価率 <b class="num">${pct(T.sales?T.cogs/T.sales:null)}</b></span></div>`
+    :'<div class="panel"><p class="empty">まだ試算表が入っていません。下のフォームから入れてください。</p></div>';
+  const rows=[['売上','sales'],['原価（仕入）','cogs'],['粗利','gross'],['人件費','labor'],['家賃','rent'],['広告・販促','ad'],['水道光熱費','util'],['その他の販管費','otherSga'],['営業利益','op'],['経常利益','ord'],['当期純利益','net']];
+  const strong=new Set(['sales','gross','op','net']);
+  $('lg-sum').innerHTML=have.length?`<table><thead><tr><th></th>${have.map(m=>`<th class="r">${Number(m.slice(5))}月</th>`).join('')}<th class="r">累計</th><th class="r">売上比</th></tr></thead><tbody>
+    ${rows.map(([n,k])=>`<tr${strong.has(k)?' style="font-weight:700"':''}><td>${n}</td>${L.map(([,x])=>`<td class="r num ${['op','ord','net'].includes(k)&&x[k]<0?'bad':''}">${yen(x[k])}</td>`).join('')}<td class="r num">${yen(T[k])}</td><td class="r num note">${k==='sales'?'':pct(T.sales?T[k]/T.sales:null)}</td></tr>`).join('')}
+    <tr><td>純利益率</td>${L.map(([,x])=>`<td class="r num ${mClass(x.margin)}">${pct(x.margin)}</td>`).join('')}<td class="r num ${mClass(T.sales?T.net/T.sales:null)}">${pct(T.sales?T.net/T.sales:null)}</td><td></td></tr></tbody></table>`:'';
+  $('lg-detail').innerHTML=have.length?`<table><thead><tr><th>勘定科目</th>${have.map(m=>`<th class="r">${Number(m.slice(5))}月</th>`).join('')}<th class="r">累計</th></tr></thead><tbody>
+    ${ACC.map(([k])=>`<tr><td>${k}</td>${have.map(m=>`<td class="r num">${num(state.ledger[m].items[k]).toLocaleString('ja-JP')}</td>`).join('')}<td class="r num">${have.reduce((t,m)=>t+num(state.ledger[m].items[k]),0).toLocaleString('ja-JP')}</td></tr>`).join('')}</tbody></table>`:'';
+  const fm=$('lg-month').value||thisMonth();
+  if(!(document.activeElement&&document.activeElement.closest('#lg-form'))||renderLedger.m!==fm){renderLedger.m=fm;
+    const it=state.ledger[fm]?.items||{};
+    $('lg-form').innerHTML=ACC.map(([k],i)=>`<label>${k}<input class="amt" id="lg-in-${i}" data-acc="${k}" inputmode="numeric" value="${it[k]??''}" style="width:100%"></label>`).join('')}
 }
 
 let curStore='honten';
@@ -503,6 +551,11 @@ $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)s
 document.addEventListener('click',e=>{const g=e.target.closest('[data-goto]');if(g){showTab(g.dataset.goto);scrollTo(0,0)}});
 
 $('home-month').addEventListener('change',renderHome);
+$('lg-month').addEventListener('change',renderLedger);
+$('lg-save').addEventListener('click',async()=>{const m=$('lg-month').value;if(!m){toast('月を選んでください');return}
+  const items={};document.querySelectorAll('#lg-form input').forEach(i=>items[i.dataset.acc]=num(i.value));
+  if(!items['売上高']){toast('売上高を入れてください');return}
+  document.activeElement.blur();await put('ledger',m,{month:m,items});toast(mLabel(m)+'の試算表を保存しました')});
 $('st-month').addEventListener('change',renderStore);
 document.addEventListener('click',e=>{const t=e.target.closest('[data-store]');if(t)openStore(t.dataset.store)});
 document.addEventListener('keydown',e=>{const t=e.target.closest&&e.target.closest('[data-store]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openStore(t.dataset.store)}});
@@ -587,7 +640,7 @@ $('bk-import').addEventListener('change',async e=>{const f=e.target.files[0];if(
     toast(`${n}件を復元しました`)}catch(err){toast('このファイルは読み込めませんでした')}e.target.value=''});
 
 /* ---------- 起動 ---------- */
-$('home-month').value=thisMonth();$('m-month').value=thisMonth();$('inv-date').value=todayStr();
+$('home-month').value=thisMonth();$('lg-month').value=thisMonth();$('m-month').value=thisMonth();$('inv-date').value=todayStr();
 let tab='home';try{tab=localStorage.getItem('enu-tab')||'home';curStore=localStorage.getItem('enu-store')||'honten'}catch(e){}
 $('st-month').value=thisMonth();
 showTab(tab);
