@@ -419,7 +419,7 @@ function memberPayload() {
     if (CHECK_TYPES.includes(C.lessons[id]?.type)) { if (rest.status === "ok") rest.status = "prac"; progress[id] = rest; }
     else progress[id] = { ...rest, ...(passedAt ? { passedAt } : {}), ...(passedBy ? { passedBy } : {}) };
   }
-  return { rev: lastRev = Math.random().toString(36).slice(2), name: m.name, store: m.store || "", joined: m.joined || today(), joinDate: m.joinDate || "", debut: m.debut || "", monthGoal: m.monthGoal || "", progress };
+  return { rev: lastRev = Math.random().toString(36).slice(2), name: m.name, store: m.store || "", joined: m.joined || today(), joinDate: m.joinDate || "", debut: m.debut || "", monthGoal: m.monthGoal || "", hw: m.hw || {}, ...(cloudState.isOwner ? { hwAssign: m.hwAssign || {} } : {}), progress };
 }
 let saveTimer = null, saving = false, saveAgain = false, lastRev = null;   // lastRev：自分が最後に保存した版（戻ってきても入れ替えない）
 function cloudSave() { clearTimeout(saveTimer); saveTimer = setTimeout(flushSave, 400); }
@@ -570,7 +570,7 @@ let activeTab = "home";
 const TABS = () => [["home", "ホーム", { name: "home" }], ["pre", C.newGrad.tab, { name: "pre" }],
   ...Object.entries(C.pages).map(([k, p]) => [k, p.tab, { name: "cats", page: k }]),
   ...(isLead(me()) ? [["team", "スタッフ", { name: "team" }]] : [])];
-const HIDDEN_TABS = [["chat", "", { name: "chat" }], ["mypage", "", { name: "mypage" }]];   // 下には出さないが、ボタンから開くページ
+const HIDDEN_TABS = [["chat", "", { name: "chat" }], ["mypage", "", { name: "mypage" }], ["hw", "", { name: "hw" }]];   // 下には出さないが、ボタンから開くページ
 function tab(key) { activeTab = key; stack = []; route = { ...[...TABS(), ...HIDDEN_TABS].find(t => t[0] === key)[2] }; render(); scrollTo(0, 0); }
 function back() { route = stack.pop() || { name: "home" }; render(); scrollTo(0, 0); }
 $("#backBtn").onclick = back;
@@ -678,6 +678,7 @@ function viewLeadHome() {
       : `<p class="pending">アシスタントはまだ登録されていません。共有メニューから「編集者」として招待すると、ここに出ます。</p>`}
   </section>
   <section class="group"><h2>メニュー</h2><nav class="menu">
+    ${hwTile()}
     <button class="tile" data-tab="team"><span class="t"><b>スタッフ</b><small>店舗ごとの進み具合${cloudState.isOwner ? "・幹部の設定" : ""}</small></span><span class="chev">›</span></button>
     <button class="tile" data-tab="pre"><span class="t"><b>${esc(C.newGrad.title)}</b><small>4月までにやることの確認</small></span><span class="chev">›</span></button>
     <button class="tile" data-go="roadmap"><span class="t"><b>ロードマップ</b></span><span class="chev">›</span></button>
@@ -1300,6 +1301,42 @@ function bindTeam() {
     (s.value === "assistant" ? ref.delete() : ref.set({ role: s.value })).catch(() => { cloudNote = "役割を保存できませんでした。もう一度やってみてください。"; render(); });
   });
 }
+/* ---------- 幹部の課題 ----------
+   担当はオーナーが自分の members に hwAssign として書き、答えは各自の members の hw に書く（携帯から入力できる） */
+const hwAssign = () => Object.values(db.users).find(x => x.role === "owner")?.hwAssign || {};
+const hwAnswers = id => Object.entries(db.users).filter(([, x]) => x.hw?.[id]?.text).map(([uid, x]) => ({ uid, name: x.name, ...x.hw[id] }));
+function hwTile() {
+  const all = C.homework || [], open = all.filter(h => !hwAnswers(h.id).length).length, mine = all.filter(h => hwAssign()[h.id] === myId() && !me().hw?.[h.id]?.text).length;
+  return `<button class="tile" data-tab="hw"><span class="t"><b>幹部の課題</b><small>${mine ? `あなたの担当 ${mine}件・` : ""}未回答 ${open}/${all.length}件</small></span><span class="chev">›</span></button>`;
+}
+const myId = () => mode === "cloud" ? myUid : db.current;
+function viewHw() {
+  const u = me(), assign = hwAssign(), leads = Object.entries(db.users).filter(([, x]) => isLead(x));
+  const owner = u.role === "owner";
+  const list = (C.homework || []).slice().sort((a, b) => (assign[b.id] === myId()) - (assign[a.id] === myId()));
+  return `
+  <section class="ptitle"><div class="eyebrow">HOMEWORK</div><h1>幹部の課題</h1>
+    <p class="note">アプリを完成させるのに足りない情報です。${owner ? "担当を決めると、その人のホームに出ます。" : "担当の課題に答えを書いて「保存」を押してください。担当以外も書き込めます。"}</p></section>
+  ${list.map(h => { const ans = hwAnswers(h.id), who = assign[h.id], mineAns = u.hw?.[h.id]?.text || "";
+    return `<section class="group"><h2>${esc(h.title)} ${ans.length ? `<span class="chip ok">回答あり</span>` : `<span class="chip todo">未回答</span>`}${who === myId() ? ` <span class="chip wait">あなたの担当</span>` : ""}</h2>
+    <div class="card" style="display:block">
+      <ol style="margin:0 0 10px;padding-left:1.3em">${h.questions.map(q => `<li>${esc(q)}</li>`).join("")}</ol>
+      <div class="field"><label>担当</label>${owner ? `<select data-hw-assign="${h.id}"><option value="">未定</option>${leads.map(([uid, x]) => `<option value="${uid}" ${who === uid ? "selected" : ""}>${esc(x.name)}</option>`).join("")}</select>` : `<p style="margin:0">${who ? esc(db.users[who]?.name || "") : "未定"}</p>`}</div>
+      ${ans.filter(a => a.uid !== myId()).map(a => `<div class="msg ai" style="max-width:none;margin:8px 0"><b>${esc(a.name)}</b><small style="color:var(--muted)"> ${esc(a.at || "")}</small><br>${esc(a.text).replace(/\n/g, "<br>")}</div>`).join("")}
+      <form data-hw-form="${h.id}"><div class="field"><label for="hw-${h.id}">あなたの答え</label><textarea id="hw-${h.id}" rows="4" placeholder="番号をつけて書くとわかりやすいです（例：1. 26mm…）">${esc(mineAns)}</textarea></div>
+        <button class="btn" type="submit">保存</button></form>
+    </div></section>`; }).join("")}`;
+}
+function bindHw() {
+  $$("[data-hw-assign]").forEach(s => s.onchange = () => { const u = me(); (u.hwAssign ||= {})[s.dataset.hwAssign] = s.value; if (!s.value) delete u.hwAssign[s.dataset.hwAssign]; store.save(); render(); });
+  $$("[data-hw-form]").forEach(f => f.onsubmit = e => {
+    e.preventDefault();
+    const u = me(), id = f.dataset.hwForm, text = f.querySelector("textarea").value.trim();
+    u.hw ||= {};
+    if (text) u.hw[id] = { text, at: today() }; else delete u.hw[id];
+    store.save(); render();
+  });
+}
 function viewMember() {
   const u = db.users[route.uid];
   return `
@@ -1388,9 +1425,9 @@ function bindChat() {
 /* ---------- 描画 ---------- */
 const VIEWS = {
   home: [viewHome], pre: [viewPre], cats: [viewCats], cat: [viewCat], lesson: [viewLesson, bindLesson],
-  roadmap: [viewRoadmap], team: [viewTeam, bindTeam], member: [viewMember], chat: [viewChat, bindChat], mypage: [viewMypage, bindMypage],
+  roadmap: [viewRoadmap], team: [viewTeam, bindTeam], member: [viewMember], chat: [viewChat, bindChat], mypage: [viewMypage, bindMypage], hw: [viewHw, bindHw],
 };
-const TITLES = { mypage: "マイページ", pre: C.newGrad.title, roadmap: "ロードマップ", team: "みんなの進み具合", member: "進み具合", chat: "オーナーAIチャット" };
+const TITLES = { mypage: "マイページ", pre: C.newGrad.title, roadmap: "ロードマップ", team: "みんなの進み具合", member: "進み具合", chat: "オーナーAIチャット", hw: "幹部の課題" };
 
 function render() {
   formDirty = false;
