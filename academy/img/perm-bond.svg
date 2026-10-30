@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 380" width="660" height="380">
+<rect width="660" height="380" fill="#ffffff"/>
+<text x="330.0" y="30" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="19" font-weight="800" fill="#2b2723" text-anchor="middle">パーマのしくみ（シスチン結合）</text>
+<text x="110" y="62" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="14.5" font-weight="800" fill="#8b5a2b" text-anchor="middle">① ふだんの髪</text>
+<text x="110" y="348" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="12.5" font-weight="400" fill="#7b736b" text-anchor="middle">2本の鎖が</text>
+<text x="110" y="366" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="12.5" font-weight="400" fill="#7b736b" text-anchor="middle">「S-S」でつながっている</text>
+<text x="330" y="62" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="14.5" font-weight="800" fill="#8b5a2b" text-anchor="middle">② 1剤で切る（還元）</text>
+<text x="330" y="348" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="12.5" font-weight="400" fill="#7b736b" text-anchor="middle">S-Sが切れて</text>
+<text x="330" y="366" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="12.5" font-weight="400" fill="#7b736b" text-anchor="middle">形を変えられる状態に</text>
+<text x="550" y="62" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="14.5" font-weight="800" fill="#8b5a2b" text-anchor="middle">③ 巻いて2剤でつなぐ（酸化）</text>
+<text x="550" y="348" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="12.5" font-weight="400" fill="#7b736b" text-anchor="middle">ロッドの形のまま</text>
+<text x="550" y="366" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="12.5" font-weight="400" fill="#7b736b" text-anchor="middle">新しい場所でつながる</text>
+<line x1="75" y1="80" x2="75" y2="320" stroke="#2b2723" stroke-width="6" stroke-linecap="round"/>
+<line x1="145" y1="80" x2="145" y2="320" stroke="#2b2723" stroke-width="6" stroke-linecap="round"/>
+<line x1="75" y1="90" x2="145" y2="90" stroke="#b0473d" stroke-width="3"/>
+<rect x="96" y="80" width="28" height="20" rx="6" fill="#fff" stroke="#b0473d"/><text x="110" y="95" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S-S</text>
+<line x1="75" y1="136" x2="145" y2="136" stroke="#b0473d" stroke-width="3"/>
+<rect x="96" y="126" width="28" height="20" rx="6" fill="#fff" stroke="#b0473d"/><text x="110" y="141" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S-S</text>
+<line x1="75" y1="182" x2="145" y2="182" stroke="#b0473d" stroke-width="3"/>
+<rect x="96" y="172" width="28" height="20" rx="6" fill="#fff" stroke="#b0473d"/><text x="110" y="187" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S-S</text>
+<line x1="75" y1="228" x2="145" y2="228" stroke="#b0473d" stroke-width="3"/>
+<rect x="96" y="218" width="28" height="20" rx="6" fill="#fff" stroke="#b0473d"/><text x="110" y="233" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S-S</text>
+<line x1="75" y1="274" x2="145" y2="274" stroke="#b0473d" stroke-width="3"/>
+<rect x="96" y="264" width="28" height="20" rx="6" fill="#fff" stroke="#b0473d"/><text x="110" y="279" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S-S</text>
+<line x1="295" y1="80" x2="295" y2="320" stroke="#2b2723" stroke-width="6" stroke-linecap="round"/>
+<line x1="365" y1="80" x2="365" y2="320" stroke="#2b2723" stroke-width="6" stroke-linecap="round"/>
+<line x1="295" y1="90" x2="316" y2="90" stroke="#b0473d" stroke-width="3"/><text x="322" y="94" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S</text>
+<line x1="344" y1="90" x2="365" y2="90" stroke="#b0473d" stroke-width="3"/><text x="338" y="94" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S</text>
+<line x1="295" y1="136" x2="316" y2="136" stroke="#b0473d" stroke-width="3"/><text x="322" y="140" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S</text>
+<line x1="344" y1="136" x2="365" y2="136" stroke="#b0473d" stroke-width="3"/><text x="338" y="140" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S</text>
+<line x1="295" y1="182" x2="316" y2="182" stroke="#b0473d" stroke-width="3"/><text x="322" y="186" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S</text>
+<line x1="344" y1="182" x2="365" y2="182" stroke="#b0473d" stroke-width="3"/><text x="338" y="186" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S</text>
+<line x1="295" y1="228" x2="316" y2="228" stroke="#b0473d" stroke-width="3"/><text x="322" y="232" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S</text>
+<line x1="344" y1="228" x2="365" y2="228" stroke="#b0473d" stroke-width="3"/><text x="338" y="232" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S</text>
+<line x1="295" y1="274" x2="316" y2="274" stroke="#b0473d" stroke-width="3"/><text x="322" y="278" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S</text>
+<line x1="344" y1="274" x2="365" y2="274" stroke="#b0473d" stroke-width="3"/><text x="338" y="278" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="11" font-weight="700" fill="#b0473d" text-anchor="middle">S</text>
+<path d="M 324 72 l 6 -8 l 6 8" fill="none" stroke="#3d6f9a" stroke-width="0"/>
+<circle cx="550" cy="200" r="34" fill="#f4f0ea" stroke="#d9d1c6" stroke-width="2"/><text x="550" y="205" font-family="Hiragino Sans, Yu Gothic, Noto Sans JP, sans-serif" font-size="12" font-weight="700" fill="#7b736b" text-anchor="middle">ロッド</text>
+<polyline points="524.0,155.0 533.5,150.7 543.7,148.4 554.1,148.2 564.3,150.0 574.0,153.9 582.7,159.6 590.1,166.9 595.9,175.6 599.9,185.2 601.8,195.5 601.7,205.9 599.5,216.1 595.3,225.6 589.2,234.1 581.7,241.3 572.8,246.7 563.0,250.3 552.7,251.9 542.3,251.4 532.2,248.9 522.8,244.3 514.5,238.0 507.7,230.2 502.5,221.2 499.2,211.3 498.0,200.9 498.9,190.5 501.8,180.5 506.6,171.3 513.2,163.2" fill="none" stroke="#2b2723" stroke-width="6" stroke-linecap="round"/>
+<polyline points="508.0,127.3 523.3,120.3 539.8,116.6 556.6,116.3 573.2,119.3 588.8,125.5 602.9,134.7 614.8,146.6 624.2,160.6 630.5,176.1 633.7,192.7 633.5,209.5 629.9,226.0 623.1,241.4 613.4,255.1 601.1,266.6 586.8,275.5 571.0,281.3 554.4,283.9 537.6,283.1 521.3,278.9 506.1,271.6 492.7,261.4 481.6,248.8 473.3,234.2 468.0,218.2 466.0,201.5 467.4,184.7 472.1,168.5 480.0,153.6 490.6,140.6" fill="none" stroke="#2b2723" stroke-width="6" stroke-linecap="round"/>
+<line x1="543.7" y1="148.4" x2="523.3" y2="120.3" stroke="#b0473d" stroke-width="3"/>
+<circle cx="533.5" cy="134.4" r="5" fill="#b0473d"/>
+<line x1="595.9" y1="175.6" x2="614.8" y2="146.6" stroke="#b0473d" stroke-width="3"/>
+<circle cx="605.4" cy="161.1" r="5" fill="#b0473d"/>
+<line x1="589.2" y1="234.1" x2="623.1" y2="241.4" stroke="#b0473d" stroke-width="3"/>
+<circle cx="606.2" cy="237.7" r="5" fill="#b0473d"/>
+<line x1="532.2" y1="248.9" x2="537.6" y2="283.1" stroke="#b0473d" stroke-width="3"/>
+<circle cx="534.9" cy="266.0" r="5" fill="#b0473d"/>
+<line x1="498.0" y1="200.9" x2="468.0" y2="218.2" stroke="#b0473d" stroke-width="3"/>
+<circle cx="483.0" cy="209.5" r="5" fill="#b0473d"/>
+<path d="M 202 200 l 30 0 m -9 -8 l 9 8 l -9 8" fill="none" stroke="#8b5a2b" stroke-width="3"/>
+<path d="M 422 200 l 30 0 m -9 -8 l 9 8 l -9 8" fill="none" stroke="#8b5a2b" stroke-width="3"/>
+</svg>
