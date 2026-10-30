@@ -2690,6 +2690,8 @@ enuは髪質改善に特化していて、縮毛矯正がすごくうまいサ�
     { id: "treatment", title: "トリートメントの工程分担", questions: ["工程ごとに、アシスタントがやるところ／スタイリストがやるところ"] },
     { id: "counsel-course", title: "カウンセリング講習", questions: ["曜日と時間", "担当は誰？"] },
     { id: "newgrad-days", title: "新卒レッスンの日程", questions: ["1日目・2日目の日付", "時間と店舗"] },
+    { id: "newgrad-mail", title: "新卒のメールアドレス（招待用）", questions: ["名前とメールアドレス"] },
+    { id: "youtube", title: "動画のYouTubeのURL", questions: ["撮れた動画から、レッスン名とURL（限定公開）"] },
   ],
 
   // オーナーAIチャット：AIはここに並べたレッスンの本文だけを根拠に答えます（オーナーの資料ができたらレッスンとして追加）
