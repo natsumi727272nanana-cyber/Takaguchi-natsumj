@@ -1010,7 +1010,7 @@ function modelPanel(l, st) {
   return `<section class="section"><h3>モデル</h3>
     <div class="count"><b>${Math.min(okN, l.models)}</b><small>/ ${l.models}人 OK</small></div>
     <div class="meter"><i style="width:${Math.min(100, okN / l.models * 100)}%"></i></div>
-    <p class="note">モデルさん1人ごとに記録を追加します。先輩が評価して、OKが${l.models}人そろったら合格です。</p>
+    <p class="note">モデルさん1人ごとに記録を追加します。先輩が評価して${l.passScore ? `（${l.passScore}点以上でOK）` : ""}、OKが${l.models}人そろったら合格です。</p>
     ${st.status === "ok" ? `<p class="toast">${l.models}人そろいました。合格！</p>` : ""}
     ${self && !route.mf ? `<button class="btn" id="mfOpen">＋ モデルを追加</button>` : ""}
   </section>
@@ -1018,18 +1018,20 @@ function modelPanel(l, st) {
   ${entries.length ? `<section class="group"><h2>モデルの記録（${entries.length}人）</h2>
     ${entries.map(e => { const ev = modelEval(st, e.id);
       return `<article class="mentry ${ev?.pass ? "okk" : ""}">
-        <div class="hd"><b>${esc(e.name)}さん</b><span class="chip ${ev ? (ev.pass ? "ok" : "ng") : "wait"}">${ev ? (ev.pass ? "OK" : "もう一度") : "評価待ち"}</span><span class="note">${esc(e.date || "")}</span></div>
+        <div class="hd"><b>${esc(e.name)}さん</b><span class="chip ${ev ? (ev.pass ? "ok" : "ng") : "wait"}">${ev ? (ev.pass ? "OK" : "もう一度") + (ev.score != null ? ` ${ev.score}点` : "") : "評価待ち"}</span><span class="note">${esc(e.date || "")}</span></div>
         <dl><dt>どこから</dt><dd>${esc(e.source || "")}${e.sourceMemo ? "（" + esc(e.sourceMemo) + "）" : ""}</dd>
           <dt>事前の状態</dt><dd>${esc(e.before || "—")}</dd><dt>使った薬剤</dt><dd>${esc(e.chem || "—")}</dd><dt>時間</dt><dd>${esc(e.time || "—")}</dd>
           <dt>反省</dt><dd>${esc(e.reflection || "—")}</dd></dl>
         <div class="photos">${photoBox(e.photoBefore, "事前")}${photoBox(e.photoAfter, "仕上がり")}</div>
         ${ev ? `<div class="evalbox"><b>先輩の評価：${ev.pass ? "OK" : "もう一度"}（${esc(ev.by)}・${esc(ev.date)}）</b>
+          ${ev.score != null ? `<div>点数：<b>${ev.score}点</b>${l.passScore ? `（${l.passScore}点以上でOK）` : ""}</div>` : ""}
           ${ev.marks && l.checks ? `<div class="x">${l.checks.map((t, i) => (ev.marks[i] ? "○ " : "× ") + esc(t)).join("<br>")}</div>` : ""}
           ${ev.comment ? `<div>${esc(ev.comment)}</div>` : ""}</div>` : ""}
         <div class="btns">${self ? `<button class="btn ghost" type="button" data-mf-edit="${e.id}">記録を直す</button>` : ""}
           ${canEval && (!self || mode !== "cloud") && route.evalEntry !== e.id ? `<button class="btn ${ev ? "ghost" : ""}" type="button" data-eval="${e.id}">${ev ? "評価をやり直す" : "評価する"}</button>` : ""}</div>
         ${route.evalEntry === e.id ? `<form class="marks" id="evalForm" style="border-top:1px solid var(--line);padding-top:10px">
           <h3>${esc(e.name)}さんの評価</h3>${oxList(l.checks)}
+          ${l.passScore ? `<div class="field"><label for="evScore">点数（${l.passScore}点以上でOK）</label><input id="evScore" type="number" inputmode="numeric" min="0" max="100" required placeholder="0〜100"></div>` : ""}
           <div class="field"><label for="evComment">コメント</label><textarea id="evComment" rows="2" placeholder="よかったところ・次に直すところ"></textarea></div>
           ${authFields("評価を記録する")}</form>` : ""}
       </article>`; }).join("")}
@@ -1183,7 +1185,8 @@ function bindLesson() {
     if (!lead) { route.msg = mode === "cloud" ? "評価できるのは幹部・オーナーだけです" : "暗証番号がちがいます"; route.err = true; render(); return; }
     const entry = st.entries.find(x => x.id === route.evalEntry);
     const marks = l.checks.map((_, i) => $(`input[name=ox${i}]:checked`)?.value === "1");
-    const rec = { date: today(), at: Date.now(), by: lead.name, comment: $("#evComment").value.trim(), entryId: entry.id, marks, pass: marks.every(Boolean), label: entry.name + "さん" };
+    const score = l.passScore ? Number($("#evScore").value) : null;
+    const rec = { date: today(), at: Date.now(), by: lead.name, comment: $("#evComment").value.trim(), entryId: entry.id, marks, ...(l.passScore ? { score } : {}), pass: l.passScore ? score >= l.passScore : marks.every(Boolean), label: entry.name + "さん" };
     st.records.push(rec); persistCheck(rec, route.uid, l.id);
     route.evalEntry = null; applyModelStatus(st, l);
     const okN = st.entries.filter(x => modelEval(st, x.id)?.pass).length;
