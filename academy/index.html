@@ -787,9 +787,8 @@ function viewPre() {
     <div class="list">${sp.rounds.map((r, i) => { const rec = recs.filter(x => x.round === i + 1).pop(), f = prog(u, "shampoo").fill?.[i];
       return `<button class="row${rec?.pass ? " done" : ""}" data-lesson="shampoo" data-day="${i}"><span class="t">${esc(r.day || `${i + 1}回目`)}（${esc(r.m)}）${rec ? `<span class="chip ${rec.pass ? "ok" : "info"}">${rec.score}点</span>` : ""}<small>${esc(r.t)}${f ? `・小テスト ${f.score}/${f.total}` : ""}</small></span></button>`; }).join("")}</div>
   </section>
-  ${(C.aprilPlan || []).length ? `<section class="group"><div class="steps-h"><span class="no">3</span><h2 style="margin:0">4月（入社1ヶ月目）のカリキュラム</h2></div>
-    ${C.aprilPlan.map(w => `<h3 class="subh">${esc(w.w)}：${esc(w.t)}</h3>${w.note ? `<p class="note">${esc(w.note)}</p>` : ""}<div class="list">
-      ${w.items.map((id, i) => row(id, i, L(id).target || "", chip(u, id))).join("")}</div>`).join("")}
+  ${(C.yearPlan || []).length ? `<section class="group"><div class="steps-h"><span class="no">3</span><h2 style="margin:0">4月（入社1ヶ月目）のカリキュラム</h2></div>
+    ${planWeeks(C.yearPlan[0], u)}<button class="btn ghost" data-go="roadmap" style="margin-top:12px">5月からの時間割を見る</button>
   </section>` : ""}
   <section class="group"><div class="steps-h"><span class="no">4</span><h2 style="margin:0">4月の初日までに読んでおくこと</h2></div><div class="list">
     ${(C.firstDay || []).map((id, i) => row(id, i, L(id).target || "", chip(u, id))).join("")}
@@ -1270,12 +1269,19 @@ function bindLesson() {
 }
 
 /* ---------- ロードマップ ---------- */
+// 時間割の1ヶ月分（週ごとにやるレッスン）
+function planWeeks(m, u) {
+  return m.weeks.map(w => `<h3 class="subh">${esc(w.w)}：${esc(w.t)}</h3>${w.note ? `<p class="note">${esc(w.note)}</p>` : ""}<div class="list">
+    ${w.items.map(id => `<button class="row${doneCls(u, id)}" data-lesson="${id}"><span class="t">${esc(L(id).title)}<small>${esc(L(id).target || "")}</small></span>${chip(u, id)}</button>`).join("")}</div>`).join("");
+}
 function viewRoadmap() {
   const u = me();
-  const buckets = [[0, "入社前"], [0.25, "入社1週間まで"], [0.5, "入社2週間まで"], [1, "入社1ヶ月まで"], [2, "入社2ヶ月まで"], [8, "デビューまで"]];
+  const buckets = [[0, "入社前"], [0.25, "入社1週間まで"], [0.5, "入社2週間まで"], [1, "入社1ヶ月まで"], [2, "入社2ヶ月まで"], [3, "入社3ヶ月まで"], [8, "デビューまで"]];
   return `
   <section class="ptitle"><div class="eyebrow">ROADMAP</div><h1>デビューまでの道のり</h1><p class="lead">${esc(C.goal.text)}</p></section>
   <section class="timeline">${C.roadmap.map(r => `<div class="tl ${r.goal ? "goalpt" : ""}"><div class="m">${esc(r.m)}</div><b>${esc(r.t)}</b>${r.d ? `<p>${esc(r.d)}</p>` : ""}</div>`).join("")}</section>
+  ${(C.yearPlan || []).length ? `<section class="group"><h2>1年目の時間割</h2><p class="note">全員が確実にこなせるペースです。月をタップで開きます。</p>
+    ${C.yearPlan.map((m, i) => `<details class="fold"${i === 0 ? " open" : ""}><summary>${esc(m.m)}｜${esc(m.t)}</summary>${planWeeks(m, u)}</details>`).join("")}</section>` : ""}
   ${buckets.map(([d, name]) => { const ids = LESSON_IDS.filter(id => (C.lessons[id].due ?? 99) === d); if (!ids.length) return "";
     return `<section class="group"><h2>${name}に合格するもの</h2><div class="list">${ids.map(id => `<button class="row" data-lesson="${id}"><span class="t">${esc(L(id).title)}</span>${chip(u, id)}</button>`).join("")}</div></section>`; }).join("")}`;
 }
