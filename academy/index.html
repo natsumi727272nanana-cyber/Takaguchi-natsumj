@@ -98,6 +98,7 @@ main .wrap { padding-block: 20px 56px; display: grid; gap: 20px }
 .row .n { font-size: 12px; color: var(--muted); width: 22px; flex: none; font-variant-numeric: tabular-nums }
 .row .t { flex: 1; min-width: 0; font-weight: 500; line-height: 1.5 }
 .row .t small { display: block; color: var(--muted); font-weight: 400; font-size: 12.5px }
+.subh { font-size: 14px; margin: 14px 0 6px; color: var(--muted) }
 .chip { font-size: 11.5px; padding: 2px 9px; border-radius: 99px; white-space: nowrap; flex: none; font-weight: 700; line-height: 1.6 }
 .chip.todo { background: var(--line); color: var(--muted) }
 .chip.prac { background: var(--accent-soft); color: var(--accent) }
@@ -766,6 +767,9 @@ function viewPre() {
   const preDone = C.preEntry.filter(id => passed(u, id)).length;
   const vidDone = id => { const s = prog(u, id); return s.watched && (s.preQuiz || !L(id).preQuiz); };
   const vids = (C.preVideo || []).filter(vidDone).length;
+  const selfPass = id => ["quiz", "read", "chore"].includes(L(id).type);
+  const preDoneFn = id => selfPass(id) ? passed(u, id) : vidDone(id);
+  const preHow = id => selfPass(id) ? (L(id).type === "read" ? "読む" : "小テスト") : "動画を見て、小テスト";
   const row = (id, i, sub, right) => `<button class="row${doneCls(u, id)}" data-lesson="${id}"><span class="n">${i + 1}</span><span class="t">${esc(L(id).title)}<small>${esc(sub)}</small></span>${right}</button>`;
   return `
   <section class="ptitle"><div class="eyebrow">${esc(G.eyebrow)}</div><h1>${esc(G.title)}</h1><p class="lead">${esc(G.lead)}</p></section>
@@ -773,20 +777,21 @@ function viewPre() {
     <div><span>4月までに合格</span><b>${preDone}/${C.preEntry.length}</b><div class="meter"><i style="width:${preDone / C.preEntry.length * 100}%"></i></div></div>
     <div><span>4月までに予習</span><b>${vids}/${(C.preVideo || []).length}</b><div class="meter"><i style="width:${vids / Math.max(1, (C.preVideo || []).length) * 100}%"></i></div></div>
   </div>
-  <section class="group"><div class="steps-h"><span class="no">1</span><h2 style="margin:0">4月までに合格すること</h2></div>
-    <p class="note">アプリのテストと、お店のシャンプーレッスンで合格します。上から順番に。</p><div class="list">
-    ${C.preEntry.map((id, i) => row(id, i, TYPE[L(id).type] + (L(id).target ? "・" + L(id).target : ""), chip(u, id))).join("")}
-  </div></section>
-  ${(C.preVideo || []).length ? `<section class="group"><div class="steps-h"><span class="no">2</span><h2 style="margin:0">4月までに予習すること</h2></div>
-    <p class="note">家では練習しません。お手本動画を見て、確認テストに全問正解したら予習完了。入社したらすぐ練習を始めます。</p><div class="list">
-    ${C.preVideo.map((id, i) => { const s = prog(u, id), done = vidDone(id); return `<button class="row${done ? " done" : ""}" data-lesson="${id}"><span class="n">${i + 1}</span><span class="t">${esc(L(id).title)}<small>${esc(L(id).target || "")}</small></span><span class="chip ${done ? "ok" : s.watched ? "prac" : "todo"}">${done ? "予習完了" : s.watched ? "テストまだ" : "まだ"}</span></button>`; }).join("")}
-  </div></section>` : ""}
-  <section class="group"><div class="steps-h"><span class="no">3</span><h2 style="margin:0">シャンプーレッスン 全${sp.rounds.length}回</h2></div>
+  <section class="group"><div class="steps-h"><span class="no">1</span><h2 style="margin:0">レッスンの各回までにやること</h2></div>
+    <p class="note">家では練習しません。アプリで動画を見て、小テストに全問正解しておきます。</p>
+    ${(C.preSessions || []).map(ss => `<h3 class="subh">${esc(ss.day)}（${esc(ss.m)}）までに</h3>${ss.note ? `<p class="note">${esc(ss.note)}</p>` : ""}<div class="list">
+      ${ss.items.map((id, i) => { const d = preDoneFn(id), s2 = prog(u, id); return `<button class="row${d ? " done" : ""}" data-lesson="${id}"><span class="n">${i + 1}</span><span class="t">${esc(L(id).title)}<small>${esc(preHow(id))}</small></span><span class="chip ${d ? "ok" : s2.watched ? "prac" : "todo"}">${d ? "できた" : s2.watched ? "テストまだ" : "まだ"}</span></button>`; }).join("")}</div>`).join("")}
+  </section>
+  <section class="group"><div class="steps-h"><span class="no">2</span><h2 style="margin:0">シャンプーレッスン 全${sp.rounds.length}回</h2></div>
     <p class="note">お店に集まって練習します。1月・2月は国家試験の勉強のためお休み。その日の教材は「シャンプー」のページで開けます。</p>
     <div class="list">${sp.rounds.map((r, i) => { const rec = recs.filter(x => x.round === i + 1).pop(), f = prog(u, "shampoo").fill?.[i];
       return `<button class="row${rec?.pass ? " done" : ""}" data-lesson="shampoo" data-day="${i}"><span class="t">${esc(r.day || `${i + 1}回目`)}（${esc(r.m)}）${rec ? `<span class="chip ${rec.pass ? "ok" : "info"}">${rec.score}点</span>` : ""}<small>${esc(r.t)}${f ? `・小テスト ${f.score}/${f.total}` : ""}</small></span></button>`; }).join("")}</div>
   </section>
-  <section class="group"><div class="steps-h"><span class="no">4</span><h2 style="margin:0">4月の初日からできるように読んでおくこと</h2></div><div class="list">
+  ${(C.aprilPlan || []).length ? `<section class="group"><div class="steps-h"><span class="no">3</span><h2 style="margin:0">4月（入社1ヶ月目）のカリキュラム</h2></div>
+    ${C.aprilPlan.map(w => `<h3 class="subh">${esc(w.w)}：${esc(w.t)}</h3>${w.note ? `<p class="note">${esc(w.note)}</p>` : ""}<div class="list">
+      ${w.items.map((id, i) => row(id, i, L(id).target || "", chip(u, id))).join("")}</div>`).join("")}
+  </section>` : ""}
+  <section class="group"><div class="steps-h"><span class="no">4</span><h2 style="margin:0">4月の初日までに読んでおくこと</h2></div><div class="list">
     ${(C.firstDay || []).map((id, i) => row(id, i, L(id).target || "", chip(u, id))).join("")}
   </div></section>`;
 }
@@ -849,7 +854,7 @@ function viewLesson() {
   ${l.checks && ["tech", "model"].includes(l.type) ? `<section class="section"><h3>チェックポイント</h3><p class="note">${l.type === "model" ? "モデルさん1人ごとにチェックし、すべて○ならOK" : l.stages.join("と") + "でチェックし、すべて○になれば合格"}です。</p><div class="md"><ul>${l.checks.map(t => `<li>${inline(t)}</li>`).join("")}</ul></div></section>` : ""}
   ${l.questions ? `<section class="section"><h3>チェック（先輩が口頭で質問）</h3><p class="note">すべて自分の言葉で答えられたら合格です。</p><div class="md"><ol>${l.questions.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
   ${l.type === "shampoo" ? scoreSheetInfo(l) : ""}
-  ${(C.preVideo || []).includes(l.id) ? `<section class="section"><h3>入社前の予習</h3>
+  ${(C.preVideo || []).includes(l.id) || l.preQuiz ? `<section class="section"><h3>入社前の予習</h3>
     <p class="note">入社前は、お手本動画を見ておくだけです（家では練習しません）。</p>
     ${st.watched ? `<p class="toast">動画を見た（${esc(st.watched)}）</p>` : route.uid ? `<p class="pending">まだ見ていません</p>` : `<button class="btn ghost" id="watched">動画を見た</button>`}
     ${st.watched && l.preQuiz ? (st.preQuiz ? `<p class="toast">確認テスト合格・予習完了（${esc(st.preQuiz)}）</p>` : route.uid ? `<p class="pending">確認テストはまだです</p>` : `<form id="preQuizForm" class="marks" style="gap:12px"><h3>動画を見たら、確認テスト（全問正解で予習完了）</h3>
