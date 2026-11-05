@@ -115,7 +115,6 @@ window.ENU = {
       { id: "attract", title: "集客", sub: "新規のお客様はどこから来るか・自分でやる集客", lessons: ["attract"] },
       { id: "repeat", title: "再来", sub: "再来術マニュアル・再来の目標とDM", lessons: ["repeat-manual", "repeat-goal"] },
       { id: "unitup", title: "単価アップ", sub: "顧客化する接客・メニューアップのアプローチ", lessons: ["unit-up"] },
-      { id: "sales", title: "売上管理", sub: "", lessons: [] },
     ]},
     { name: "100万円を達成する・続ける", page: "million", categories: [
       { id: "million-goal", title: "月売上100万円", sub: "達成したら合格", lessons: ["million-pass"] },
