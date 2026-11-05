@@ -320,6 +320,25 @@ nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background
 nav.tabs .in { max-width: 600px; margin: 0 auto; display: flex }
 nav.tabs button { flex: 1; min-width: 0; border: 0; background: none; padding: 12px 0 14px; font-size: 12px; white-space: nowrap; letter-spacing: -.02em; line-height: 1.3; color: var(--muted); font-weight: 500 }
 nav.tabs button[aria-current="page"] { color: var(--accent); font-weight: 900 }
+nav.tabs .in.many button { flex: 1 1 auto; padding-left: 1px; padding-right: 1px; font-size: 11.5px }
+/* 売上 */
+.ym { display: flex; align-items: center; justify-content: center; gap: 18px }
+.ym button { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; width: 46px; height: 40px; color: var(--accent) }
+.ym b { font-size: 19px; font-weight: 900; font-variant-numeric: tabular-nums }
+.months { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px }
+.months button { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 0; font-size: 13.5px; font-variant-numeric: tabular-nums }
+.months button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 700 }
+.kv { display: grid }
+.kv > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px }
+.kv > div:last-child { border-bottom: 0 }
+.kv span { color: var(--muted); min-width: 0 }
+.kv b { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap }
+.kv b.big { font-size: 21px; font-weight: 900 }
+.s-up { color: var(--ok) } .s-down { color: var(--ng) }
+.meter i.s-up { background: var(--ok) } .meter i.s-down { background: var(--ng) }
+.sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px }
+.sgrid .field input { text-align: right; font-variant-numeric: tabular-nums; background: var(--bg) }
+.subh2 { font-size: 13px; color: var(--muted); font-weight: 700; margin: 6px 0 0 }
 </style>
 
 <header class="bar"><div class="wrap">
@@ -484,14 +503,14 @@ async function boot() {
     if (cloudState.isOwner && cloudState.roles[myUid]?.role !== "owner" && !cloudState.ownerRoleWritten) {
       cloudState.ownerRoleWritten = true; cloud.doc("roles/" + myUid).set({ role: "owner" }).catch(() => { cloudState.ownerRoleWritten = false; });
     }
-    syncCheckSubs(); refresh();
+    syncCheckSubs(); syncSalesSubs(); refresh();
   }, cloudError);
   cloud.collection("members").onSnapshot(s => {
     cloudState.members = Object.fromEntries(s.docs.map(d => [d.id, d.data()]));
     const remote = cloudState.members[myUid];
     // 別の端末で直したときだけ取り込む。自分の保存が戻ってきたときは、手元の記録をそのまま使う
     if (remote && (!cloudState.mine || (!saving && !saveTimer && !s.metadata.hasPendingWrites && remote.rev !== lastRev))) cloudState.mine = structuredClone(remote);
-    cloudState.loaded = true; refresh();
+    cloudState.loaded = true; syncSalesSubs(); refresh();
   }, cloudError);
 }
 
@@ -580,6 +599,7 @@ let activeTab = "home";
 const ngMode = () => { const u = me(); return !!(u && u.newGrad && u.role === "assistant"); };   // 入社前の新卒：シャンプーレッスンだけの画面
 const TABS = () => ngMode() ? [["home", "シャンプーレッスン", { name: "home" }], ["mypage", "マイページ", { name: "mypage" }]] : [["home", "ホーム", { name: "home" }], ["pre", C.newGrad.tab, { name: "pre" }],
   ...Object.entries(C.pages).map(([k, p]) => [k, p.tab, { name: "cats", page: k }]),
+  ["sales", "売上", { name: "sales" }],
   ...(isLead(me()) ? [["team", "スタッフ", { name: "team" }]] : [])];
 const HIDDEN_TABS = [["chat", "", { name: "chat" }], ["mypage", "", { name: "mypage" }], ["hw", "", { name: "hw" }]];   // 下には出さないが、ボタンから開くページ
 function tab(key) { activeTab = key; stack = []; route = { ...[...TABS(), ...HIDDEN_TABS].find(t => t[0] === key)[2] }; render(); scrollTo(0, 0); }
@@ -1470,12 +1490,150 @@ function bindChat() {
   if (route.name === "chat" && $("#chatMode")) $("#chatMode").textContent = sample ? "AIが、理念・カウンセリング・カラー調合・再来術のマニュアルをもとに答えます。" : "マニュアルの中から、近い答えを探して表示します。";
 })();
 
+/* ---------- 売上・再来 ----------
+   書き込みは各自の sales/<自分のid>/rows/<キー> だけ（チェックの記録と同じ作り）。
+   表示する値は、項目ごとに「いちばん新しい書き込み」を使う。ただし、
+   管理者（オーナー・幹部）の書き込みはどの項目もOK、本人の書き込みは自分の数字（週の売上・来客数・店販・再来）だけ有効。
+   キー：p_年-月_<id>（個人の月）、s_年-月_<店舗番号>（店舗の月）、y_年_<id>（個人の年の目標率） */
+const SALES_SELF = new Set(["w1", "w2", "w3", "w4", "w5", "nw", "ex", "rt", "r1c", "r1r", "r2c", "r2r", "r3c", "r3r"]);
+const salesW = {}, salesSubs = {}, salesQueue = {};
+const pad2 = n => String(n).padStart(2, "0");
+const pKey = (y, m, uid) => `p_${y}-${pad2(m)}_${uid}`;
+const sKey = (y, m, st) => `s_${y}-${pad2(m)}_${Math.max(0, C.stores.indexOf(st))}`;
+const yKey = (y, uid) => `y_${y}_${uid}`;
+function syncSalesSubs() {
+  if (mode !== "cloud") return;
+  for (const uid of new Set([...Object.keys(cloudState.members), ...Object.keys(cloudState.roles)])) {
+    if (salesSubs[uid]) continue;
+    salesSubs[uid] = cloud.collection(`sales/${uid}/rows`).onSnapshot(s => {
+      salesW[uid] = Object.fromEntries(s.docs.map(d => [d.id, d.data().f || {}]));
+      if (route.name === "sales") refresh();
+    }, cloudError);
+  }
+}
+function sv(key, field) {
+  if (mode !== "cloud") return db.sales?.[key]?.[field]?.v ?? null;
+  let best = null;
+  for (const [w, rows] of Object.entries(salesW)) {
+    const e = rows[key]?.[field];
+    if (!e || (best && (e.at || 0) <= best.at)) continue;
+    if (validChecker(w) || (SALES_SELF.has(field) && key.startsWith("p_") && key.endsWith("_" + w))) best = { v: e.v, at: e.at || 0 };
+  }
+  return best ? best.v : null;
+}
+const sn = (key, f) => Number(sv(key, f)) || 0;   // 未入力は0
+const sdiv = (a, b) => b ? a / b : null;          // 割れないときは null →「—」
+function salesSave(key, field, v) {
+  const entry = { v, at: Date.now() };
+  if (mode !== "cloud") { ((db.sales ||= {})[key] ||= {})[field] = { ...entry, by: db.current }; store.save(); return; }
+  const mine = salesW[myUid] || {};
+  salesW[myUid] = { ...mine, [key]: { ...(mine[key] || {}), [field]: entry } };
+  const ref = cloud.doc(`sales/${myUid}/rows/${key}`);
+  // 先に最新を読み直してから、変えた項目だけを書く（ほかの項目は消さない）。同じ行は1回ずつ順番に
+  salesQueue[key] = (salesQueue[key] || Promise.resolve()).then(async () => {
+    const snap = await ref.get(), body = { f: { [field]: entry } };
+    if (snap.exists) await ref.update(body); else await ref.set({ k: key, ...body });
+  }).catch(() => { cloudNote = "売上を保存できませんでした。通信を確認して、もう一度入力してください。"; render(); });
+}
+function salesCalc(uid, y, m) {
+  const u = db.users[uid] || {}, k = pKey(y, m, uid), sk = sKey(y, m, u.store || C.stores[0]);
+  const goal = sn(k, "g"), weeks = [1, 2, 3, 4, 5].map(i => sn(k, "w" + i)), cur = weeks.reduce((a, b) => a + b, 0);
+  const nw = sn(k, "nw"), ex = sn(k, "ex"), tot = nw + ex, rt = sn(k, "rt"), de = sn(sk, "de"), dt = sn(sk, "dt");
+  const should = dt ? goal * de / dt : null;
+  return { goal, weeks, cur, left: goal - cur, rate: sdiv(cur, goal), should, prog: should == null ? null : sdiv(cur, should), nw, ex, tot, exRate: sdiv(ex, tot), unit: sdiv(cur, tot), rt, rtRate: sdiv(rt, cur) };
+}
+function storeCalc(st, y, m) {
+  const sk = sKey(y, m, st), goal = sn(sk, "sg");
+  const cur = Object.entries(db.users).filter(([, u]) => (u.store || C.stores[0]) === st).reduce((a, [id]) => a + salesCalc(id, y, m).cur, 0);
+  return { goal, cur, left: goal - cur, rate: sdiv(cur, goal), de: sn(sk, "de"), dt: sn(sk, "dt") };
+}
+const yen = n => n == null ? "—" : (n < 0 ? "-" : "") + "¥" + Math.round(Math.abs(n)).toLocaleString("ja-JP");
+const pctT = r => r == null ? "—" : (Math.round(r * 1000) / 10).toLocaleString("ja-JP") + "%";
+const rcls = (r, t = 1) => r == null || t == null ? "" : r >= t ? "s-up" : "s-down";
+const REPEAT = [["新規リピート率（1→2回目）", "r1", "新規来客数", "tn"], ["再来リピート率（2→3回目）", "r2", "再来来客数", "tr"], ["固定リピート率（3回目以上→次回）", "r3", "固定来客数", null]];
+
+function viewSales() {
+  const admin = isLead(me()), now = new Date();
+  const y = route.y ||= now.getFullYear(), m = route.m ||= now.getMonth() + 1;
+  const sid = admin && route.sid && db.users[route.sid] ? route.sid : myId(), su = db.users[sid] || me();
+  const st = su.store || C.stores[0], S = storeCalc(st, y, m), P = salesCalc(sid, y, m), k = pKey(y, m, sid), yk = yKey(y, sid);
+  const canEdit = f => admin || (SALES_SELF.has(f) && sid === myId());
+  const kv = (label, val, cls = "") => `<div><span>${label}</span><b class="${cls}">${val}</b></div>`;
+  const inp = (key, f, label, o = {}) => { const v = sv(key, f), dec = o.dec ? "|d" : "";
+    const shown = v == null ? "" : o.dec ? String(v) : Number(v).toLocaleString("ja-JP");
+    return `<div class="field"><label for="sf-${f}">${label}</label>${canEdit(f)
+      ? `<input id="sf-${f}" data-sf="${esc(key)}|${f}${dec}" type="text" inputmode="${o.dec ? "decimal" : "numeric"}" value="${esc(shown)}" placeholder="0" autocomplete="off">`
+      : `<p style="margin:0;font-weight:700">${o.dec ? (v == null ? "—" : v + "%") : o.yen ? yen(Number(v) || 0) : Number(v) || 0}</p>`}</div>`; };
+  const bar = r => `<div class="meter"><i class="${rcls(r)}" style="width:${r == null ? 0 : Math.min(100, r * 100)}%"></i></div>`;
+  const yearSum = f => Array.from({ length: 12 }, (_, i) => sn(pKey(y, i + 1, sid), f)).reduce((a, b) => a + b, 0);
+  const team = Object.entries(db.users).sort((a, b) => (a[1].store || "").localeCompare(b[1].store || "") || a[1].name.localeCompare(b[1].name, "ja"));
+  return `
+  <section class="ptitle"><div class="eyebrow">SALES</div><h1>売上</h1>
+    <p class="lead">${admin ? "全員の数字を入力・修正できます。" : "自分の数字を入力できます。店舗全体の数字も見られます。"}</p></section>
+  <div class="ym"><button data-sy="-1" aria-label="前の年">◀</button><b>${y}年</b><button data-sy="1" aria-label="次の年">▶</button></div>
+  <div class="months">${Array.from({ length: 12 }, (_, i) => `<button data-sm="${i + 1}" aria-pressed="${i + 1 === m}">${i + 1}月</button>`).join("")}</div>
+  ${admin ? `<div class="field"><label for="salesWho">スタッフを選ぶ</label><select id="salesWho">${team.map(([id, u]) => `<option value="${id}" ${id === sid ? "selected" : ""}>${esc(u.name)}（${esc(u.store || "")}）${id === myId() ? "・自分" : ""}</option>`).join("")}</select></div>` : ""}
+
+  <section class="section"><h3>店舗全体（${esc(st)}）・${m}月</h3>
+    <div class="kv">${kv("店舗目標売上", yen(S.goal))}${kv("店舗売上", yen(S.cur), "big")}${kv("目標まで", yen(S.left))}${kv("月次達成率", pctT(S.rate), rcls(S.rate))}${kv("経過営業日数 / 合計営業日数", `${S.de} / ${S.dt}日`)}</div>
+    ${bar(S.rate)}
+    ${admin ? `<h4 class="subh2">店舗の設定（管理者のみ）</h4><div class="sgrid">${inp(sKey(y, m, st), "sg", "店舗目標売上（円）")}${inp(sKey(y, m, st), "de", "経過営業日数")}${inp(sKey(y, m, st), "dt", "合計営業日数")}</div>` : ""}
+  </section>
+
+  <section class="section" id="salesMe"><h3>${sid === myId() ? "自分" : esc(su.name) + "さん"}・${m}月</h3>
+    <div class="kv">${kv("個人目標売上", yen(P.goal))}${kv("現在売上", yen(P.cur), "big")}${kv("目標まで", yen(P.left))}${kv("月次達成率", pctT(P.rate), rcls(P.rate))}${kv("目標進捗率", pctT(P.prog), rcls(P.prog))}${kv("到達しておくべき売上", yen(P.should))}</div>
+    ${bar(P.rate)}
+    ${admin ? `<div class="sgrid">${inp(k, "g", "個人目標売上（円）")}</div>` : ""}
+    <h4 class="subh2">週ごとの売上（円）</h4>
+    <div class="sgrid">${[1, 2, 3, 4, 5].map(i => inp(k, "w" + i, `${i}週目`, { yen: 1 })).join("")}</div>
+    <h4 class="subh2">来客数と店販</h4>
+    <div class="sgrid">${inp(k, "nw", "新規来客数")}${inp(k, "ex", "既存来客数")}${inp(k, "rt", "店販売上（円）", { yen: 1 })}</div>
+    <div class="kv">${kv("合計来客数", P.tot + "人")}${kv("既存顧客比率", pctT(P.exRate))}${kv("顧客単価", yen(P.unit))}${kv("店販売上", yen(P.rt))}${kv("店販 / 売上比率", pctT(P.rtRate))}</div>
+  </section>
+
+  <section class="section"><h3>再来（リピート率）・${m}月 / ${y}年</h3>
+    <p class="note">リピート率＝再来数÷来客数。年度合計は、${y}年1〜12月の再来数の合計÷来客数の合計です。</p>
+    ${REPEAT.map(([title, r, cl, tf]) => { const c = sn(k, r + "c"), rr = sn(k, r + "r"), rate = sdiv(rr, c), yr = sdiv(yearSum(r + "r"), yearSum(r + "c"));
+      const t = tf ? sv(yk, tf) : null, tt = t == null ? null : Number(t) / 100;
+      return `<h4 class="subh2">${title}</h4>
+      <div class="sgrid">${inp(k, r + "c", cl)}${inp(k, r + "r", "再来数")}</div>
+      <div class="kv">${kv(`${m}月のリピート率`, pctT(rate), rcls(rate, tt))}${kv(`${y}年 年度合計`, `${pctT(yr)}（${yearSum(r + "r")}/${yearSum(r + "c")}）`, rcls(yr, tt))}${tf ? kv("個人目標率", t == null ? "—" : t + "%") : ""}</div>
+      ${tf && admin ? `<div class="sgrid">${inp(yk, tf, `個人目標率（%）・${y}年`, { dec: 1 })}</div>` : ""}`; }).join("")}
+  </section>
+
+  ${admin ? `<section class="group"><h2>全員の一覧（${m}月）</h2><div class="tablewrap"><table><thead><tr><th>名前</th><th>現在売上 / 目標</th><th>達成率</th></tr></thead><tbody>
+    ${team.map(([id, u]) => { const c = salesCalc(id, y, m); return `<tr data-sales-who="${id}" style="cursor:pointer"><td>${esc(u.name)}<br><small style="color:var(--muted)">${esc(u.store || "")}</small></td><td>${yen(c.cur)} / ${yen(c.goal)}</td><td class="${rcls(c.rate)}" style="font-weight:700">${pctT(c.rate)}</td></tr>`; }).join("")}
+  </tbody></table></div><p class="note">名前を押すと、その人の入力に切り替わります。</p></section>` : ""}`;
+}
+function bindSales() {
+  const again = (keepFocus, toMe) => setTimeout(() => {
+    const a = keepFocus ? document.activeElement?.dataset?.sf : null, y = scrollY;
+    render(); if (toMe) $("#salesMe")?.scrollIntoView({ block: "start" }); else scrollTo(0, y);
+    if (a) document.querySelector(`[data-sf="${CSS.escape(a)}"]`)?.focus();
+  }, 0);
+  $$("[data-sy]").forEach(b => b.onclick = () => { route.y += Number(b.dataset.sy); again(); });
+  $$("[data-sm]").forEach(b => b.onclick = () => { route.m = Number(b.dataset.sm); again(); });
+  $("#salesWho")?.addEventListener("change", e => { route.sid = e.target.value; again(); });
+  $$("[data-sales-who]").forEach(b => b.onclick = () => { route.sid = b.dataset.salesWho; again(false, true); });
+  $$("[data-sf]").forEach(inp => inp.onchange = () => {
+    const [key, field, dec] = inp.dataset.sf.split("|");
+    const raw = inp.value.normalize("NFKC").replace(/[¥￥,\s%円人日]/g, "");
+    let v = null;
+    if (raw !== "") {
+      v = Number(raw);
+      if (!isFinite(v) || v < 0) { inp.value = ""; inp.placeholder = "0以上の数字"; return; }
+      v = dec ? Math.round(v * 10) / 10 : Math.round(v);
+    }
+    salesSave(key, field, v); again(true);
+  });
+}
+
 /* ---------- 描画 ---------- */
 const VIEWS = {
   home: [viewHome], pre: [viewPre], cats: [viewCats], cat: [viewCat], lesson: [viewLesson, bindLesson],
-  roadmap: [viewRoadmap], team: [viewTeam, bindTeam], member: [viewMember], chat: [viewChat, bindChat], mypage: [viewMypage, bindMypage], hw: [viewHw, bindHw],
+  roadmap: [viewRoadmap], team: [viewTeam, bindTeam], member: [viewMember], chat: [viewChat, bindChat], mypage: [viewMypage, bindMypage], hw: [viewHw, bindHw], sales: [viewSales, bindSales],
 };
-const TITLES = { mypage: "マイページ", pre: C.newGrad.title, roadmap: "ロードマップ", team: "みんなの進み具合", member: "進み具合", chat: "オーナーAIチャット", hw: "幹部の課題" };
+const TITLES = { mypage: "マイページ", pre: C.newGrad.title, roadmap: "ロードマップ", team: "みんなの進み具合", member: "進み具合", chat: "オーナーAIチャット", hw: "幹部の課題", sales: "売上" };
 
 function render() {
   formDirty = false;
@@ -1492,6 +1650,7 @@ function render() {
   const [view, bind] = VIEWS[route.name] || VIEWS.home;
   $("#backBtn").hidden = !stack.length;
   $("#tabs").hidden = false;
+  $("#tabsIn").className = "in" + (TABS().length > 6 ? " many" : "");
   $("#tabsIn").innerHTML = TABS().map(([k, l]) => `<button data-tab="${k}" ${k === activeTab ? 'aria-current="page"' : ""}>${l}</button>`).join("");
   $("#brand").className = route.name === "home" ? "brand logo" : !stack.length ? "brand logo small" : "brand";
   $("#brand").textContent = !stack.length ? "enu ACADEMY" : route.name === "cats" ? C.pages[route.page].title : route.name === "cat" ? CATS.find(c => c.id === route.id).title : route.name === "lesson" ? L(route.id).title : TITLES[route.name] || "enu ACADEMY";
@@ -1509,3 +1668,4 @@ function render() {
 }
 boot();
 </script>
+
