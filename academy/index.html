@@ -902,7 +902,7 @@ function viewLesson() {
   ${l.products ? productsPanel(l) : ""}
   ${l.checklist ? checklistPanel(l, u) : !l.body ? "" : `<section class="section"><h3>${l.menu ? "あわせて覚えること" : l.type === "theory" ? "覚えること" : l.fold ? "マニュアル（章をタップで開く）" : l.type === "read" ? "内容" : "やり方"}</h3>${md(l.body, l.fold)}</section>`}
   ${l.tasks ? `<section class="section"><h3>課題</h3><div class="md"><ol>${l.tasks.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
-  ${l.checks && ["tech", "model"].includes(l.type) ? `<section class="section"><h3>チェックポイント</h3><p class="note">${l.type === "model" ? "モデルさん1人ごとにチェックし、すべて○ならOK" : l.stages.join("と") + "でチェックし、すべて○になれば合格"}です。</p><div class="md"><ul>${l.checks.map(t => `<li>${inline(t)}</li>`).join("")}</ul></div></section>` : ""}
+  ${l.checks && ["tech", "model"].includes(l.type) ? `<section class="section"><h3>チェックポイント</h3><p class="note">${l.type === "model" ? "モデルさん1人ごとにチェックし、すべて○ならOK" : l.sheet ? `${l.stages.join("と")}で、先輩が${l.sheet.length}項目を各10点で採点。合計${l.passScore}点以上で合格` : l.stages.join("と") + "でチェックし、すべて○になれば合格"}です。</p><div class="md"><ul>${l.checks.map(t => `<li>${inline(t)}</li>`).join("")}</ul></div></section>` : ""}
   ${l.questions ? `<section class="section"><h3>チェック（先輩が口頭で質問）</h3><p class="note">すべて自分の言葉で答えられたら合格です。</p><div class="md"><ol>${l.questions.map(t => `<li>${inline(t)}</li>`).join("")}</ol></div></section>` : ""}
   ${l.type === "shampoo" ? scoreSheetInfo(l) : ""}
   ${(C.preVideo || []).includes(l.id) || l.preQuiz ? `<section class="section"><h3>入社前の予習</h3>
@@ -913,6 +913,9 @@ function viewLesson() {
       ${l.preQuiz.map((q, qi) => `<div class="q"><p>Q${qi + 1}. ${esc(q.q)}</p>${q.options.map((o, oi) => `<label class="opt"><input type="radio" name="pq${qi}" value="${oi}" required><span>${esc(o)}</span></label>`).join("")}</div>`).join("")}
       <button class="btn" type="submit">答え合わせ</button></form>`) : ""}</section>` : ""}
   ${l.miniQuiz ? miniQuizPanel(l, st) : ""}
+  ${l.sheet && !route.uid ? `<form class="section" id="selfForm"><h3>自己採点（参考）</h3><p class="note">練習のたびに、チェックシートで自分を採点しよう。「いける」と思ったら、先輩にチェックをお願いします。${st.selfScore ? `前回：${st.selfScore.total}点（${esc(st.selfScore.date)}）` : ""}</p>
+    <div class="marks">${l.sheet.map(([t, pt], i) => `<div class="mark"><span>${esc(t)}<small style="display:block;color:var(--muted)">${esc(pt)}</small></span><select data-self="${i}" aria-label="${esc(t)}">${Array.from({ length: 11 }, (_, v) => 10 - v).map(v => `<option value="${v}"${st.selfScore?.marks?.[i] === v ? " selected" : ""}>${v}/10</option>`).join("")}</select></div>`).join("")}</div>
+    <div class="total"><span>合計</span><b id="selfTotal">${st.selfScore ? st.selfScore.total : l.sheet.length * 10}</b></div><button class="btn ghost" type="submit">自己採点を保存</button></form>` : ""}
   ${(() => { const b = blockedBy(u, l.id, route.cat);
     if (l.miniQuiz && !st.miniOk && st.status !== "ok") return route.uid ? "" : `<section class="section"><h3>ロープレとチェック</h3><p class="note" style="font-size:14px">小テストに全問正解すると、ロープレの練習と先輩のチェックに進めます。</p></section>`; return b && st.status !== "ok"
     ? `<section class="section"><h3>練習とチェック</h3><p class="note" style="font-size:14px">いまは予習の時間です。前のレッスン「${esc(L(b).title)}」に合格すると、練習の記録と先輩のチェックができるようになります。</p><button class="btn ghost" data-lesson="${b}">「${esc(L(b).title)}」へ</button></section>`
@@ -1124,8 +1127,10 @@ function checkPanel(l, st, leadView) {
   let body = "";
   if (l.type === "tech") {
     const remain = l.stages.filter(s => !st.stages.includes(s));
+    const self = st.selfScore;
     body = `<div class="field"><label for="ckStage">どこでチェック？</label><select id="ckStage">${remain.map(s => `<option>${esc(s)}</option>`).join("")}</select></div>
-      ${oxList(l.checks)}`;
+      ${l.sheet ? `${self ? `<p class="note">本人の自己採点（参考）：${self.total}点（${esc(self.date)}）</p>` : ""}<div class="marks">${l.sheet.map(([t, pt], i) => `<div class="mark"><span>${esc(t)}<small style="display:block;color:var(--muted)">${esc(pt)}${self ? `・自己 ${self.marks[i]}点` : ""}</small></span><select data-score="${i}" aria-label="${esc(t)}">${Array.from({ length: 11 }, (_, v) => 10 - v).map(v => `<option value="${v}">${v}/10</option>`).join("")}</select></div>`).join("")}</div>
+      <div class="total"><span>合計（${l.passScore}点以上で合格）</span><b id="scoreTotal">${l.sheet.length * 10}</b></div>` : oxList(l.checks)}`;
   } else if (l.type === "model") {
     body = `<p class="note">${st.records.filter(r => r.pass).length + 1}人目のチェックです。</p>
       <div class="field"><label for="ckModel">モデルさん（名前や特徴のメモ）</label><input id="ckModel" placeholder="例：Aさん・肩下ロング"></div>
@@ -1159,10 +1164,11 @@ function oxList(items, required = true) {
 }
 function recordsPanel(l, st) {
   if (!st.records.length || l.type === "model") return "";
-  const items = l.type === "shampoo" ? null : ["tech", "roleplay", "model"].includes(l.type) ? l.checks : l.questions;
+  const items = l.type === "shampoo" || l.sheet ? null : ["tech", "roleplay", "model"].includes(l.type) ? l.checks : l.questions;
+  const sc = l.sheet ? l.sheet.map(([t]) => [null, t, 10]) : l.score;
   return `<section class="section"><h3>チェックの記録</h3><div style="display:grid;gap:10px">
     ${st.records.slice().reverse().map(r => {
-      const ng = items ? r.marks.map((v, i) => v ? null : items[i]).filter(Boolean) : l.score.map(([, p, pt], i) => r.marks[i] < pt ? `${p}（${r.marks[i]}/${pt}）` : null).filter(Boolean);
+      const ng = items ? r.marks.map((v, i) => v ? null : items[i]).filter(Boolean) : (sc || []).map(([, p, pt], i) => r.marks[i] < pt ? `${p}（${r.marks[i]}/${pt}）` : null).filter(Boolean);
       return `<div class="rec"><div class="h"><span class="chip ${r.pass ? "ok" : "ng"}">${r.pass ? "合格" : "もう一度"}</span>
         <b>${esc(r.label)}</b>${r.score != null ? `<b>${r.score}点</b>` : ""}<span>${esc(r.date)}・${esc(r.by)}</span></div>
         ${ng.length ? `<div class="x">× ${ng.map(esc).join("／")}</div>` : ""}
@@ -1269,6 +1275,9 @@ function bindLesson() {
   });
   const sumScore = () => $$("[data-score]").reduce((a, s) => a + Number(s.value), 0);
   $$("[data-score]").forEach(s => s.onchange = () => $("#scoreTotal").textContent = sumScore());
+  const selfSum = () => $$("select[data-self]").reduce((a, x) => a + Number(x.value), 0);
+  $$("select[data-self]").forEach(x => x.onchange = () => $("#selfTotal").textContent = selfSum());
+  $("#selfForm")?.addEventListener("submit", e => { e.preventDefault(); st.selfScore = { marks: $$("select[data-self]").map(x => Number(x.value)), total: selfSum(), date: today() }; store.save(); flash(`自己採点 ${st.selfScore.total}点を保存しました`); });
   $("#checkForm")?.addEventListener("submit", e => {
     e.preventDefault();
     const lead = mode === "cloud" ? me() : db.users[$("#ckBy").value];
@@ -1289,14 +1298,16 @@ function bindLesson() {
       const left = l.maxJudge ? l.maxJudge - judgeCount(st, l) : null;
       return flash(rec.pass ? `${rec.score}点、合格です！` : `${rec.score}点。${!judging ? "練習の採点として記録しました。" : !reqOk ? "★必須がまだ満点ではありません。" : !extraOk ? "トリートメントのおすすめまでできたら合格です。" : `合格は${l.passScore}点以上です。`}${judging && left != null ? (left > 0 ? `（今日のテストはあと${left}回）` : `（今日のテストは終わり。${l.retryNote || "別の日に再テスト"}）`) : ""}`, !rec.pass);
     }
-    rec.marks = $$(".marks .mark").map((_, i) => $(`input[name=ox${i}]:checked`)?.value === "1");
-    const allOk = rec.marks.every(Boolean);
+    if (l.sheet) { rec.marks = $$("[data-score]").map(x => Number(x.value)); rec.score = sumScore(); }
+    else rec.marks = $$(".marks .mark").map((_, i) => $(`input[name=ox${i}]:checked`)?.value === "1");
+    const allOk = l.sheet ? rec.score >= l.passScore : rec.marks.every(Boolean);
     if (l.type === "tech") {
       rec.stage = $("#ckStage").value; rec.label = rec.stage + "チェック"; rec.pass = allOk;
       if (allOk) st.stages.push($("#ckStage").value);
       const done = l.stages.every(s => st.stages.includes(s));
       if (done) pass(lead.name); else st.status = "prac";
       keep();
+      if (l.sheet) return flash(done ? `${rec.score}点、合格！${l.passMsg || ""}` : allOk ? `${rec.score}点で${$("#ckStage").value}は合格。次は${l.stages.find(s => !st.stages.includes(s))}でチェックを受けよう` : `${rec.score}点。合格は${l.passScore}点以上です。点の低いところを練習して、もう一度`, !allOk);
       return flash(done ? (l.passMsg ? "すべて○、" + l.passMsg : "すべて○、合格！営業でお客様に入れます") : allOk ? `${$("#ckStage").value}は合格。次は${l.stages.find(s => !st.stages.includes(s))}でチェックを受けよう` : "×のところを練習して、もう一度チェックを受けよう", !allOk);
     }
     if (l.type === "model") {
