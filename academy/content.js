@@ -1009,7 +1009,7 @@ enu が大切にするのは、頑張った人が自分の力で稼ぎ、その�
     },
 
     "dry-reading": {
-      title: "ドライの基本（1回目のレッスンまでに読む）", type: "read", target: "入社前（シャンプー1日目まで）", due: 0, noVideo: true,
+      title: "ドライの基本（1回目のレッスンまでに読む）", type: "read", videos: [{ t: "ドライ", url: "https://youtube.com/shorts/N6eGUEl1x5A" }, { t: "前髪のドライ", url: "https://youtube.com/shorts/Mghe3VCwqe8" }], target: "入社前（シャンプー1日目まで）", due: 0, noVideo: true,
       intro: `シャンプーレッスンの1日目までに読んでおく資料です。レッスンでは、シャンプーのあとにドライまで通してやります。`,
       body: `#### なぜドライヤーで乾かすの？
 
@@ -1036,7 +1036,7 @@ enu が大切にするのは、頑張った人が自分の力で稼ぎ、その�
     },
 
     "dry-basic": {
-      title: "シャンプー後のドライ", type: "tech", target: "入社前（シャンプーレッスンと一緒に）", due: 0,
+      title: "シャンプー後のドライ", type: "tech", videos: [{ t: "ドライ", url: "https://youtube.com/shorts/N6eGUEl1x5A" }, { t: "前髪のドライ", url: "https://youtube.com/shorts/Mghe3VCwqe8" }], target: "入社前（シャンプーレッスンと一緒に）", due: 0,
       practice: 5, practiceLabel: "相モデルでドライまでやった", stages: ["人頭"],
       intro: `カラー・縮毛矯正・カットなどで、シャンプーが終わったあとに乾かすドライです。ウィッグは使わず、最初から人頭で、シャンプーレッスンの流れの中でドライまでやります。縮毛矯正の「ストレートブロー（伸ばす作業）」は、縮毛矯正のレッスンにあります。`,
       body: `#### 準備
@@ -3900,7 +3900,7 @@ enuは髪質改善に特化していて、縮毛矯正がすごくうまいサ�
         { id: "counsel-course", title: "カウンセリング講習", questions: ["曜日と時間", "担当は誰？"] },
     { id: "newgrad-days", title: "新卒レッスンの日程", questions: ["1日目・2日目の日付", "時間と店舗"] },
     { id: "newgrad-mail", title: "新卒のメールアドレス（招待用）", questions: ["名前とメールアドレス"] },
-    { id: "youtube", title: "動画のYouTubeのURL", questions: ["撮れた動画から、レッスン名とURL（限定公開）"] },
+    { id: "youtube", title: "動画のYouTubeのURL", questions: ["撮れた動画から、レッスン名とURL（限定公開）。済：ドライ・前髪のドライ"] },
   ],
 
   // オーナーAIチャット：AIはここに並べたレッスンの本文だけを根拠に答えます（オーナーの資料ができたらレッスンとして追加）
