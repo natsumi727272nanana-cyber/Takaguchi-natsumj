@@ -973,11 +973,12 @@ function progressPanel(l, st, u) {
   return self && !["ok", "wait"].includes(st.status) ? `<section class="section"><h3>準備ができたら</h3>
     <button class="btn" id="request">${l.type === "shampoo" ? "採点をお願いする" : "先輩にチェックをお願いする"}</button></section>` : "";
 }
+const quizNeed = l => l.passRate ? Math.ceil(l.quiz.length * l.passRate) : l.quiz.length;   // 合格に必要な正解数
 function quizPanel(l, st) {
-  const r = route.result;
-  return `<form class="section" id="quizForm"><h3>確認テスト（全問正解で合格）</h3>
+  const r = route.result, n = l.quiz.length, need = quizNeed(l);
+  return `<form class="section" id="quizForm"><h3>確認テスト（${need < n ? `${n}問中${need}問以上の正解で合格` : "全問正解で合格"}）</h3>
     ${st.status === "ok" ? `<div class="toast">合格しています（${esc(st.passedAt || "")}）</div>` : ""}
-    ${r ? `<div class="toast ${r.ok ? "" : "err"}">${r.ok ? "全問正解、合格です！" : `${r.correct}/${l.quiz.length}問正解。やり方を読み直して、もう一度チャレンジしよう`}</div>` : ""}
+    ${r ? `<div class="toast ${r.ok ? "" : "err"}">${r.ok ? (r.correct === n ? "全問正解、合格です！" : `${r.correct}/${n}問正解、合格です！`) : `${r.correct}/${n}問正解。合格は${need}問以上です。やり方を読み直して、もう一度チャレンジしよう`}${r.wrong?.length ? `<br><small>まちがえた問題：${r.wrong.map(i => "Q" + (i + 1)).join("・")}</small>` : ""}</div>` : ""}
     ${l.quiz.map((q, qi) => `<div class="q"><p>Q${qi + 1}. ${esc(q.q)}</p>${q.options.map((o, oi) => `<label class="opt"><input type="radio" name="q${qi}" value="${oi}" required><span>${esc(o)}</span></label>`).join("")}</div>`).join("")}
     ${route.uid ? "" : `<button class="btn" type="submit">答え合わせ</button>`}
   </form>`;
@@ -1219,9 +1220,10 @@ function bindLesson() {
   $("#openCheck")?.addEventListener("click", () => { route.open = true; render(); $("#checkForm")?.scrollIntoView({ block: "start" }); });
   $("#quizForm")?.addEventListener("submit", e => {
     e.preventDefault();
-    const correct = l.quiz.filter((q, i) => Number($(`input[name=q${i}]:checked`)?.value) === q.answer).length, ok = correct === l.quiz.length;
+    const wrong = l.quiz.map((q, i) => Number($(`input[name=q${i}]:checked`)?.value) === q.answer ? null : i).filter(i => i !== null);
+    const correct = l.quiz.length - wrong.length, ok = correct >= quizNeed(l);
     if (ok) pass("アプリのテスト"); else if (st.status !== "ok") st.status = "prac";
-    route.result = { ok, correct }; store.save(); render();
+    route.result = { ok, correct, wrong }; store.save(); render();
   });
   const sumScore = () => $$("[data-score]").reduce((a, s) => a + Number(s.value), 0);
   $$("[data-score]").forEach(s => s.onchange = () => $("#scoreTotal").textContent = sumScore());
