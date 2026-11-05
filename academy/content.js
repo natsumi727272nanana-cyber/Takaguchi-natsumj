@@ -125,7 +125,7 @@ window.ENU = {
   preVideo: ["setting-blow", "finish-inward", "finish-outward", "finish-kubire", "finish-straight", "color-fashion", "color-gray", "straight-apply", "register"],
   // シャンプーレッスンの各回までに、アプリでやっておくこと（動画＋小テスト）
   preSessions: [
-    { m: "11月", day: "1日目", items: ["enu-about", "shampoo", "dry-reading"], note: "シャンプーの工程動画を見て、小テストまで" },
+    { m: "11月", day: "1日目", items: ["enu-about", "shampoo", "dry-reading"], note: "今回、動画はレッスン当日にお店で見ます。シャンプーのページは、やり方（流れ・お声かけ・洗う順番）を読んでおけばOK" },
     { m: "11月", day: "2日目", items: ["drink", "cloth", "setting-blow"] },
     { m: "12月", day: "3日目", items: ["phone", "greeting"] },
     { m: "3月", day: "4日目", items: ["finish-inward", "finish-outward", "finish-kubire", "finish-straight"], note: "巻きとストレート仕上げは、4月に練習する分の予習" },
