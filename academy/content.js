@@ -2821,7 +2821,7 @@ LTVとは、お客様が長期的に通ってくださる中で生まれる「�
     },
     // カット：教えるのは誰でもOK、チェックは幹部。ウィッグ5回（毎回自己採点）→ ウィッグで幹部チェック → モデル5人
     "cut-onelength": {
-      title: "ワンレングス", type: "tech", target: "ジュニアスタイリストデビューまで", due: 8, practice: 5, practiceLabel: "ウィッグで練習した", stages: ["ウィッグ"],
+      title: "ワンレングス", type: "tech", video: "https://youtube.com/shorts/MniEdt9aTdE", target: "ジュニアスタイリストデビューまで", due: 8, practice: 5, practiceLabel: "ウィッグで練習した", stages: ["ウィッグ"],
       intro: `全部の毛を同じ長さの線で切る、カットの基本です。この線がきれいに切れることが、すべてのカットの土台になります。`,
       body: `#### ワンレングスをベースに作れる代表スタイル
 
