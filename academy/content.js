@@ -129,7 +129,7 @@ window.ENU = {
   preVideo: ["setting-blow", "finish-inward", "finish-outward", "finish-kubire", "finish-straight", "color-fashion", "color-gray", "straight-apply", "register"],
   // シャンプーレッスンの各回までに、アプリでやっておくこと（動画＋小テスト）
   preSessions: [
-    { m: "11月", day: "1日目", items: ["enu-about", "shampoo", "dry-reading"], note: "今回、動画はレッスン当日にお店で見ます。シャンプーのページは、やり方（流れ・お声かけ・洗う順番）を読んでおけばOK" },
+    { m: "11月", day: "1日目", items: ["enu-about", "shampoo", "dry-reading"], note: "シャンプーの手順の動画を見て、小テストまで。ドライの基本の動画（ドライ・前髪のドライ）も見ておこう" },
     { m: "11月", day: "2日目", items: ["drink", "cloth", "setting-blow"] },
     { m: "12月", day: "3日目", items: ["phone", "greeting"] },
     { m: "3月", day: "4日目", items: ["finish-inward", "finish-outward", "finish-kubire", "finish-straight"], note: "巻きとストレート仕上げは、4月に練習する分の予習" },
@@ -763,7 +763,7 @@ enu が大切にするのは、頑張った人が自分の力で稼ぎ、その�
     },
 
     "shampoo": {
-      title: "シャンプー（SP）", type: "shampoo", target: "入社前（3月の5日目で合格）", due: 0, time: "ご案内込みで10分",
+      title: "シャンプー（SP）", type: "shampoo", videos: [{ t: "シャンプーの手順", url: "https://youtu.be/--V6OJif92g" }], target: "入社前（3月の5日目で合格）", due: 0, time: "ご案内込みで10分",
       body: `#### SPの大切なこと
 
 1. **シャンプーは、アシスタントがいちばん最初にお客様に触れる技術です。**「このお店に任せて大丈夫かな」というお客様の印象は、ここで決まります。
@@ -3900,7 +3900,7 @@ enuは髪質改善に特化していて、縮毛矯正がすごくうまいサ�
         { id: "counsel-course", title: "カウンセリング講習", questions: ["曜日と時間", "担当は誰？"] },
     { id: "newgrad-days", title: "新卒レッスンの日程", questions: ["1日目・2日目の日付", "時間と店舗"] },
     { id: "newgrad-mail", title: "新卒のメールアドレス（招待用）", questions: ["名前とメールアドレス"] },
-    { id: "youtube", title: "動画のYouTubeのURL", questions: ["撮れた動画から、レッスン名とURL（限定公開）。済：ドライ・前髪のドライ"] },
+    { id: "youtube", title: "動画のYouTubeのURL", questions: ["撮れた動画から、レッスン名とURL（限定公開）。済：ドライ・前髪のドライ・シャンプーの手順"] },
   ],
 
   // オーナーAIチャット：AIはここに並べたレッスンの本文だけを根拠に答えます（オーナーの資料ができたらレッスンとして追加）
