@@ -109,6 +109,7 @@ main .wrap { padding-block: 20px 56px; display: grid; gap: 20px }
 .danger p { margin: 8px 0 0; font-size: 14px; font-weight: 700; color: var(--ink, inherit) }
 .vlinks { display: flex; flex-direction: column; gap: 10px; margin-top: 10px }
 .vlinks a { display: block; background: rgba(255,255,255,.12); border-radius: 10px; padding: 10px 14px; font-weight: 700 }
+.hero { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; margin: 0 0 14px }
 .subh { font-size: 14px; margin: 14px 0 6px; color: var(--muted) }
 .chip { font-size: 11.5px; padding: 2px 9px; border-radius: 99px; white-space: nowrap; flex: none; font-weight: 700; line-height: 1.6 }
 .chip.todo { background: var(--line); color: var(--muted) }
@@ -692,6 +693,7 @@ function viewLeadHome() {
   const u = me(), P = C.philosophy, waits = waitingList();
   const team = Object.entries(db.users).filter(([, x]) => x.role === "assistant");
   return `
+  <img class="hero" src="img/hero.jpg" alt="enu hair">
   <button class="philo" ${P.link ? `data-lesson="${P.link}"` : ""} style="text-align:left;width:100%">
     <div class="eyebrow">${esc(P.eyebrow)}</div>
     <h1>${esc(P.title)}</h1>
@@ -725,6 +727,7 @@ function viewHome() {
   const u = me(), P = C.philosophy, done = LESSON_IDS.filter(id => passed(u, id)).length, pct = percent(u);
   const waits = waitingList(), lead = isLead(u);
   return `
+  <img class="hero" src="img/hero.jpg" alt="enu hair">
   <button class="philo" ${P.link ? `data-lesson="${P.link}"` : ""} style="text-align:left;width:100%">
     <div class="eyebrow">${esc(P.eyebrow)}</div>
     <h1>${esc(P.title)}</h1>
@@ -803,6 +806,7 @@ function viewShampooOnly() {
   const selfPass = id => ["quiz", "read", "chore"].includes(L(id).type);
   const doneFn = id => selfPass(id) ? passed(u, id) : vidDone(id);
   return `
+  <img class="hero" src="img/hero.jpg" alt="enu hair">
   <section class="ptitle"><div class="eyebrow">${esc(C.newGrad.eyebrow)}</div><h1>シャンプーレッスン</h1>
     <p class="lead">${esc(u.name)}さん、ようこそ。11月・12月・3月の全${sp.rounds.length}回です。各回の前に、下の「この日までに」を見ておいてね。家で練習はしなくて大丈夫です。</p></section>
   ${sp.rounds.map((r, i) => { const ss = (C.preSessions || [])[i], rec = recs.filter(x => x.round === i + 1).pop(), f = prog(u, "shampoo").fill?.[i];
