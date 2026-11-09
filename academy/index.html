@@ -110,6 +110,10 @@ main .wrap { padding-block: 20px 56px; display: grid; gap: 20px }
 .vlinks { display: flex; flex-direction: column; gap: 10px; margin-top: 10px }
 .vlinks a { display: block; background: rgba(255,255,255,.12); border-radius: 10px; padding: 10px 14px; font-weight: 700 }
 .hero { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; margin: 0 0 14px }
+.redoalert { display: block; width: 100%; text-align: left; background: var(--ng-soft); color: var(--ng); border: 2px solid var(--ng); border-radius: 14px; padding: 12px 14px; margin: 0 0 12px; font-weight: 900; font-size: 15px }
+.redoalert small { display: block; font-weight: 700; font-size: 12.5px; margin-top: 2px }
+.section.redo { border: 2px solid var(--ng); background: var(--ng-soft) }
+.section.redo h3 { color: var(--ng) }
 .subh { font-size: 14px; margin: 14px 0 6px; color: var(--muted) }
 .chip { font-size: 11.5px; padding: 2px 9px; border-radius: 99px; white-space: nowrap; flex: none; font-weight: 700; line-height: 1.6 }
 .chip.todo { background: var(--line); color: var(--muted) }
@@ -407,16 +411,25 @@ function deriveProgress(uid, progress) {
   Object.entries(cloudState.checks).filter(([lid]) => validChecker(lid)).forEach(([, rs]) => rs.filter(r => r.member === uid).forEach(r => (byLesson[r.lesson] ||= []).push(r)));
   for (const id of Object.keys(C.lessons)) {
     const l = C.lessons[id];
-    if (!CHECK_TYPES.includes(l.type)) continue;
-    const rs = (byLesson[id] || []).slice().sort((a, b) => (a.at || 0) - (b.at || 0));
-    if (!progress[id] && !rs.length) continue;
+    const all = (byLesson[id] || []).slice().sort((a, b) => (a.at || 0) - (b.at || 0));
+    const lastRedo = all.filter(r => r.redo).at(-1);
+    if (!CHECK_TYPES.includes(l.type)) {   // 自分で合格する項目：やり直しのあとに合格し直していなければ、練習中に戻す
+      if (!lastRedo) { if (progress[id]) delete progress[id].redo; continue; }
+      const st = progress[id] ||= { status: "todo", practice: 0 };
+      if ((st.passTs || 0) > lastRedo.at) delete st.redo;
+      else { st.redo = lastRedo; if (st.status === "ok") st.status = "prac"; delete st.passedAt; delete st.passedBy; }
+      continue;
+    }
+    if (!progress[id] && !all.length) continue;
     const st = progress[id] ||= { status: "todo", practice: 0 };
+    const rs = lastRedo ? all.filter(r => !r.redo && (r.at || 0) > lastRedo.at) : all.filter(r => !r.redo);   // やり直しより前の合格は数えない
     const ok = rs.filter(r => r.pass);
-    st.records = rs;
+    st.records = all;
+    if (lastRedo) st.redo = lastRedo; else delete st.redo;
     if (l.type === "model") { st.stages = []; applyModelStatus(st, l); continue; }
     st.stages = l.type === "tech" ? [...new Set(ok.map(r => r.stage))] : l.type === "roleplay" ? [...new Set(ok.map(r => String(r.round)))] : [];
     const done = l.type === "tech" ? l.stages.every(s => st.stages.includes(s)) : l.type === "roleplay" ? l.rounds.every((_, i) => st.stages.includes(String(i + 1))) : l.type === "model" ? ok.length >= l.models : ok.length > 0;
-    if (done) { const last = ok.at(-1); Object.assign(st, { status: "ok", passedAt: last.date, passedBy: last.by }); continue; }
+    if (done) { const last = ok.at(-1); Object.assign(st, { status: "ok", passedAt: last.date, passedBy: last.by }); delete st.redo; continue; }
     delete st.passedAt; delete st.passedBy;
     const lastAt = rs.at(-1)?.at || 0;
     if (st.status === "wait" && (st.requestedAt || 0) > lastAt) continue;
@@ -521,9 +534,14 @@ function lessonLocked(u, cat, idx) {
   if (isLead(u) || idx === 0 || cat.free || ["chore", "read"].includes(C.lessons[cat.lessons[idx]].type)) return false;
   return !passed(u, cat.lessons[idx - 1]);
 }
+// やり直し中の項目（先輩がクレームなどで「やり直し」にしたもの）。合格し直すまで、ほかのレッスンの練習とチェックは止まる
+const redoList = u => Object.keys(C.lessons).filter(id => u.progress[id]?.redo && u.progress[id].status !== "ok");
 // 前のレッスンに合格していないとき、そのレッスン名を返す（中身は見られる。練習とチェックだけ止める）
 function blockedBy(u, id, catId) {
-  if (isLead(me()) || ["chore", "read"].includes(C.lessons[id].type)) return null;   // 雑務はチェックなしなので順番待ちにしない
+  if (isLead(me())) return null;
+  const redo = redoList(u).find(x => x !== id);
+  if (redo) return redo;
+  if (["chore", "read"].includes(C.lessons[id].type)) return null;   // 雑務はチェックなしなので順番待ちにしない
   const c = CATS.find(x => x.id === catId && x.lessons.includes(id)) || CATS.find(x => x.lessons.includes(id));
   const i = c.lessons.indexOf(id);
   return i > 0 && !c.free && !passed(u, c.lessons[i - 1]) ? c.lessons[i - 1] : null;
@@ -535,6 +553,7 @@ function todayDone(u, id) { const d = prog(u, id).daily; return d && d.date === 
 function percent(u) { return Math.round(LESSON_IDS.filter(id => passed(u, id)).length / LESSON_IDS.length * 100); }
 const doneCls = (u, id) => passed(u, id) ? " done" : "";
 function chip(u, id, locked) {
+  if (u.progress[id]?.redo && u.progress[id].status !== "ok") return `<span class="chip ng">やり直し</span>`;
   if (locked && prog(u, id).status === "todo") return `<span class="chip lock">予習OK</span>`;
   const [label, cls] = STATUS[prog(u, id).status];
   return `<span class="chip ${cls}">${label}</span>`;
@@ -713,6 +732,8 @@ function viewLeadHome() {
     ${waits.length ? waits.map(w => `<button class="row" data-lesson="${w.id}" data-uid="${w.uid}"><span class="t">${esc(w.x.name)}さん<span class="chip wait">チェックする</span><small>${esc(L(w.id).title)}</small></span></button>`).join("")
       : `<p class="pending">いまチェック待ちはありません。アシスタントが「先輩にチェックをお願いする」を押すと、ここに出ます。</p>`}
   </div></section>
+  ${(() => { const rl = team.flatMap(([uid, x]) => redoList(x).map(id => ({ uid, x, id }))); return rl.length ? `<section class="group"><h2>やり直し中（${rl.length}件）</h2><div class="list">
+    ${rl.map(w => `<button class="row" data-lesson="${w.id}" data-uid="${w.uid}"><span class="t">${esc(w.x.name)}さん<span class="chip ng">やり直し</span><small>${esc(L(w.id).title)}・${esc(w.x.progress[w.id].redo.reason || "")}</small></span></button>`).join("")}</div></section>` : ""; })()}
   <section class="group"><h2>アシスタントの進み具合</h2>
     ${team.length ? `<div class="list">${team.map(([uid, x]) => { const cur = LESSON_IDS.find(id => !passed(x, id));
       return `<button class="row" data-member="${uid}"><span class="t">${esc(x.name)}<span class="chip info">${percent(x)}%</span><small>${esc(x.store || "")}・${stageLabel(x)}・いま：${cur ? esc(L(cur).title) : "全て合格"}</small></span></button>`; }).join("")}</div>`
@@ -929,11 +950,25 @@ function viewLesson() {
     <div class="marks">${l.sheet.map(([t, pt], i) => `<div class="mark"><span>${esc(t)}<small style="display:block;color:var(--muted)">${esc(pt)}</small></span><select data-self="${i}" aria-label="${esc(t)}">${Array.from({ length: 11 }, (_, v) => 10 - v).map(v => `<option value="${v}"${st.selfScore?.marks?.[i] === v ? " selected" : ""}>${v}/10</option>`).join("")}</select></div>`).join("")}</div>
     <div class="total"><span>合計</span><b id="selfTotal">${st.selfScore ? st.selfScore.total : l.sheet.length * 10}</b></div><button class="btn ghost" type="submit">自己採点を保存</button></form>` : ""}
   ${(() => { const b = blockedBy(u, l.id, route.cat);
+    if (b && st.status !== "ok" && redoList(u).includes(b)) return `<section class="section redo"><h3>⚠ いまはレッスン中断中です</h3><p class="note" style="font-size:14px">「${esc(L(b).title)}」が<b>やり直し</b>になっています。もう一度合格するまで、ほかのレッスンの練習とチェックは止まります。</p><button class="btn" data-lesson="${b}">「${esc(L(b).title)}」の練習へ</button></section>`;
     if (l.miniQuiz && !st.miniOk && st.status !== "ok") return route.uid ? "" : `<section class="section"><h3>ロープレとチェック</h3><p class="note" style="font-size:14px">小テストに全問正解すると、ロープレの練習と先輩のチェックに進めます。</p></section>`; return b && st.status !== "ok"
-    ? `<section class="section"><h3>練習とチェック</h3><p class="note" style="font-size:14px">いまは予習の時間です。前のレッスン「${esc(L(b).title)}」に合格すると、練習の記録と先輩のチェックができるようになります。</p><button class="btn ghost" data-lesson="${b}">「${esc(L(b).title)}」へ</button></section>`
+    ? (redoList(u).includes(b) ? `<section class="section redo"><h3>⚠ いまはレッスン中断中です</h3><p class="note" style="font-size:14px">「${esc(L(b).title)}」が<b>やり直し</b>になっています。もう一度合格するまで、ほかのレッスンの練習とチェックは止まります。</p><button class="btn" data-lesson="${b}">「${esc(L(b).title)}」の練習へ</button></section>`
+      : `<section class="section"><h3>練習とチェック</h3><p class="note" style="font-size:14px">いまは予習の時間です。前のレッスン「${esc(L(b).title)}」に合格すると、練習の記録と先輩のチェックができるようになります。</p><button class="btn ghost" data-lesson="${b}">「${esc(L(b).title)}」へ</button></section>`)
     : progressPanel(l, st, u) + (st.status !== "ok" && CHECK_TYPES.includes(l.type) && l.type !== "model" ? checkPanel(l, st, leadView) : ""); })()}
+  ${redoPanel(l, st)}
   ${recordsPanel(l, st)}
   ${nextButton(l, u)}`;
+}
+/* やり直し：クレームなどがあったとき、先輩が合格ずみの項目を練習に戻す */
+function redoPanel(l, st) {
+  const r = st.redo && st.status !== "ok" ? st.redo : null;
+  const info = r ? `<section class="section redo"><h3>⚠ やり直し</h3><p style="margin:0 0 6px;font-weight:700">${esc(r.reason || "")}</p><p class="note">${esc(r.date || "")}・${esc(r.by || "")}　もう一度、練習して先輩のチェックに合格しよう。</p></section>` : "";
+  const canSet = route.uid && (mode === "cloud" ? isLead(me()) && route.uid !== myUid : true) && !r && l.type !== "model";
+  if (!canSet) return info;
+  if (!route.redoOpen) return info + `<section class="section"><h3>やり直しにする</h3><p class="note">営業でクレームや問題があったとき、この項目を練習に戻します。もう一度合格するまで、ほかのレッスンは中断になります。</p><button class="btn ghost" type="button" id="redoOpen">やり直しにする</button></section>`;
+  return info + `<form class="section" id="redoForm"><h3>やり直しにする</h3>
+    <div class="field"><label for="redoReason">理由（本人に見えます）</label><textarea id="redoReason" rows="3" required placeholder="例：11/10 白髪染めで生え際の塗りもれ。お客様からご連絡あり"></textarea></div>
+    ${authFields("やり直しにする")}</form>`;
 }
 /* 小テスト（全問正解で、練習とチェックに進める） */
 function miniQuizPanel(l, st) {
@@ -1176,10 +1211,12 @@ function oxList(items, required = true) {
 }
 function recordsPanel(l, st) {
   if (!st.records.length || l.type === "model") return "";
+  const recOf = r => r.redo ? `<div class="rec"><div class="h"><span class="chip ng">やり直し</span><b>${esc(r.reason || "")}</b><span>${esc(r.date)}・${esc(r.by)}</span></div></div>` : null;
   const items = l.type === "shampoo" || l.sheet ? null : ["tech", "roleplay", "model"].includes(l.type) ? l.checks : l.questions;
   const sc = l.sheet ? l.sheet.map(([t]) => [null, t, 10]) : l.score;
   return `<section class="section"><h3>チェックの記録</h3><div style="display:grid;gap:10px">
     ${st.records.slice().reverse().map(r => {
+      if (r.redo) return recOf(r);
       const ng = items ? r.marks.map((v, i) => v ? null : items[i]).filter(Boolean) : (sc || []).map(([, p, pt], i) => r.marks[i] < pt ? `${p}（${r.marks[i]}/${pt}）` : null).filter(Boolean);
       return `<div class="rec"><div class="h"><span class="chip ${r.pass ? "ok" : "ng"}">${r.pass ? "合格" : "もう一度"}</span>
         <b>${esc(r.label)}</b>${r.score != null ? `<b>${r.score}点</b>` : ""}<span>${esc(r.date)}・${esc(r.by)}</span></div>
@@ -1198,7 +1235,7 @@ function nextButton(l, u) {
 function bindLesson() {
   const u = subject(), l = L(route.id), st = prog(u, l.id);
   const flash = (msg, err) => { route.msg = msg; route.err = !!err; route.open = false; store.save(); render(); scrollTo(0, 0); };
-  const pass = by => Object.assign(st, { status: "ok", passedAt: today(), passedBy: by });
+  const pass = by => { Object.assign(st, { status: "ok", passedAt: today(), passedBy: by, passTs: Date.now() }); delete st.redo; };
   $$("[data-series]").forEach(b => b.onclick = () => { route.series = b.dataset.series; const y = scrollY; render(); scrollTo(0, y); });
   $("#ajq")?.addEventListener("input", e => { route.q = e.target.value; const y = scrollY, pos = e.target.selectionStart; render(); scrollTo(0, y); const el = $("#ajq"); el.focus(); el.setSelectionRange(pos, pos); });
   $$("details[data-day]").forEach(d => d.ontoggle = () => { if (d.open) route.openDay = Number(d.dataset.day); else if (route.openDay === Number(d.dataset.day)) route.openDay = null; });
@@ -1279,6 +1316,16 @@ function bindLesson() {
   $("#practice")?.addEventListener("click", () => { st.practice++; if (st.status === "todo") st.status = "prac"; flash(`練習を記録しました（${st.practice}回目）`); });
   $("#request")?.addEventListener("click", () => { st.status = "wait"; st.requestedAt = Date.now(); flash("チェック待ちにしました。先輩に声をかけよう"); });
   $("#openCheck")?.addEventListener("click", () => { route.open = true; render(); $("#checkForm")?.scrollIntoView({ block: "start" }); });
+  $("#redoOpen")?.addEventListener("click", () => { route.redoOpen = true; render(); $("#redoForm")?.scrollIntoView({ block: "start" }); });
+  $("#redoForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    const lead = authLead();
+    if (!lead) { route.msg = mode === "cloud" ? "やり直しにできるのは幹部・オーナーだけです" : "暗証番号がちがいます"; route.err = true; render(); return; }
+    const rec = { date: today(), at: Date.now(), by: lead.name, redo: true, pass: false, reason: $("#redoReason").value.trim(), label: "やり直し" };
+    st.records.push(rec); persistCheck(rec, route.uid, l.id);
+    Object.assign(st, { redo: rec, status: st.practice ? "prac" : "todo", stages: [] }); delete st.passedAt; delete st.passedBy; delete st.miniOk;
+    route.redoOpen = false; store.save(); flash("やり直しにしました。本人のレッスンは、この項目に合格し直すまで中断になります", true);
+  });
   $("#quizForm")?.addEventListener("submit", e => {
     e.preventDefault();
     const wrong = l.quiz.map((q, i) => Number($(`input[name=q${i}]:checked`)?.value) === q.answer ? null : i).filter(i => i !== null);
@@ -1679,7 +1726,10 @@ function render() {
   $("#brand").className = route.name === "home" ? "brand logo" : !stack.length ? "brand logo small" : "brand";
   $("#brand").textContent = !stack.length ? "enu ACADEMY" : route.name === "cats" ? C.pages[route.page].title : route.name === "cat" ? CATS.find(c => c.id === route.id).title : route.name === "lesson" ? L(route.id).title : TITLES[route.name] || "enu ACADEMY";
   $("#who").innerHTML = ""; brandLogo();
-  $("#view").innerHTML = (cloudNote ? `<div class="toast err">${esc(cloudNote)}</div>` : "") + view();
+  const redos = isLead(u) ? [] : redoList(u);
+  $("#view").innerHTML = (cloudNote ? `<div class="toast err">${esc(cloudNote)}</div>` : "")
+    + (redos.length && !(route.name === "lesson" && redos.includes(route.id)) ? `<button class="redoalert" data-lesson="${redos[0]}">⚠ やり直し：${redos.map(id => esc(L(id).title)).join("・")}<small>合格し直すまで、ほかのレッスンは中断です。タップして練習へ</small></button>` : "")
+    + view();
   $$("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
   $$("[data-tab]").forEach(b => b.onclick = () => tab(b.dataset.tab));
   $$("[data-scroll]").forEach(b => b.onclick = () => $("#" + b.dataset.scroll)?.scrollIntoView({ behavior: "smooth" }));
