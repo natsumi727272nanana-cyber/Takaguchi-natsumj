@@ -461,7 +461,7 @@ async function flushSave() {
   if (saving) { saveAgain = true; return; }
   saving = true;
   try { await cloud.doc("members/" + myUid).set(memberPayload()); }
-  catch (e) { cloudNote = e?.code === "invalid_argument" ? "記録を保存できませんでした。高口さんに「編集者」として招待してもらってください。" : "記録を保存できませんでした。通信を確認して、もう一度やってみてください。"; render(); }
+  catch (e) { cloudNote = e?.code === "invalid_argument" ? "記録を保存できませんでした。高口さんに、共有の権限を「コントリビューター」か「編集者」にしてもらってください。" : "記録を保存できませんでした。通信を確認して、もう一度やってみてください。"; render(); }
   saving = false;
   if (saveAgain) { saveAgain = false; flushSave(); }
 }
@@ -497,7 +497,7 @@ async function boot() {
   const canWrite = cu ? await cu.can("data.write") : null;
   if (!cdb || !myUid || canWrite === false) {
     mode = "local"; db = store.load();
-    cloudNote = !cdb ? "" : !myUid ? "サインインしていないため、記録はこの端末だけに保存されます。" : "閲覧のみで開いているため、記録はこの端末だけに保存されます。高口さんに「編集者」として招待してもらってください。";
+    cloudNote = !cdb ? "" : !myUid ? "サインインしていないため、記録はこの端末だけに保存されます。" : "閲覧のみで開いているため、記録はこの端末だけに保存されます。高口さんに、共有の権限を「コントリビューター」か「編集者」にしてもらってください。";
     return render();
   }
   cloud = cdb; mode = "cloud"; cloudState.isOwner = await cu.isOwner();
@@ -599,13 +599,17 @@ function md(src, fold) {
 function go(name, params = {}) { stack.push(route); route = { name, ...params }; render(); scrollTo(0, 0); }
 // 画面下のタブ。タブを押すとそのページの一番上から
 let activeTab = "home";
-const ngMode = () => { const u = me(); return !!(u && u.newGrad && u.role === "assistant"); };   // 入社前の新卒：シャンプーレッスンだけの画面
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const nextApril = () => { const d = new Date(); return `${d.getMonth() >= 3 ? d.getFullYear() + 1 : d.getFullYear()}-04-01`; };   // 次の4月1日
+const joinOf = u => u.joinDate || "2027-04-01";   // 入社日が未入力の人は、最初の新卒（2027年4月入社）として扱う
+// 入社前の新卒：シャンプーレッスンだけの画面。入社日になると、同じアカウントのまま自動でアプリ全体が使えるようになる
+const ngMode = () => { const u = me(); return !!(u && u.newGrad && u.role === "assistant" && ymd(new Date()) < joinOf(u)); };
 const TABS = () => ngMode() ? [["home", "シャンプーレッスン", { name: "home" }], ["mypage", "マイページ", { name: "mypage" }]] : [["home", "ホーム", { name: "home" }], ["pre", C.newGrad.tab, { name: "pre" }],
   ...Object.entries(C.pages).map(([k, p]) => [k, p.tab, { name: "cats", page: k }]),
   ["sales", "売上", { name: "sales" }],
   ...(isLead(me()) ? [["team", "スタッフ", { name: "team" }]] : [])];
 const HIDDEN_TABS = [["chat", "", { name: "chat" }], ["mypage", "", { name: "mypage" }], ["hw", "", { name: "hw" }]];   // 下には出さないが、ボタンから開くページ
-function tab(key) { activeTab = key; stack = []; route = { ...[...TABS(), ...HIDDEN_TABS].find(t => t[0] === key)[2] }; render(); scrollTo(0, 0); }
+function tab(key) { const t = [...TABS(), ...HIDDEN_TABS].find(t => t[0] === key) || TABS()[0]; activeTab = t[0]; stack = []; route = { ...t[2] }; render(); scrollTo(0, 0); }
 function back() { route = stack.pop() || { name: "home" }; render(); scrollTo(0, 0); }
 $("#backBtn").onclick = back;
 
@@ -620,7 +624,7 @@ function viewLogin(msg) {
   <form class="section" id="regForm">
     <div class="field"><label for="regName">名前</label><input id="regName" required placeholder="例：高口 なつみ" autocomplete="name"></div>
     <div class="field"><label for="regStore">店舗</label><select id="regStore">${C.stores.map(s => `<option>${esc(s)}</option>`).join("")}</select></div>
-    <div class="field"><label for="regKind">区分</label><select id="regKind" required><option value="" disabled selected>選んでください</option><option value="newgrad">2027年4月入社の新卒（シャンプーレッスン）</option><option value="staff">スタッフ（いま働いている人）</option></select></div>
+    <div class="field"><label for="regKind">区分</label><select id="regKind" required><option value="" disabled selected>選んでください</option><option value="newgrad">${nextApril().slice(0, 4)}年4月入社の新卒（シャンプーレッスン）</option><option value="staff">スタッフ（いま働いている人）</option></select></div>
     <p class="note">幹部（監督）は、登録したあとに高口さんが設定します。</p>
     <button class="btn" type="submit">登録してはじめる</button>
   </form>`;
@@ -651,7 +655,8 @@ function bindLogin() {
     $("#regForm").onsubmit = e => {
       e.preventDefault();
       const name = $("#regName").value.trim(); if (!name) return;
-      cloudState.mine = { name, store: $("#regStore").value, newGrad: $("#regKind").value === "newgrad", progress: {}, joined: today() };
+      const ng = $("#regKind").value === "newgrad";
+      cloudState.mine = { name, store: $("#regStore").value, newGrad: ng, ...(ng ? { joinDate: nextApril() } : {}), progress: {}, joined: today() };
       rebuildUsers(); flushSave(); route = { name: "home" }; stack = []; activeTab = "home"; render();
     };
     return;
@@ -711,7 +716,7 @@ function viewLeadHome() {
   <section class="group"><h2>アシスタントの進み具合</h2>
     ${team.length ? `<div class="list">${team.map(([uid, x]) => { const cur = LESSON_IDS.find(id => !passed(x, id));
       return `<button class="row" data-member="${uid}"><span class="t">${esc(x.name)}<span class="chip info">${percent(x)}%</span><small>${esc(x.store || "")}・${stageLabel(x)}・いま：${cur ? esc(L(cur).title) : "全て合格"}</small></span></button>`; }).join("")}</div>`
-      : `<p class="pending">アシスタントはまだ登録されていません。共有メニューから「編集者」として招待すると、ここに出ます。</p>`}
+      : `<p class="pending">アシスタントはまだ登録されていません。共有メニューから「コントリビューター」か「編集者」で招待すると、ここに出ます。</p>`}
   </section>
   <section class="group"><h2>メニュー</h2><nav class="menu">
     ${hwTile()}
@@ -779,7 +784,7 @@ function viewMypage() {
     <div class="field"><label for="myStore">店舗</label><select id="myStore">${C.stores.map(s => `<option ${s === u.store ? "selected" : ""}>${esc(s)}</option>`).join("")}</select></div>
     <div class="field"><label for="myJoin">入社日</label><input id="myJoin" type="date" value="${esc(u.joinDate || "")}"></div>
     <div class="field"><label for="myDebut">目標デビュー日</label><input id="myDebut" type="date" value="${esc(u.debut || "")}"></div>
-    ${u.role === "assistant" ? `<label class="mark ck" style="margin:4px 0 10px"><input type="checkbox" id="myNewGrad" ${u.newGrad ? "checked" : ""}><span>シャンプーレッスンだけの画面にする（入社前の新卒）</span></label>` : ""}
+    ${u.role === "assistant" ? `<label class="mark ck" style="margin:4px 0 10px"><input type="checkbox" id="myNewGrad" ${u.newGrad ? "checked" : ""}><span>入社日まではシャンプーレッスンだけの画面にする（新卒）</span></label>` : ""}
     <div class="field"><label for="myGoal">今月の目標</label><textarea id="myGoal" rows="2" placeholder="例：カラー塗布の先輩チェックに合格する">${esc(u.monthGoal || "")}</textarea></div>
     <button class="btn" type="submit">保存する</button>
   </form>
@@ -807,7 +812,7 @@ function viewShampooOnly() {
   const doneFn = id => selfPass(id) ? passed(u, id) : vidDone(id);
   return `
   <img class="hero" src="img/hero.jpg" alt="enu hair">
-  <section class="ptitle"><div class="eyebrow">${esc(C.newGrad.eyebrow)}</div><h1>シャンプーレッスン</h1>
+  <section class="ptitle"><div class="eyebrow">${joinOf(u).slice(0, 4)}年4月入社</div><h1>シャンプーレッスン</h1>
     <p class="lead">${esc(u.name)}さん、ようこそ。11月・12月・3月の全${sp.rounds.length}回です。各回の前に、下の「この日までに」を見ておいてね。家で練習はしなくて大丈夫です。</p></section>
   ${sp.rounds.map((r, i) => { const ss = (C.preSessions || [])[i], rec = recs.filter(x => x.round === i + 1).pop(), f = prog(u, "shampoo").fill?.[i];
     return `<section class="group"><div class="steps-h"><span class="no">${i + 1}</span><h2 style="margin:0">${esc(r.day || `${i + 1}回目`)}（${esc(r.m)}）${rec ? ` <span class="chip ${rec.pass ? "ok" : "info"}">${rec.score}点</span>` : ""}</h2></div>
@@ -815,7 +820,7 @@ function viewShampooOnly() {
         ${ss.items.map(id => { const d = doneFn(id); return `<button class="row${d ? " done" : ""}" data-lesson="${id}"><span class="t">${esc(L(id).title)}<small>${selfPass(id) ? (L(id).type === "read" ? "読む" : "小テスト") : "動画を見て、小テスト"}</small></span><span class="chip ${d ? "ok" : "todo"}">${d ? "できた" : "まだ"}</span></button>`; }).join("")}</div>` : ""}
       <h3 class="subh">当日</h3><div class="list"><button class="row${rec?.pass ? " done" : ""}" data-lesson="shampoo" data-day="${i}"><span class="t">${esc(r.day || `${i + 1}回目`)}の教材をひらく<small>${esc(r.t)}${f ? `・小テスト ${f.score}/${f.total}` : ""}</small></span><span class="chev">›</span></button></div>
     </section>`; }).join("")}
-  <p class="note" style="text-align:center">4月からは、マイページで「シャンプーレッスンだけの画面」を外すと、アプリ全体が使えます。</p>`;
+  <p class="note" style="text-align:center">入社日（${joinOf(u).replace(/^(\d+)-0?(\d+)-0?(\d+)$/, "$1年$2月$3日")}）になると、このままアプリ全体が使えるようになります。記録もそのまま引きつがれます。</p>`;
 }
 
 /* ---------- 入社前 ---------- */
@@ -1114,7 +1119,7 @@ async function shrinkImage(file, max, quality) {
 async function savePhoto(file) {
   if (mode === "cloud") {
     const assets = await window.claude.use("assets");
-    if (!assets) throw new Error("写真を保存できません。高口さんに「編集者」として招待してもらってください。");
+    if (!assets) throw new Error("写真を保存できません。高口さんに、共有の権限を「コントリビューター」か「編集者」にしてもらってください。");
     const blob = await shrinkImage(file, 1280, 0.8), r = await assets.upload(blob);
     return { id: r.id, url: r.url };
   }
@@ -1184,6 +1189,7 @@ function recordsPanel(l, st) {
 }
 function nextButton(l, u) {
   if (route.uid || !passed(u, l.id)) return "";
+  if (ngMode()) return `<button class="btn wide ghost" data-tab="home">シャンプーレッスンにもどる</button>`;   // 新卒モードはシャンプーレッスンの外へ進めない
   const c = CATS.find(x => x.id === route.cat) || CATS.find(x => x.lessons.includes(l.id));
   const nextId = c.lessons[c.lessons.indexOf(l.id) + 1];
   return nextId ? `<button class="btn wide" data-lesson="${nextId}">次のレッスン「${esc(L(nextId).title)}」へ</button>`
@@ -1686,4 +1692,5 @@ function render() {
 }
 boot();
 </script>
+
 
