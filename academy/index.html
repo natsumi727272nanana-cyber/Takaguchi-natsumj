@@ -481,7 +481,7 @@ function memberPayload() {
     if (CHECK_TYPES.includes(C.lessons[id]?.type)) { if (rest.status === "ok") rest.status = "prac"; progress[id] = rest; }
     else progress[id] = { ...rest, ...(passedAt ? { passedAt } : {}), ...(passedBy ? { passedBy } : {}) };
   }
-  return { rev: lastRev = Math.random().toString(36).slice(2), name: m.name, store: m.store || "", joined: m.joined || today(), joinDate: m.joinDate || "", debut: m.debut || "", monthGoal: m.monthGoal || "", newGrad: !!m.newGrad, hw: m.hw || {}, ...(cloudState.isOwner ? { hwAssign: m.hwAssign || {} } : {}), progress };
+  return { rev: lastRev = Math.random().toString(36).slice(2), name: m.name, store: m.store || "", joined: m.joined || today(), joinDate: m.joinDate || "", debut: m.debut || "", monthGoal: m.monthGoal || "", newGrad: !!m.newGrad, hw: m.hw || {}, ...(cloudState.isOwner ? { hwAssign: m.hwAssign || {}, evalPlan: m.evalPlan || {} } : {}), progress };
 }
 let saveTimer = null, saving = false, saveAgain = false, lastRev = null;   // lastRev：自分が最後に保存した版（戻ってきても入れ替えない）
 function cloudSave() { clearTimeout(saveTimer); saveTimer = setTimeout(flushSave, 400); }
@@ -644,7 +644,7 @@ const TABS = () => ngMode() ? [["home", "シャンプーレッスン", { name: "
   ...Object.entries(C.pages).map(([k, p]) => [k, p.tab, { name: "cats", page: k }]),
   ["sales", "売上", { name: "sales" }],
   ...(isLead(me()) ? [["team", "スタッフ", { name: "team" }]] : [])];
-const HIDDEN_TABS = [["chat", "", { name: "chat" }], ["mypage", "", { name: "mypage" }], ["hw", "", { name: "hw" }]];   // 下には出さないが、ボタンから開くページ
+const HIDDEN_TABS = [["chat", "", { name: "chat" }], ["mypage", "", { name: "mypage" }], ["hw", "", { name: "hw" }], ["evalplan", "", { name: "evalplan" }]];   // 下には出さないが、ボタンから開くページ
 function tab(key) { const t = [...TABS(), ...HIDDEN_TABS].find(t => t[0] === key) || TABS()[0]; activeTab = t[0]; stack = []; route = { ...t[2] }; render(); scrollTo(0, 0); }
 function back() { route = stack.pop() || { name: "home" }; render(); scrollTo(0, 0); }
 $("#backBtn").onclick = back;
@@ -758,6 +758,7 @@ function viewLeadHome() {
   </section>
   <section class="group"><h2>メニュー</h2><nav class="menu">
     ${hwTile()}
+    <button class="tile" data-tab="evalplan"><span class="t"><b>評価のしかたを決める</b><small>項目ごとに「読むだけ・小テスト・○×・100点」を選ぶ</small></span><span class="chev">›</span></button>
     <button class="tile" data-tab="team"><span class="t"><b>スタッフ</b><small>店舗ごとの進み具合${cloudState.isOwner ? "・幹部の設定" : ""}</small></span><span class="chev">›</span></button>
     <button class="tile" data-tab="pre"><span class="t"><b>${esc(C.newGrad.title)}</b><small>4月までにやることの確認</small></span><span class="chev">›</span></button>
     <button class="tile" data-go="roadmap"><span class="t"><b>ロードマップ</b></span><span class="chev">›</span></button>
@@ -1467,6 +1468,33 @@ function bindTeam() {
     (s.value === "assistant" ? ref.delete() : ref.set({ role: s.value })).catch(() => { cloudNote = "役割を保存できませんでした。もう一度やってみてください。"; render(); });
   });
 }
+/* ---------- 評価のしかた（オーナーが項目ごとに選ぶ。決まったらレッスンに反映する） ---------- */
+const EVAL_OPTS = [["read", "読むだけでOK"], ["quiz", "小テスト"], ["ox", "○×チェック（先輩）"], ["score", "100点採点（先輩）"]];
+const evalNow = l => l.sheet || ["shampoo", "model"].includes(l.type) || l.passScore ? "score" : ["tech", "theory", "roleplay"].includes(l.type) ? "ox" : l.type === "quiz" ? "quiz" : "read";
+const evalPlan = () => Object.values(db.users).find(x => x.role === "owner")?.evalPlan || {};
+function viewEvalPlan() {
+  const owner = me().role === "owner", plan = evalPlan();
+  const decided = LESSON_IDS.filter(id => plan[id]).length;
+  return `
+  <section class="ptitle"><div class="eyebrow">EVALUATION</div><h1>評価のしかた</h1>
+    <p class="lead">項目ごとに、合格のしかたを選んでください。選ぶとすぐ保存されます。決まったら、レッスンのチェックをこのとおりに作り直します。</p>
+    <p class="note">決めた項目 ${decided} / ${LESSON_IDS.length}　・　「今」＝いまのアプリのやり方</p></section>
+  <section class="section"><div class="md"><ul>
+    <li><b>読むだけでOK</b>：やり方を読んで、自分で「できた」にする（掃除など）</li>
+    <li><b>小テスト</b>：アプリのテストに合格</li>
+    <li><b>○×チェック</b>：先輩が、できた・できていないだけを見る</li>
+    <li><b>100点採点</b>：先輩が項目ごとに点数をつけて、80点以上で合格（★必須は満点）</li></ul></div></section>
+  ${C.groups.map(g => `<section class="group"><h2>${esc(C.pages[g.page]?.tab || "")}｜${esc(g.name)}</h2><div class="list">
+    ${g.categories.flatMap(c => c.lessons.filter(id => !C.lessons[id].draft)).map(id => { const l = L(id), now = evalNow(l), v = plan[id] || "";
+      return `<div class="row"><span class="t">${esc(l.title)}<small>今：${EVAL_OPTS.find(o => o[0] === now)[1]}</small></span>
+        ${owner ? `<select data-eval-plan="${id}" aria-label="${esc(l.title)}の評価" style="border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:6px 8px;max-width:150px"><option value="">未定</option>${EVAL_OPTS.map(([k, t]) => `<option value="${k}" ${v === k ? "selected" : ""}>${t}</option>`).join("")}</select>`
+          : `<span class="chip info">${v ? EVAL_OPTS.find(o => o[0] === v)[1] : "未定"}</span>`}</div>`; }).join("")}
+  </div></section>`).join("")}`;
+}
+function bindEvalPlan() {
+  $$("[data-eval-plan]").forEach(x => x.onchange = () => { const u = me(); (u.evalPlan ||= {})[x.dataset.evalPlan] = x.value; if (!x.value) delete u.evalPlan[x.dataset.evalPlan]; store.save(); const y = scrollY; render(); scrollTo(0, y); });
+}
+
 /* ---------- 幹部の課題 ----------
    担当はオーナーが自分の members に hwAssign として書き、答えは各自の members の hw に書く（携帯から入力できる） */
 const hwAssign = () => Object.values(db.users).find(x => x.role === "owner")?.hwAssign || {};
@@ -1729,9 +1757,9 @@ function bindSales() {
 /* ---------- 描画 ---------- */
 const VIEWS = {
   home: [viewHome], pre: [viewPre], cats: [viewCats], cat: [viewCat], lesson: [viewLesson, bindLesson],
-  roadmap: [viewRoadmap], team: [viewTeam, bindTeam], member: [viewMember], chat: [viewChat, bindChat], mypage: [viewMypage, bindMypage], hw: [viewHw, bindHw], sales: [viewSales, bindSales],
+  roadmap: [viewRoadmap], team: [viewTeam, bindTeam], member: [viewMember], chat: [viewChat, bindChat], mypage: [viewMypage, bindMypage], hw: [viewHw, bindHw], sales: [viewSales, bindSales], evalplan: [viewEvalPlan, bindEvalPlan],
 };
-const TITLES = { mypage: "マイページ", pre: C.newGrad.title, roadmap: "ロードマップ", team: "みんなの進み具合", member: "進み具合", chat: "オーナーAIチャット", hw: "幹部の課題", sales: "売上" };
+const TITLES = { mypage: "マイページ", pre: C.newGrad.title, roadmap: "ロードマップ", team: "みんなの進み具合", member: "進み具合", chat: "オーナーAIチャット", hw: "幹部の課題", sales: "売上", evalplan: "評価のしかた" };
 
 function render() {
   formDirty = false;
