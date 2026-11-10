@@ -111,9 +111,12 @@ main .wrap { padding-block: 20px 56px; display: grid; gap: 20px }
 .vlinks a { display: block; background: rgba(255,255,255,.12); border-radius: 10px; padding: 10px 14px; font-weight: 700 }
 .hero { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; margin: 0 0 14px }
 .redoalert { display: block; width: 100%; text-align: left; background: var(--ng-soft); color: var(--ng); border: 2px solid var(--ng); border-radius: 14px; padding: 12px 14px; margin: 0 0 12px; font-weight: 900; font-size: 15px }
-.redoalert small { display: block; font-weight: 700; font-size: 12.5px; margin-top: 2px }
+.warnalert { display: block; width: 100%; text-align: left; background: var(--wait-soft); color: var(--wait); border: 2px solid var(--wait); border-radius: 14px; padding: 12px 14px; margin: 0 0 12px; font-weight: 900; font-size: 15px }
+.warnalert small, .redoalert small { display: block; font-weight: 700; font-size: 12.5px; margin-top: 2px }
 .section.redo { border: 2px solid var(--ng); background: var(--ng-soft) }
 .section.redo h3 { color: var(--ng) }
+.section.warnbox { border: 2px solid var(--wait); background: var(--wait-soft) }
+.section.warnbox h3 { color: var(--wait) }
 .subh { font-size: 14px; margin: 14px 0 6px; color: var(--muted) }
 .chip { font-size: 11.5px; padding: 2px 9px; border-radius: 99px; white-space: nowrap; flex: none; font-weight: 700; line-height: 1.6 }
 .chip.todo { background: var(--line); color: var(--muted) }
@@ -406,14 +409,28 @@ const subject = () => route.uid ? db.users[route.uid] : me();   // 幹部が他�
    checks/<幹部のid>/records/<id> … 幹部・オーナーが書く合格チェック。合格はここからだけ決まる */
 const CHECK_TYPES = ["tech", "theory", "shampoo", "roleplay", "model"];
 const validChecker = uid => ["owner", "lead"].includes(cloudState.roles[uid]?.role);
+/* 指摘：お客様からのクレームは1回で、先輩からの指摘は3回たまったら「やり直し」。やり直しのたびに数え直す */
+const WARN_LIMIT = 3;
+function redoFrom(recs) {
+  let last = null, n = 0, reasons = [];
+  for (const r of recs) {
+    if (r.redo) { last = r; n = 0; reasons = []; continue; }
+    if (!r.warn) continue;
+    n++; reasons.push(r.reason);
+    if (n >= WARN_LIMIT) { last = { ...r, redo: true, auto: true, reason: `先輩からの指摘が${WARN_LIMIT}回：${reasons.join("／")}` }; n = 0; reasons = []; }
+  }
+  return last;
+}
+const warnCount = st => { let n = 0; for (const r of (st.records || [])) { if (r.redo) n = 0; else if (r.warn) n = n + 1 >= WARN_LIMIT ? 0 : n + 1; } return n; };
 function deriveProgress(uid, progress) {
   const byLesson = {};
   Object.entries(cloudState.checks).filter(([lid]) => validChecker(lid)).forEach(([, rs]) => rs.filter(r => r.member === uid).forEach(r => (byLesson[r.lesson] ||= []).push(r)));
   for (const id of Object.keys(C.lessons)) {
     const l = C.lessons[id];
     const all = (byLesson[id] || []).slice().sort((a, b) => (a.at || 0) - (b.at || 0));
-    const lastRedo = all.filter(r => r.redo).at(-1);
+    const lastRedo = redoFrom(all);
     if (!CHECK_TYPES.includes(l.type)) {   // 自分で合格する項目：やり直しのあとに合格し直していなければ、練習中に戻す
+      if (all.length) (progress[id] ||= { status: "todo", practice: 0 }).records = all;
       if (!lastRedo) { if (progress[id]) delete progress[id].redo; continue; }
       const st = progress[id] ||= { status: "todo", practice: 0 };
       if ((st.passTs || 0) > lastRedo.at) delete st.redo;
@@ -422,7 +439,7 @@ function deriveProgress(uid, progress) {
     }
     if (!progress[id] && !all.length) continue;
     const st = progress[id] ||= { status: "todo", practice: 0 };
-    const rs = lastRedo ? all.filter(r => !r.redo && (r.at || 0) > lastRedo.at) : all.filter(r => !r.redo);   // やり直しより前の合格は数えない
+    const rs = all.filter(r => !r.redo && !r.warn && (!lastRedo || (r.at || 0) > lastRedo.at));   // やり直しより前の合格・指摘は数えない
     const ok = rs.filter(r => r.pass);
     st.records = all;
     if (lastRedo) st.redo = lastRedo; else delete st.redo;
@@ -963,12 +980,15 @@ function viewLesson() {
 function redoPanel(l, st) {
   const r = st.redo && st.status !== "ok" ? st.redo : null;
   const info = r ? `<section class="section redo"><h3>⚠ やり直し</h3><p style="margin:0 0 6px;font-weight:700">${esc(r.reason || "")}</p><p class="note">${esc(r.date || "")}・${esc(r.by || "")}　もう一度、練習して先輩のチェックに合格しよう。</p></section>` : "";
+  const wn = r ? 0 : warnCount(st);
+  const warnInfo = wn ? `<section class="section warnbox"><h3>先輩からの指摘 ${wn} / ${WARN_LIMIT}</h3><p class="note">${WARN_LIMIT}回たまると、この項目はやり直しになります。</p></section>` : "";
   const canSet = route.uid && (mode === "cloud" ? isLead(me()) && route.uid !== myUid : true) && !r && l.type !== "model";
-  if (!canSet) return info;
-  if (!route.redoOpen) return info + `<section class="section"><h3>やり直しにする</h3><p class="note">営業でクレームや問題があったとき、この項目を練習に戻します。もう一度合格するまで、ほかのレッスンは中断になります。</p><button class="btn ghost" type="button" id="redoOpen">やり直しにする</button></section>`;
-  return info + `<form class="section" id="redoForm"><h3>やり直しにする</h3>
-    <div class="field"><label for="redoReason">理由（本人に見えます）</label><textarea id="redoReason" rows="3" required placeholder="例：11/10 白髪染めで生え際の塗りもれ。お客様からご連絡あり"></textarea></div>
-    ${authFields("やり直しにする")}</form>`;
+  if (!canSet) return info + warnInfo;
+  if (!route.redoOpen) return info + warnInfo + `<section class="section"><h3>指摘・クレームを記録する</h3><p class="note">営業で問題があったときに記録します。<b>お客様からのクレームは1回</b>、<b>先輩からの指摘は${WARN_LIMIT}回</b>たまったら、この項目はやり直しになり、合格し直すまでほかのレッスンは中断になります。</p><button class="btn ghost" type="button" id="redoOpen">記録する</button></section>`;
+  return info + warnInfo + `<form class="section" id="redoForm"><h3>指摘・クレームを記録する</h3>
+    <div class="field"><label for="redoKind">種類</label><select id="redoKind"><option value="warn">先輩からの指摘（${WARN_LIMIT}回でやり直し・いま${wn}回）</option><option value="claim">お客様からのクレーム（1回でやり直し）</option></select></div>
+    <div class="field"><label for="redoReason">内容（本人に見えます）</label><textarea id="redoReason" rows="3" required placeholder="例：11/10 白髪染めで生え際の塗りもれ"></textarea></div>
+    ${authFields("記録する")}</form>`;
 }
 /* 小テスト（全問正解で、練習とチェックに進める） */
 function miniQuizPanel(l, st) {
@@ -1211,12 +1231,12 @@ function oxList(items, required = true) {
 }
 function recordsPanel(l, st) {
   if (!st.records.length || l.type === "model") return "";
-  const recOf = r => r.redo ? `<div class="rec"><div class="h"><span class="chip ng">やり直し</span><b>${esc(r.reason || "")}</b><span>${esc(r.date)}・${esc(r.by)}</span></div></div>` : null;
+  const recOf = r => `<div class="rec"><div class="h"><span class="chip ${r.redo ? "ng" : "wait"}">${r.redo ? "やり直し" : "指摘"}</span><b>${esc(r.reason || "")}</b><span>${esc(r.date)}・${esc(r.by)}</span></div></div>`;
   const items = l.type === "shampoo" || l.sheet ? null : ["tech", "roleplay", "model"].includes(l.type) ? l.checks : l.questions;
   const sc = l.sheet ? l.sheet.map(([t]) => [null, t, 10]) : l.score;
   return `<section class="section"><h3>チェックの記録</h3><div style="display:grid;gap:10px">
     ${st.records.slice().reverse().map(r => {
-      if (r.redo) return recOf(r);
+      if (r.redo || r.warn) return recOf(r);
       const ng = items ? r.marks.map((v, i) => v ? null : items[i]).filter(Boolean) : (sc || []).map(([, p, pt], i) => r.marks[i] < pt ? `${p}（${r.marks[i]}/${pt}）` : null).filter(Boolean);
       return `<div class="rec"><div class="h"><span class="chip ${r.pass ? "ok" : "ng"}">${r.pass ? "合格" : "もう一度"}</span>
         <b>${esc(r.label)}</b>${r.score != null ? `<b>${r.score}点</b>` : ""}<span>${esc(r.date)}・${esc(r.by)}</span></div>
@@ -1321,10 +1341,17 @@ function bindLesson() {
     e.preventDefault();
     const lead = authLead();
     if (!lead) { route.msg = mode === "cloud" ? "やり直しにできるのは幹部・オーナーだけです" : "暗証番号がちがいます"; route.err = true; render(); return; }
-    const rec = { date: today(), at: Date.now(), by: lead.name, redo: true, pass: false, reason: $("#redoReason").value.trim(), label: "やり直し" };
+    const claim = $("#redoKind").value === "claim", reason = $("#redoReason").value.trim();
+    const rec = claim ? { date: today(), at: Date.now(), by: lead.name, redo: true, claim: true, pass: false, reason: "お客様からのクレーム：" + reason, label: "やり直し" }
+      : { date: today(), at: Date.now(), by: lead.name, warn: true, pass: false, reason, label: "先輩からの指摘" };
     st.records.push(rec); persistCheck(rec, route.uid, l.id);
-    Object.assign(st, { redo: rec, status: st.practice ? "prac" : "todo", stages: [] }); delete st.passedAt; delete st.passedBy; delete st.miniOk;
-    route.redoOpen = false; store.save(); flash("やり直しにしました。本人のレッスンは、この項目に合格し直すまで中断になります", true);
+    const red = redoFrom(st.records);
+    route.redoOpen = false;
+    if (red && red.at >= rec.at) {
+      Object.assign(st, { redo: red, status: st.practice ? "prac" : "todo", stages: [] }); delete st.passedAt; delete st.passedBy; delete st.miniOk;
+      store.save(); return flash(claim ? "やり直しにしました。本人のレッスンは、この項目に合格し直すまで中断になります" : `指摘が${WARN_LIMIT}回たまったので、やり直しにしました。ほかのレッスンは中断になります`, true);
+    }
+    store.save(); flash(`指摘を記録しました（${warnCount(st)} / ${WARN_LIMIT}回）`);
   });
   $("#quizForm")?.addEventListener("submit", e => {
     e.preventDefault();
@@ -1728,6 +1755,7 @@ function render() {
   $("#who").innerHTML = ""; brandLogo();
   const redos = isLead(u) ? [] : redoList(u);
   $("#view").innerHTML = (cloudNote ? `<div class="toast err">${esc(cloudNote)}</div>` : "")
+    + (() => { const ws = isLead(u) || redos.length ? [] : Object.keys(C.lessons).filter(id => u.progress[id] && warnCount(u.progress[id])); return ws.length && route.name === "home" ? `<button class="warnalert" data-lesson="${ws[0]}">先輩からの指摘：${ws.map(id => `${esc(L(id).title)}（${warnCount(u.progress[id])}/${WARN_LIMIT}）`).join("・")}<small>${WARN_LIMIT}回たまるとやり直しになります。タップして確認</small></button>` : ""; })()
     + (redos.length && !(route.name === "lesson" && redos.includes(route.id)) ? `<button class="redoalert" data-lesson="${redos[0]}">⚠ やり直し：${redos.map(id => esc(L(id).title)).join("・")}<small>合格し直すまで、ほかのレッスンは中断です。タップして練習へ</small></button>` : "")
     + view();
   $$("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
