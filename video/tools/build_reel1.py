@@ -119,7 +119,8 @@ def shorten(p0, p1, s0, s1):
     dx, dy = p1[0] - p0[0], p1[1] - p0[1]; L = math.hypot(dx, dy)
     return ((p0[0] + dx * s0 / L, p0[1] + dy * s0 / L), (p1[0] - dx * s1 / L, p1[1] - dy * s1 / L))
 
-def wheel_frames(dur=7.0):
+def wheel_frames(dur=4.2):
+    T1, T2, T3 = 0.3, 1.5, 2.8   # 赤丸 → 補色の矢印 → 緑に✕
     src = Image.open(WHEEL_SRC).convert("RGBA").crop((0, 110, 1000, 1000))
     bg = Image.new("RGBA", (W, H), (255, 255, 255, 255))
     bg.alpha_composite(src, (WX, WY + 110))
@@ -130,37 +131,31 @@ def wheel_frames(dur=7.0):
         im = bg.copy(); dr = ImageDraw.Draw(im)
         text_center(im, 110, "色相環で選定", 72)
         # 1) 赤は残す
-        if t >= 1.0:
-            k = min(1, (t - 1.0) / 0.4)
+        if t >= T1:
+            k = min(1, (t - T1) / 0.3)
             for key in ("赤", "赤橙"):
                 x, y = wheel_pos(DEG[key]); r = 82 * (0.6 + 0.4 * k)
                 dr.ellipse([x - r, y - r, x + r, y + r], outline=(230, 20, 30, 255), width=12)
         # 2) 補色で打ち消す
-        if t >= 2.6:
-            k = min(1, (t - 2.6) / 0.6)
+        if t >= T2:
+            k = min(1, (t - T2) / 0.4)
             for a, b, col in (("橙", "青", (30, 70, 170, 255)), ("黄", "紫", (100, 40, 140, 255))):
                 p0, p1 = shorten(wheel_pos(DEG[a], 250), wheel_pos(DEG[b], 250), 60, 60)
                 p1 = (p0[0] + (p1[0] - p0[0]) * k, p0[1] + (p1[1] - p0[1]) * k)
                 arrow(dr, p0, p1, col)
         # 3) 緑は使わない
-        if t >= 4.6:
+        if t >= T3:
             gx, gy = wheel_pos(DEG["緑"])
-            arrow(dr, (1040, 150 + 140), (gx + 70, gy - 60), (230, 20, 30, 255), width=12)
-            s = 70
-            dr.line([(gx - s, gy - s), (gx + s, gy + s)], fill=(230, 20, 30, 255), width=22)
-            dr.line([(gx - s, gy + s), (gx + s, gy - s)], fill=(230, 20, 30, 255), width=22)
-            bub = font(58); txt = "ブッブー！"
-            bw = dr.textlength(txt, font=bub)
-            bx, by = W - bw - 70, 205 + 30
-            if t >= 5.0:
-                dr.rounded_rectangle([bx - 24, by - 10, bx + bw + 24, by + 80], 40, fill=(230, 20, 30, 255))
-                dr.text((bx, by - 2), txt, font=bub, fill=WHITE)
+            arrow(dr, (1040, 290), (gx + 70, gy - 60), (230, 20, 30, 255), width=12)
+            k = min(1, (t - T3) / 0.25); sz = 70 * (1.6 - 0.6 * k)
+            dr.line([(gx - sz, gy - sz), (gx + sz, gy + sz)], fill=(230, 20, 30, 255), width=22)
+            dr.line([(gx - sz, gy + sz), (gx + sz, gy - sz)], fill=(230, 20, 30, 255), width=22)
         # 下のテロップ
-        if 1.0 <= t < 2.6:
+        if T1 <= t < T2:
             lines = ["髪の中の「赤」は", "削らないで残す"]
-        elif 2.6 <= t < 4.6:
+        elif T2 <= t < T3:
             lines = ["オレンジには「ブルー」", "黄みには「パープル」で打ち消す"]
-        elif t >= 4.6:
+        elif t >= T3:
             lines = ["だから緑系は使いません", "緑っぽくならない"]
         else:
             lines = []
@@ -254,15 +249,14 @@ def main():
     shutil.rmtree(WORK, ignore_errors=True); os.makedirs(WORK)
     R = lambda f: os.path.join(RAW, f)
     vertical = f"scale={W}:{H}"
-    # 鏡に映る顔をぼかす（IMG_6726）
-    blur6726 = (f"scale={W}:{H},split[a][b];[b]crop=470:600:0:0,boxblur=30:5[bb];[a][bb]overlay=0:0")
+    # お客様の掲載許可あり → ぼかしなし
     crop_land = lambda x: f"crop=608:1080:{x}:0,scale={W}:{H}"
 
     # 1 オープニング：仕上がり＋タイトル＋薬剤チップ
     op = canvas(); title(op); chips(op)
-    c1 = clip("c1.mp4", R("IMG_6726.mov"), 0, 3.6, blur6726, [(save(op, "op.png"), 0, 99)])
+    c1 = clip("c1.mp4", R("IMG_6726.mov"), 0, 3.6, vertical, [(save(op, "op.png"), 0, 99)])
     # 2 ビフォー
-    c2 = clip("c2.mp4", R("IMG_6716.MOV"), 0.2, 3.6, f"crop=540:960:794:110,scale={W}:{H}", [  # 上の鏡に映る人を切り落とす
+    c2 = clip("c2.mp4", R("IMG_6716.MOV"), 0.2, 3.6, crop_land(760), [
         (save(telop(["今回はこちらからスタート"]), "t2a.png"), 0, 1.8),
         (save(telop(["根元は暗く", "毛先はオレンジ・黄み"]), "t2b.png"), 1.8, 99)])
     # 3 色相環
@@ -286,7 +280,7 @@ def main():
     ed1.alpha_composite(telop(["ベースに合わせた塗り分けだから", "次のカラーもこの発色"], size=58))
     ed2 = canvas(); title(ed2)
     ed2.alpha_composite(telop(["保存して活用してください"], size=66))
-    c8 = clip("c8.mp4", R("IMG_6726.mov"), 0.4, 4.4, blur6726, [
+    c8 = clip("c8.mp4", R("IMG_6726.mov"), 0.4, 4.4, vertical, [
         (save(ed1, "ed1.png"), 0, 2.4), (save(ed2, "ed2.png"), 2.4, 99)])
 
     lst = os.path.join(WORK, "list.txt")
