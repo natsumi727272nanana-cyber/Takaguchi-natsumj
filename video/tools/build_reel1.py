@@ -262,7 +262,7 @@ def main():
     op = canvas(); title(op); chips(op)
     c1 = clip("c1.mp4", R("IMG_6726.mov"), 0, 3.6, blur6726, [(save(op, "op.png"), 0, 99)])
     # 2 ビフォー
-    c2 = clip("c2.mp4", R("IMG_6716.MOV"), 0.2, 3.6, crop_land(760), [
+    c2 = clip("c2.mp4", R("IMG_6716.MOV"), 0.2, 3.6, f"crop=540:960:794:110,scale={W}:{H}", [  # 上の鏡に映る人を切り落とす
         (save(telop(["今回はこちらからスタート"]), "t2a.png"), 0, 1.8),
         (save(telop(["根元は暗く", "毛先はオレンジ・黄み"]), "t2b.png"), 1.8, 99)])
     # 3 色相環
