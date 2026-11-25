@@ -63,31 +63,52 @@ def telop(lines, y=1120, size=64):
         text_center(img, y + i * int(size * 1.35), s, size)
     return img
 
-# 薬剤チップ（ベンチマークの「色の四角」）
-CHIPS = [
-    ("グレー\nパール13", (150, 150, 160)),
-    ("グレー", (105, 105, 108)),
-    ("ブルー", (40, 90, 185)),
-    ("ジェット\nパープル", (105, 45, 145)),
-    ("14\nライトナー", (240, 230, 210)),
+# 薬剤の箱（オープニングに並べる）: (名前, 素材, 切り抜き範囲)
+BOXES = [
+    ("グレー\nパール13", ("IMG_7199.MOV", 7.0), (410, 660, 690, 860)),
+    ("グレー", ("IMG_7204.heic", None), (460, 1512, 1388, 2368)),
+    ("ブルー", ("IMG_7206.heic", None), (800, 1680, 1564, 2312)),
+    ("ジェット\nパープル", ("IMG_7205.heic", None), (668, 1512, 1572, 2448)),
+    ("14\nライトナー", ("IMG_7202.heic", None), (800, 1448, 1660, 2360)),
 ]
 
-def chips(img, y=1360):
+def load_box(src, box):
+    name, ss = src
+    path = os.path.join(RAW, name)
+    if ss is not None:   # 動画から1コマ
+        png = os.path.join(WORK, "box_frame.png")
+        run(["ffmpeg", "-v", "error", "-y", "-ss", str(ss), "-i", path, "-frames:v", "1", png])
+        im = Image.open(png)
+    else:
+        import pillow_heif; pillow_heif.register_heif_opener()
+        from PIL import ImageOps
+        im = ImageOps.exif_transpose(Image.open(path))
+    return im.convert("RGB").crop(box)
+
+def chips(img, y=1330):
     d = ImageDraw.Draw(img)
-    n, size, gap = len(CHIPS), 150, 32
-    x0 = (W - (n * size + (n - 1) * gap)) / 2
-    f = font(30)
-    for i, (name, col) in enumerate(CHIPS):
-        x = x0 + i * (size + gap)
+    h, gap = 150, 22
+    tiles = []
+    for name, src, box in BOXES:
+        b = load_box(src, box)
+        w = int(b.width * h / b.height)
+        tiles.append((name, b.resize((w, h), Image.LANCZOS)))
+    total = sum(t.width for _, t in tiles) + gap * (len(tiles) - 1)
+    x = (W - total) / 2
+    f = font(28)
+    for name, t in tiles:
+        x0 = int(x)
         sh = Image.new("RGBA", img.size, (0, 0, 0, 0))
-        ImageDraw.Draw(sh).rounded_rectangle([x + 4, y + 8, x + size + 4, y + size + 8], 18, fill=(0, 0, 0, 120))
+        ImageDraw.Draw(sh).rounded_rectangle([x0 + 4, y + 8, x0 + t.width + 4, y + h + 8], 14, fill=(0, 0, 0, 130))
         img.alpha_composite(sh.filter(ImageFilter.GaussianBlur(6)))
+        mask = Image.new("L", t.size, 0); ImageDraw.Draw(mask).rounded_rectangle([0, 0, t.width - 1, h - 1], 14, fill=255)
+        img.paste(t, (x0, y), mask)
         d = ImageDraw.Draw(img)
-        d.rounded_rectangle([x, y, x + size, y + size], 18, fill=col + (255,), outline=WHITE, width=4)
-        lines = name.split("\n")
-        for j, ln in enumerate(lines):
+        d.rounded_rectangle([x0, y, x0 + t.width, y + h], 14, outline=WHITE, width=4)
+        for j, ln in enumerate(name.split("\n")):
             w = d.textlength(ln, font=f)
-            d.text((x + (size - w) / 2, y + size + 12 + j * 36), ln, font=f, fill=WHITE, stroke_width=4, stroke_fill=INK)
+            d.text((x0 + (t.width - w) / 2, y + h + 12 + j * 34), ln, font=f, fill=WHITE, stroke_width=4, stroke_fill=INK)
+        x += t.width + gap
 
 def title(img, y=230):
     rich_center(img, y, [("この冬", WHITE, 1.0), ("1番人気", GOLD, 1.25), ("オーダー", WHITE, 1.0)], 70)
@@ -167,7 +188,7 @@ def wheel_frames(dur=4.2):
 # ---------- 混ぜるアニメーション ----------
 def mix_frames(dur=2.8):
     d = os.path.join(WORK, "mix"); os.makedirs(d, exist_ok=True)
-    items = [("髪の中のオレンジ", (215, 120, 50)), ("ブルー", (40, 90, 185)),
+    items = [("髪の中の赤", (190, 45, 40)), ("ブルー", (40, 90, 185)),
              ("ジェットパープル", (105, 45, 145)), ("グレー", (120, 120, 124))]
     starts = [(250, 650), (830, 650), (250, 1150), (830, 1150)]
     center = (540, 900); result = (132, 112, 96)
