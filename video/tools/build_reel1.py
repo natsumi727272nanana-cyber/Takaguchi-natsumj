@@ -65,11 +65,11 @@ def telop(lines, y=1120, size=64):
 
 # 薬剤の箱（オープニングに並べる）: (名前, 素材, 切り抜き範囲)
 BOXES = [
-    ("グレー\nパール13", ("IMG_7199.MOV", 7.0), (410, 660, 690, 860)),
-    ("グレー", ("IMG_7204.heic", None), (460, 1512, 1388, 2368)),
-    ("ブルー", ("IMG_7206.heic", None), (800, 1680, 1564, 2312)),
-    ("ジェット\nパープル", ("IMG_7205.heic", None), (668, 1512, 1572, 2448)),
-    ("14\nライトナー", ("IMG_7202.heic", None), (800, 1448, 1660, 2360)),
+    ("グレー\nパール13", ("IMG_7199.MOV", 7.0), (418, 670, 682, 852)),
+    ("グレー", ("IMG_7204.heic", None), (482, 1650, 1368, 2348)),
+    ("ブルー", ("IMG_7206.heic", None), (818, 1698, 1548, 2298)),
+    ("ジェット\nパープル", ("IMG_7205.heic", None), (692, 1534, 1552, 2428)),
+    ("14\nライトナー", ("IMG_7202.heic", None), (822, 1468, 1638, 2338)),
 ]
 
 def load_box(src, box):
@@ -85,27 +85,19 @@ def load_box(src, box):
         im = ImageOps.exif_transpose(Image.open(path))
     return im.convert("RGB").crop(box)
 
-def chips(img, y=1330):
-    d = ImageDraw.Draw(img)
-    h, gap = 150, 22
-    tiles = []
+def chips(img, y=1400):
+    """箱の写真をそろった正方形に当てはめて並べる（白枠なし）"""
+    size, gap = 156, 20
+    total = size * len(BOXES) + gap * (len(BOXES) - 1)
+    x = (W - total) // 2
     for name, src, box in BOXES:
-        b = load_box(src, box)
-        w = int(b.width * h / b.height)
-        tiles.append((name, b.resize((w, h), Image.LANCZOS)))
-    total = sum(t.width for _, t in tiles) + gap * (len(tiles) - 1)
-    x = (W - total) / 2
-    f = font(28)
-    for name, t in tiles:
-        x0 = int(x)
+        t = load_box(src, box).resize((size, size), Image.LANCZOS)
         sh = Image.new("RGBA", img.size, (0, 0, 0, 0))
-        ImageDraw.Draw(sh).rounded_rectangle([x0 + 4, y + 8, x0 + t.width + 4, y + h + 8], 14, fill=(0, 0, 0, 130))
-        img.alpha_composite(sh.filter(ImageFilter.GaussianBlur(6)))
-        mask = Image.new("L", t.size, 0); ImageDraw.Draw(mask).rounded_rectangle([0, 0, t.width - 1, h - 1], 14, fill=255)
-        img.paste(t, (x0, y), mask)
-        d = ImageDraw.Draw(img)
-        d.rounded_rectangle([x0, y, x0 + t.width, y + h], 14, outline=WHITE, width=4)
-        x += t.width + gap
+        ImageDraw.Draw(sh).rounded_rectangle([x + 3, y + 7, x + size + 3, y + size + 7], 16, fill=(0, 0, 0, 120))
+        img.alpha_composite(sh.filter(ImageFilter.GaussianBlur(7)))
+        mask = Image.new("L", t.size, 0); ImageDraw.Draw(mask).rounded_rectangle([0, 0, size - 1, size - 1], 16, fill=255)
+        img.paste(t, (x, y), mask)
+        x += size + gap
 
 MARU = "/usr/share/fonts/truetype/motoya-l-maruberi/MTLmr3m.ttf"   # apt: fonts-motoya-l-maruberi
 
