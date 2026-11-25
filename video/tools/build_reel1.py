@@ -119,6 +119,24 @@ def title(img, y=760):
     shadow = Image.new("RGBA", img.size, (30, 20, 15, 0)); shadow.putalpha(a)
     img.alpha_composite(shadow, (3, 6)); img.alpha_composite(lay)
 
+def zero_card(scale=1.0):
+    """「ブラウンの薬剤はゼロ」を大きく強調する"""
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 110))
+    lay = Image.new("RGBA", img.size, (0, 0, 0, 0)); d = ImageDraw.Draw(lay)
+    def ct(yy, s, size, fill, thick, stroke=None):
+        f = ImageFont.truetype(MARU, size); w = d.textlength(s, font=f)
+        d.text(((W - w) / 2, yy), s, font=f, fill=fill, stroke_width=thick, stroke_fill=stroke or fill)
+    ct(640, "実は", 64, WHITE, 2)
+    ct(740, "ブラウンの薬剤は", 92, WHITE, 4)
+    zs = int(300 * scale)
+    ct(900 + (300 - zs) // 2, "ゼロ", zs, GOLD, 8)
+    # 「ゼロ」の下に線
+    d.rounded_rectangle([300, 1250, 780, 1266], 8, fill=GOLD)
+    a = lay.split()[3].filter(ImageFilter.GaussianBlur(12)).point(lambda v: int(v * 0.7))
+    shadow = Image.new("RGBA", img.size, (20, 12, 8, 0)); shadow.putalpha(a)
+    img.alpha_composite(shadow, (3, 7)); img.alpha_composite(lay)
+    return img
+
 def save(img, name):
     p = os.path.join(WORK, name); img.save(p); return p
 
@@ -294,9 +312,11 @@ def main():
         (save(telop(["4カップで塗り分け"], y=150, size=76), "t4a.png"), 0, 99),
         (save(recipe_card(), "t4b.png"), 0.6, 99)])
     # 5 塗布（2倍速）
-    c5 = clip("c5.mp4", R("IMG_6721.MOV"), 4.0, 4.0, crop_land(700), [
+    c5 = clip("c5.mp4", R("IMG_6721.MOV"), 4.0, 5.2, crop_land(700), [
         (save(telop(["ベースの茶色さに合わせて", "場所ごとに塗り分け"]), "t5a.png"), 0, 2.0),
-        (save(telop(["実はブラウンの薬は", "ゼロ"]), "t5b.png"), 2.0, 99)], speed=2.0)
+        (save(zero_card(1.25), "t5b0.png"), 2.0, 2.12),
+        (save(zero_card(1.1), "t5b1.png"), 2.12, 2.24),
+        (save(zero_card(1.0), "t5b2.png"), 2.24, 99)], speed=2.0)
     # 6 混ぜる
     c6 = seq("c6.mp4", mix_frames())
     # 7 アフター（揺らす）
