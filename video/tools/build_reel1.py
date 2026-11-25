@@ -105,14 +105,27 @@ def chips(img, y=1330):
         img.paste(t, (x0, y), mask)
         d = ImageDraw.Draw(img)
         d.rounded_rectangle([x0, y, x0 + t.width, y + h], 14, outline=WHITE, width=4)
-        for j, ln in enumerate(name.split("\n")):
-            w = d.textlength(ln, font=f)
-            d.text((x0 + (t.width - w) / 2, y + h + 12 + j * 34), ln, font=f, fill=WHITE, stroke_width=4, stroke_fill=INK)
         x += t.width + gap
 
-def title(img, y=230):
-    rich_center(img, y, [("この冬", WHITE, 1.0), ("1番人気", GOLD, 1.25), ("オーダー", WHITE, 1.0)], 70)
-    text_center(img, y + 120, "マロングレージュ", 118, fill=MARRON, sw=12)
+MARU = "/usr/share/fonts/truetype/motoya-l-maruberi/MTLmr3m.ttf"   # apt: fonts-motoya-l-maruberi
+
+def title(img, y=760):
+    """参考リール風：丸みのある白文字＋やわらかい影＋斜め線の飾り"""
+    lay = Image.new("RGBA", img.size, (0, 0, 0, 0)); d = ImageDraw.Draw(lay)
+    def ct(yy, s, size, thick):
+        f = ImageFont.truetype(MARU, size); w = d.textlength(s, font=f)
+        d.text(((W - w) / 2, yy), s, font=f, fill=WHITE, stroke_width=thick, stroke_fill=WHITE)
+        return w
+    ct(y, "＼ この冬1番人気オーダー ／", 52, 2)
+    w = ct(y + 92, "マロングレージュ", 100, 5)
+    # 斜め線の飾り（タイトルの左右）
+    lx, rx, ty = (W - w) / 2 - 18, (W + w) / 2 + 18, y + 92
+    for dx in (0, 22):
+        d.line([(lx - 40 - dx, ty + 10), (lx - dx, ty + 135)], fill=WHITE, width=5)
+        d.line([(rx + dx, ty + 135), (rx + 40 + dx, ty + 10)], fill=WHITE, width=5)
+    a = lay.split()[3].filter(ImageFilter.GaussianBlur(10)).point(lambda v: int(v * 0.55))
+    shadow = Image.new("RGBA", img.size, (30, 20, 15, 0)); shadow.putalpha(a)
+    img.alpha_composite(shadow, (3, 6)); img.alpha_composite(lay)
 
 def save(img, name):
     p = os.path.join(WORK, name); img.save(p); return p
@@ -274,8 +287,10 @@ def main():
     crop_land = lambda x: f"crop=608:1080:{x}:0,scale={W}:{H}"
 
     # 1 オープニング：仕上がり＋タイトル＋薬剤チップ
-    op = canvas(); title(op); chips(op)
-    c1 = clip("c1.mp4", R("IMG_6726.mov"), 0, 3.6, vertical, [(save(op, "op.png"), 0, 99)])
+    op = canvas(); title(op)
+    bx = canvas(); chips(bx, y=1400)
+    c1 = clip("c1.mp4", R("IMG_6726.mov"), 0, 4.9, vertical, [
+        (save(op, "op.png"), 0, 99), (save(bx, "boxes.png"), 1.6, 99)])
     # 2 ビフォー
     c2 = clip("c2.mp4", R("IMG_6716.MOV"), 0.2, 3.6, crop_land(760), [
         (save(telop(["今回はこちらからスタート"]), "t2a.png"), 0, 1.8),
@@ -298,9 +313,9 @@ def main():
         (save(telop(["緑にならず", "顔色が明るく見える"]), "t7b.png"), 2.4, 99)])
     # 8 エンディング：一番人気の仕上がり
     ed1 = canvas(); title(ed1)
-    ed1.alpha_composite(telop(["ベースに合わせた塗り分けだから", "次のカラーもこの発色"], size=58))
+    ed1.alpha_composite(telop(["ベースに合わせた塗り分けだから", "次のカラーもこの発色"], y=1280, size=58))
     ed2 = canvas(); title(ed2)
-    ed2.alpha_composite(telop(["保存して活用してください"], size=66))
+    ed2.alpha_composite(telop(["保存して活用してください"], y=1280, size=66))
     c8 = clip("c8.mp4", R("IMG_6726.mov"), 0.4, 4.4, vertical, [
         (save(ed1, "ed1.png"), 0, 2.4), (save(ed2, "ed2.png"), 2.4, 99)])
 
