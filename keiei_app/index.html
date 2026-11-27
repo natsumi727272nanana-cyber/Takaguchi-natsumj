@@ -139,6 +139,10 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
       <div class="panel"><h2>お金の流れ</h2><div class="tbl" id="st-break"></div></div>
       <div class="panel"><h2>仕入（会社別）</h2><div class="tbl" id="st-sup"></div></div>
     </div>
+    <div class="panel" id="st-salon-panel"><h2>お客様の数（サロンボード）</h2>
+      <p class="note">サロンボードの「ネット予約売上」の数字です（税込）。試算表の売上（税抜）× 1.1 とほぼ同じなので、お店の売上のほぼ全部です。「再来の割合」はその月のお客様のうち2回目以上の方の割合です。今月の分は途中までの数字です。</p>
+      <div class="grid3" id="st-salon-kpi"></div>
+      <div class="tbl" id="st-salon"></div></div>
     <div class="panel"><h2>この月の請求書</h2><div class="tbl" id="st-inv"></div></div>
     <div class="panel"><h2>今期の推移</h2><div class="tbl" id="st-trend"></div></div>
   </section>
@@ -373,8 +377,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 const PLAN_KINDS={store:'出店',product:'商品づくり',event:'慰安旅行・イベント',other:'その他'};
 const STORES=[{id:'honten',name:'enu hair 本店',sub:'梅田'},{id:'chayamachi',name:'enu hair 茶屋町',sub:'2026年8月オープン'},{id:'eyelash',name:'enu アイラッシュ',sub:'梅田'},{id:'muko',name:'enu 武庫之荘',sub:'ヘア＋アイラッシュ'},{id:'ritsu',name:'律',sub:'ヘッドスパ・心斎橋'}];
 const zeroStores=()=>Object.fromEntries(STORES.map(x=>[x.id,0])),sumStores=o=>STORES.reduce((t,x)=>t+num(o[x.id]),0);
-const COLS=['checks','promos','cashm','ledger','monthly','invoices','schedules','plans','settings'];
-const state={checks:{},promos:{},cashm:{},ledger:{},monthly:{},invoices:{},schedules:{},plans:{},settings:{}};
+const COLS=['salon','checks','promos','cashm','ledger','monthly','invoices','schedules','plans','settings'];
+const state={salon:{},checks:{},promos:{},cashm:{},ledger:{},monthly:{},invoices:{},schedules:{},plans:{},settings:{}};
 let db=null, mode='local';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -484,7 +488,7 @@ function renderHome(){
         <dt>広告費</dt><dd class="num">${yen(c.cat['広告費'])}</dd>
         <dt>雑費・その他</dt><dd class="num">${yen(c.cat['雑費']+c.cat['その他経費']+c.other)}</dd>
         <dt><b>経費を引いた利益</b></dt><dd class="num ${mClass(c.margin)}"><b>${yen(c.profit)}</b></dd>
-      </dl><span class="note" style="text-align:right">くわしく見る →</span></div>`}).join('');
+      </dl>${(()=>{const sb=state.salon[`${s.id}_${ym}`];return sb?`<div class="note" style="border-top:1px dashed var(--line);padding-top:8px">サロンボード${ym===thisMonth()?'（途中まで）':''}：売上 <b class="num">${yen(num(sb.net))}</b>（税込）・お客様 <b class="num">${num(sb.cust)}人</b>（新規${num(sb.newc)}・再来${num(sb.rep)}）・客単価 <b class="num">${yen(num(sb.avg))}</b>・指名率 <b class="num">${pct(num(sb.nomCount)/num(sb.cust))}</b></div>`:''})()}<span class="note" style="text-align:right">くわしく見る →</span></div>`}).join('');
   $('home-title').textContent=ym===thisMonth()?'今月のまとめ（'+mLabel(ym)+'）':mLabel(ym)+'のまとめ';
   const soon=Object.values(state.plans).filter(x=>x.month&&x.month>=thisMonth()&&x.month<=addMonths(thisMonth(),3)&&x.status!=='見送り'&&x.status!=='完了').sort((a,b)=>a.month.localeCompare(b.month));
   const spend=soon.reduce((t,x)=>t+num(x.budget),0);
@@ -548,6 +552,15 @@ function renderLedger(){
 let curStore='honten';
 function renderStore(){
   const s=STORES.find(x=>x.id===curStore)||STORES[0],ym=$('st-month').value||thisMonth(),c=calc(ym,s.id);
+  const sbMonths=Object.values(state.salon).filter(x=>x.store===s.id).map(x=>x.month).sort();
+  $('st-salon-panel').hidden=!sbMonths.length;
+  if(sbMonths.length){const sb=state.salon[`${s.id}_${ym}`]||state.salon[`${s.id}_${sbMonths[sbMonths.length-1]}`],py=state.salon[`${s.id}_${addMonths(sb.month,-12)}`];
+    const yoy=(a,b)=>b?`<span class="${a>=b?'good':'bad'}">前年同月比 ${(a/b*100).toFixed(0)}%</span>`:'';
+    $('st-salon-kpi').innerHTML=`<div class="panel"><span class="lbl">${mLabel(sb.month)}のお客様</span><span class="big">${num(sb.cust)}人</span><span class="note">新規 ${num(sb.newc)}人・再来 ${num(sb.rep)}人 ${py?yoy(num(sb.cust),num(py.cust)):''}</span></div>
+      <div class="panel"><span class="lbl">客単価</span><span class="big">${yen(num(sb.avg))}</span><span class="note">店販 ${yen(num(sb.retail))}（売上の${pct(num(sb.retail)/num(sb.net))}）</span></div>
+      <div class="panel"><span class="lbl">指名率</span><span class="big">${pct(num(sb.nomCount)/num(sb.cust))}</span><span class="note">指名 ${num(sb.nomCount)}人／${num(sb.cust)}人</span></div>`;
+    $('st-salon').innerHTML=`<table><thead><tr><th>月</th><th class="r">売上（税込）</th><th class="r">お客様</th><th class="r">新規</th><th class="r">再来</th><th class="r">再来の割合</th><th class="r">客単価</th><th class="r">店販</th><th class="r">指名率</th></tr></thead><tbody>
+      ${sbMonths.slice().reverse().map(m=>{const x=state.salon[`${s.id}_${m}`];return `<tr${m===sb.month?' style="font-weight:700"':''}><td>${mLabel(m)}${m===thisMonth()?' <span class="pill">途中</span>':''}</td><td class="r num">${yen(num(x.net))}</td><td class="r num">${num(x.cust)}</td><td class="r num">${num(x.newc)}</td><td class="r num">${num(x.rep)}</td><td class="r num">${pct(num(x.rep)/num(x.cust))}</td><td class="r num">${yen(num(x.avg))}</td><td class="r num">${yen(num(x.retail))}</td><td class="r num">${pct(num(x.nomCount)/num(x.cust))}</td></tr>`}).join('')}</tbody></table>`}
   $('v-store').className='view sc-'+s.id;
   $('st-head').innerHTML=`<h2 style="color:var(--sc);font-size:1.5rem">${s.name}</h2><span class="note">${mLabel(ym)}${c.src?`・税理士さんの試算表（${deptName(STORE_DEPT[s.id])}）の数字です`:''}</span>`;
   const fy=sumCalc(fyMonths(ym).filter(m=>m<=ym).map(m=>calc(m,s.id)));
