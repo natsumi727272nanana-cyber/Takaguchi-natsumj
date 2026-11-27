@@ -94,7 +94,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
   </header>
   <nav id="tabs">
     <button data-tab="home">ホーム</button>
-    <button data-tab="ledger">会社全体（試算表）</button>
+    <button data-tab="ledger">試算表（全事業所）</button>
     <button data-tab="monthly">月次（売上・人件費）</button>
     <button data-tab="invoices">請求書・仕入</button>
     <button data-tab="cash">お金の残り</button>
@@ -145,13 +145,15 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 
   <!-- 会社全体（試算表） -->
   <section class="view" id="v-ledger" hidden>
-    <div class="row between"><h2>会社全体（残高試算表より）</h2><span class="note" id="lg-src"></span></div>
+    <div class="row between"><h2>試算表（税理士さんの数字）</h2><label>見る事業所<select id="lg-dept"></select></label></div>
+    <span class="note" id="lg-src"></span>
     <div class="grid3" id="lg-kpi"></div>
+    <div class="panel"><h2>事業所ごとの比較（今期累計）</h2><p class="note">行を押すと、その事業所の詳しい数字に切り替わります。「共通経費」は役員報酬・本部の経費など、店に分けていない費用です。</p><div class="tbl" id="lg-compare"></div></div>
     <div class="panel"><h2>月別のまとめ</h2><p class="note">人件費＝役員報酬＋給料手当＋外注費＋法定福利費＋福利厚生費、家賃＝地代家賃＋賃借料。</p><div class="tbl" id="lg-sum"></div></div>
     <div class="panel"><h2>勘定科目ごと</h2><div class="tbl" id="lg-detail"></div></div>
     <div class="panel">
       <div class="row between"><h2>試算表を入力・修正</h2><label>月<input type="month" id="lg-month"></label></div>
-      <p class="note">税理士さんから届いた試算表の数字を、その月の列に入れて保存してください。</p>
+      <p class="note">上で選んでいる事業所の、選んだ月の数字を入れて保存します。</p>
       <div class="grid3" id="lg-form" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"></div>
       <div class="row"><button class="btn" id="lg-save">この月を保存</button></div>
     </div>
@@ -416,6 +418,10 @@ const CATS=['仕入','光熱費','広告費','雑費','その他経費'];
 const catOf=inv=>CATS.includes(inv.cat)?inv.cat:inv.cat==='経費'?'その他経費':'仕入';
 const rents=()=>Object.entries(state.schedules).filter(([,s])=>s.kind==='rent');
 function calc(ym,store){
+  const L=!state.monthly[`${ym}_${store}`]&&STORE_DEPT[store]?lg(STORE_DEPT[store],ym):null;
+  if(L){const cat={'仕入':L.cogs,'光熱費':L.util,'広告費':L.ad,'雑費':L.otherSga,'その他経費':L.nonop+L.tax};const expense=L.util+L.ad+L.otherSga+L.nonop+L.tax;
+    return {src:'試算表',sales:L.sales,labor:L.labor,other:0,purchase:L.cogs,expense,rent:L.rent,cost:L.sales-L.net,profit:L.net,cat,sup:{},has:true,
+      margin:L.margin,laborR:L.laborR,purR:L.sales?L.cogs/L.sales:null}}
   const mo=state.monthly[`${ym}_${store}`]||{};
   const cat=Object.fromEntries(CATS.map(c=>[c,0])),sup={};
   for(const inv of Object.values(state.invoices)){if((inv.date||'').slice(0,7)!==ym)continue;
@@ -454,18 +460,18 @@ function renderHome(){
   const ym=$('home-month').value||thisMonth();
   const months=fyMonths(ym),past=months.filter(m=>m<=ym);
   const fyAll=sumCalc(past.flatMap(m=>STORES.map(s=>calc(m,s.id))));
-  const entered=past.filter(m=>STORES.some(s=>state.monthly[`${m}_${s.id}`]));
+  const entered=past.filter(m=>STORES.some(s=>calc(m,s.id).has));
   const forecast=entered.length?fyAll.sales/entered.length*12:0;
   const target=num(state.settings.main?.target);
-  const lgHave=fyMonths(ym).filter(m=>m<=ym&&state.ledger[m]).map(lg);
+  const lgHave=fyMonths(ym).filter(m=>m<=ym&&LI('all',m)).map(m=>lg('all',m));
   const lgS=lgHave.reduce((t,x)=>t+x.sales,0),lgN=lgHave.reduce((t,x)=>t+x.net,0);
   $('home-fy').innerHTML=(lgHave.length?`<div class="panel tap" data-goto="ledger" role="button" tabindex="0"><span class="lbl">会社全体・試算表の今期累計（${lgHave.length}か月）</span><span class="big">${man(lgS)}</span>
       <span class="note">当期純利益 <b class="num ${lgN<0?'bad':'good'}">${man(lgN)}</b>・年間ペース <b class="num">${man(lgS/lgHave.length*12)}</b>・くわしく見る →</span></div>`:'')+`
-    <div class="panel"><span class="lbl">今期の年商（${mLabel(months[0])}〜${mLabel(ym)}）</span><span class="big">${man(fyAll.sales)}</span>
+    <div class="panel"><span class="lbl">梅田3店の年商（${mLabel(months[0])}〜${mLabel(ym)}）</span><span class="big">${man(fyAll.sales)}</span>
       <span class="note">入力済み${entered.length}か月・この調子なら年間 <b class="num">${man(forecast)}</b></span></div>
-    <div class="panel"><span class="lbl">今期の利益（全店）</span><span class="big ${mClass(fyAll.margin)}">${man(fyAll.profit)}</span>
-      <span class="note">利益率 <b class="num">${pct(fyAll.margin)}</b>・決算 ${fyEnd()}月</span></div>
-    <div class="panel"><span class="lbl">${mLabel(ym)}の売上（全店）</span><span class="big">${man(sumCalc(STORES.map(s=>calc(ym,s.id))).sales)}</span>
+    <div class="panel"><span class="lbl">梅田3店の利益（共通経費を引く前）</span><span class="big ${mClass(fyAll.margin)}">${man(fyAll.profit)}</span>
+      <span class="note">利益率 <b class="num">${pct(fyAll.margin)}</b>・役員報酬など店に分けていない経費は「試算表」の共通経費にあります</span></div>
+    <div class="panel"><span class="lbl">${mLabel(ym)}の売上（梅田3店）</span><span class="big">${man(sumCalc(STORES.map(s=>calc(ym,s.id))).sales)}</span>
       <span class="note">${target?`目標 ${man(target)} まで あと <b class="num">${man(Math.max(0,target-sumCalc(STORES.map(s=>calc(ym,s.id))).sales))}</b>`:'目標は「設定」で入れられます'}</span></div>`;
   $('home-stores').innerHTML=STORES.map(s=>{const c=calc(ym,s.id);return `
     <div class="panel store tap sc-${s.id}" data-store="${s.id}" role="button" tabindex="0" aria-label="${s.name}の詳細を開く">
@@ -497,17 +503,27 @@ function renderHome(){
       <td class="r num">${t.sales?man(t.sales):'—'}</td><td class="r num ${t.sales?mClass(t.margin):''}">${t.sales?man(t.profit):'—'}</td><td class="r num">${t.sales?pct(t.margin):'—'}</td></tr>`}).join('')}</tbody></table>`;
 }
 
-const ACC=[['売上高','売上'],['仕入高','原価'],['店販仕入','原価'],
+const ACC=[['売上高','売上'],['売上（武庫之荘eye）','売上'],['仕入高','原価'],['店販仕入','原価'],
   ['役員報酬','人件費'],['給料手当','人件費'],['外注費','人件費'],['法定福利費','人件費'],['福利厚生費','人件費'],
   ['採用教育費','販管'],['広告宣伝費','広告'],['交際費','販管'],['会議費','販管'],['旅費交通費','販管'],['通信費','販管'],['販売促進費','広告'],
   ['消耗品費','販管'],['水道光熱費','光熱'],['諸会費','販管'],['支払手数料','販管'],['地代家賃','家賃'],['賃借料','家賃'],['租税公課','販管'],
-  ['支払報酬料','販管'],['減価償却費','販管'],['長期前払費用償却','販管'],['受取利息','外収'],['雑収入','外収'],['支払利息','外費'],['法人税等','税']];
-function lg(m){const it=state.ledger[m]?.items;if(!it)return null;const g={};ACC.forEach(([k,c])=>g[c]=(g[c]||0)+num(it[k]));
+  ['支払報酬料','販管'],['減価償却費','販管'],['長期前払費用償却','販管'],['雑費','販管'],['受取利息','外収'],['雑収入','外収'],['支払利息','外費'],['法人税等','税']];
+const DEPTS=[['all','会社全体（全事業所）'],['enu','enu 合計（梅田3店＋共通）'],['umeda','enu梅田（本店）'],['chayamachi','enu梅田茶屋町'],['matsuek','enu梅田マツエク（アイラッシュ）'],['enu_common','enu 共通経費'],
+  ['muko_total','武庫之荘 合計'],['muko','enu武庫之荘'],['muko_common','武庫之荘 共通'],['ritsu_total','律 合計'],['ritsu','律（リツ）'],['ritsu_common','律 共通'],['office_common','事業所 共通']];
+const COMPARE=['umeda','chayamachi','matsuek','muko','ritsu','enu_common','office_common'];
+const STORE_DEPT={honten:'umeda',chayamachi:'chayamachi',eyelash:'matsuek'};
+const deptName=d=>(DEPTS.find(x=>x[0]===d)||[d,d])[1];
+const ACC_CAT=Object.fromEntries(ACC);
+const accCat=k=>ACC_CAT[k]||(k.startsWith('売上')?'売上':'販管');
+const LI=(d,m)=>state.ledger[`${d}_${m}`]?.items||null;
+function lg(d,m){const it=LI(d,m);if(!it)return null;const g={'売上':0,'原価':0,'人件費':0,'販管':0,'広告':0,'光熱':0,'家賃':0,'外収':0,'外費':0,'税':0};
+  Object.entries(it).forEach(([k,v])=>g[accCat(k)]+=num(v));
   const sales=g['売上'],gross=sales-g['原価'],sga=g['人件費']+g['販管']+g['広告']+g['光熱']+g['家賃'],op=gross-sga,ord=op+g['外収']-g['外費'],net=ord-g['税'];
-  return {sales,cogs:g['原価'],gross,labor:g['人件費'],rent:g['家賃'],ad:g['広告'],util:g['光熱'],otherSga:g['販管'],sga,op,ord,net,margin:sales?net/sales:null,laborR:sales?g['人件費']/sales:null,items:it}}
+  return {sales,cogs:g['原価'],gross,labor:g['人件費'],rent:g['家賃'],ad:g['広告'],util:g['光熱'],otherSga:g['販管'],sga,op,ord,net,nonop:g['外費']-g['外収'],tax:g['税'],margin:sales?net/sales:null,laborR:sales?g['人件費']/sales:null,items:it}}
 function renderLedger(){
-  const ms=fyMonths(thisMonth()),have=ms.filter(m=>state.ledger[m]);
-  const L=have.map(m=>[m,lg(m)]),T={};L.forEach(([,x])=>['sales','cogs','gross','labor','rent','ad','util','otherSga','sga','op','ord','net'].forEach(k=>T[k]=(T[k]||0)+x[k]));
+  const sel=$('lg-dept');if(!sel.options.length){sel.innerHTML=DEPTS.map(([k,n])=>`<option value="${k}">${n}</option>`).join('');sel.value='all'}
+  const dept=sel.value||'all',ms=fyMonths(thisMonth()),have=ms.filter(m=>LI(dept,m));
+  const L=have.map(m=>[m,lg(dept,m)]),T={};L.forEach(([,x])=>['sales','cogs','gross','labor','rent','ad','util','otherSga','sga','op','ord','net'].forEach(k=>T[k]=(T[k]||0)+x[k]));
   $('lg-src').textContent=have.length?`入力済み：${have.map(m=>Number(m.slice(5))+'月').join('・')}`:'';
   $('lg-kpi').innerHTML=have.length?`
     <div class="panel"><span class="lbl">今期の売上累計（${have.length}か月）</span><span class="big">${man(T.sales)}</span><span class="note">このペースなら年間 <b class="num">${man(T.sales/have.length*12)}</b></span></div>
@@ -520,10 +536,13 @@ function renderLedger(){
     ${rows.map(([n,k])=>`<tr${strong.has(k)?' style="font-weight:700"':''}><td>${n}</td>${L.map(([,x])=>`<td class="r num ${['op','ord','net'].includes(k)&&x[k]<0?'bad':''}">${yen(x[k])}</td>`).join('')}<td class="r num">${yen(T[k])}</td><td class="r num note">${k==='sales'?'':pct(T.sales?T[k]/T.sales:null)}</td></tr>`).join('')}
     <tr><td>純利益率</td>${L.map(([,x])=>`<td class="r num ${mClass(x.margin)}">${pct(x.margin)}</td>`).join('')}<td class="r num ${mClass(T.sales?T.net/T.sales:null)}">${pct(T.sales?T.net/T.sales:null)}</td><td></td></tr></tbody></table>`:'';
   $('lg-detail').innerHTML=have.length?`<table><thead><tr><th>勘定科目</th>${have.map(m=>`<th class="r">${Number(m.slice(5))}月</th>`).join('')}<th class="r">累計</th></tr></thead><tbody>
-    ${ACC.map(([k])=>`<tr><td>${k}</td>${have.map(m=>`<td class="r num">${num(state.ledger[m].items[k]).toLocaleString('ja-JP')}</td>`).join('')}<td class="r num">${have.reduce((t,m)=>t+num(state.ledger[m].items[k]),0).toLocaleString('ja-JP')}</td></tr>`).join('')}</tbody></table>`:'';
+    ${[...ACC.map(a=>a[0]),...new Set(have.flatMap(m=>Object.keys(LI(dept,m))).values())].filter((k,i,a)=>a.indexOf(k)===i&&have.some(m=>LI(dept,m)[k]!=null)).map(k=>`<tr><td>${k}</td>${have.map(m=>`<td class="r num">${num(LI(dept,m)[k]).toLocaleString('ja-JP')}</td>`).join('')}<td class="r num">${have.reduce((t,m)=>t+num(LI(dept,m)[k]),0).toLocaleString('ja-JP')}</td></tr>`).join('')}</tbody></table>`:'';
+  const cmp=COMPARE.map(d=>{const xs=ms.map(m=>lg(d,m)).filter(Boolean);if(!xs.length)return null;const t={};['sales','gross','labor','rent','ad','op','net'].forEach(k=>t[k]=xs.reduce((a,x)=>a+x[k],0));return [d,t,xs.length]}).filter(Boolean);
+  $('lg-compare').innerHTML=cmp.length?`<table><thead><tr><th>事業所</th><th class="r">売上</th><th class="r">粗利</th><th class="r">人件費</th><th class="r">人件費率</th><th class="r">家賃</th><th class="r">広告・販促</th><th class="r">営業利益</th><th class="r">純利益</th><th class="r">利益率</th></tr></thead><tbody>
+    ${cmp.map(([d,t])=>`<tr data-lgdept="${d}" style="cursor:pointer"><td>${deptName(d)}</td>${['sales','gross','labor'].map(k=>`<td class="r num">${man(t[k])}</td>`).join('')}<td class="r num">${t.sales?pct(t.labor/t.sales):'—'}</td>${['rent','ad','op','net'].map(k=>`<td class="r num ${['op','net'].includes(k)&&t[k]<0?'bad':''}">${man(t[k])}</td>`).join('')}<td class="r num ${t.sales?mClass(t.net/t.sales):''}">${t.sales?pct(t.net/t.sales):'—'}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">事業所ごとの試算表はまだありません。</p>';
   const fm=$('lg-month').value||thisMonth();
-  if(!(document.activeElement&&document.activeElement.closest('#lg-form'))||renderLedger.m!==fm){renderLedger.m=fm;
-    const it=state.ledger[fm]?.items||{};
+  if(!(document.activeElement&&document.activeElement.closest('#lg-form'))||renderLedger.m!==fm+dept){renderLedger.m=fm+dept;
+    const it=LI(dept,fm)||{};
     $('lg-form').innerHTML=ACC.map(([k],i)=>`<label>${k}<input class="amt" id="lg-in-${i}" data-acc="${k}" inputmode="numeric" value="${it[k]??''}" style="width:100%"></label>`).join('')}
 }
 
@@ -531,19 +550,19 @@ let curStore='honten';
 function renderStore(){
   const s=STORES.find(x=>x.id===curStore)||STORES[0],ym=$('st-month').value||thisMonth(),c=calc(ym,s.id);
   $('v-store').className='view sc-'+s.id;
-  $('st-head').innerHTML=`<h2 style="color:var(--sc);font-size:1.5rem">${s.name}</h2><span class="note">${mLabel(ym)}</span>`;
+  $('st-head').innerHTML=`<h2 style="color:var(--sc);font-size:1.5rem">${s.name}</h2><span class="note">${mLabel(ym)}${c.src?`・税理士さんの試算表（${deptName(STORE_DEPT[s.id])}）の数字です`:''}</span>`;
   const fy=sumCalc(fyMonths(ym).filter(m=>m<=ym).map(m=>calc(m,s.id)));
   $('st-kpi').innerHTML=`<div class="panel"><span class="lbl">売上</span><span class="big">${yen(c.sales)}</span>${c.has?'':'<span class="note">「月次」で売上を入れてください</span>'}</div>
     <div class="panel"><span class="lbl">経費を引いた利益</span><span class="big ${mClass(c.margin)}">${yen(c.profit)}</span><span class="note">利益率 <b class="num">${pct(c.margin)}</b></span></div>
     <div class="panel"><span class="lbl">今期の年商（この店）</span><span class="big">${man(fy.sales)}</span><span class="note">今期の利益 <b class="num">${man(fy.profit)}</b></span></div>`;
-  const rowsB=[['仕入',c.purchase],['人件費',c.labor],['家賃',c.rent],['光熱費',c.cat['光熱費']],['広告費（HPB等）',c.cat['広告費']],['雑費',c.cat['雑費']],['その他経費',c.cat['その他経費']+c.other]];
+  const rowsB=[['仕入',c.purchase],['人件費',c.labor],['家賃',c.rent],['光熱費',c.cat['光熱費']],['広告費（HPB等）',c.cat['広告費']],[c.src?'その他の経費（消耗品・手数料・減価償却など）':'雑費',c.cat['雑費']],[c.src?'利息・税金など':'その他経費',c.cat['その他経費']+c.other]];
   $('st-break').innerHTML=`<table><tbody><tr><td><b>売上</b></td><td class="r num"><b>${yen(c.sales)}</b></td><td class="r note">100%</td></tr>
     ${rowsB.map(([k,v])=>`<tr><td>− ${k}</td><td class="r num">${yen(v)}</td><td class="r note num">${c.sales?pct(v/c.sales):''}</td></tr>`).join('')}
     </tbody><tfoot><tr><td>経費合計</td><td class="r num">${yen(c.cost)}</td><td class="r note num">${c.sales?pct(c.cost/c.sales):''}</td></tr>
     <tr><td>利益</td><td class="r num ${mClass(c.margin)}">${yen(c.profit)}</td><td class="r num ${mClass(c.margin)}">${pct(c.margin)}</td></tr></tfoot></table>`;
   const sup=Object.entries(c.sup).sort((a,b)=>b[1]-a[1]);
   $('st-sup').innerHTML=sup.length?`<table><thead><tr><th>会社</th><th class="r">金額</th><th class="r">売上比</th></tr></thead><tbody>${sup.map(([n,v])=>`<tr><td>${esc(n)}</td><td class="r num">${yen(v)}</td><td class="r note num">${c.sales?pct(v/c.sales):''}</td></tr>`).join('')}</tbody><tfoot><tr><td>仕入合計</td><td class="r num">${yen(c.purchase)}</td><td class="r num">${pct(c.purR)}</td></tr></tfoot></table>`
-    :'<p class="empty">この月の仕入はまだありません。「請求書・仕入」で登録してください。</p>';
+    :c.src?`<p class="empty">試算表には会社別の内訳がありません（この月の仕入合計 ${yen(c.purchase)}）。請求書を登録すると会社別に見られます。</p>`:'<p class="empty">この月の仕入はまだありません。「請求書・仕入」で登録してください。</p>';
   const inv=Object.values(state.invoices).filter(i=>(i.date||'').startsWith(ym)&&num(i.alloc?.[s.id])).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   $('st-inv').innerHTML=inv.length?`<table><thead><tr><th>請求日</th><th>会社</th><th>区分</th><th class="r">この店の分</th><th>状態</th></tr></thead><tbody>${inv.map(i=>`<tr><td class="num">${esc(i.date)}</td><td>${esc(i.supplier)}${i.memo?`<br><span class="note">${esc(i.memo)}</span>`:''}</td><td>${catOf(i)}</td><td class="r num">${yen(num(i.alloc[s.id]))}</td><td>${i.paid?'<span class="pill good">支払済</span>':'<span class="pill warn">未払い</span>'}</td></tr>`).join('')}</tbody></table>`
     :'<p class="empty">この月の請求書はありません。</p>';
@@ -647,9 +666,9 @@ document.addEventListener('change',async e=>{const id=e.target.dataset&&e.target
 /* ---------- お金の残り ---------- */
 const NONCASH=['減価償却費','長期前払費用償却'],ADACC=['広告宣伝費','販売促進費'];
 function cashBase(){
-  const have=Object.keys(state.ledger).sort().slice(-6);
-  const act=m=>{const it=state.ledger[m]?.items;if(!it)return null;let out=0,inc=num(it['売上高']),ad=0,oth=num(it['受取利息'])+num(it['雑収入']);
-    ACC.forEach(([k,c])=>{if(['売上','外収','税'].includes(c)||NONCASH.includes(k))return;out+=num(it[k]);if(ADACC.includes(k))ad+=num(it[k])});return {inc,out,ad,oth}};
+  const have=fyMonths(thisMonth()).concat(fyMonths(addMonths(thisMonth(),-12))).filter(m=>LI('all',m)).sort().slice(-6);
+  const act=m=>{const it=LI('all',m);if(!it)return null;let out=0,inc=Object.keys(it).filter(k=>accCat(k)==='売上').reduce((t,k)=>t+num(it[k]),0),ad=0,oth=num(it['受取利息'])+num(it['雑収入']);
+    Object.keys(it).forEach(k=>{const c=accCat(k);if(['売上','外収','税'].includes(c)||NONCASH.includes(k))return;out+=num(it[k]);if(ADACC.includes(k))ad+=num(it[k])});return {inc,out,ad,oth}};
   const A=have.map(act);const avg=k=>A.length?A.reduce((t,x)=>t+x[k],0)/A.length:0;
   return {act,avgInc:avg('inc'),avgOut:avg('out'),avgAd:avg('ad'),avgOth:avg('oth'),n:A.length}}
 function promoMonth(m){return Object.values(state.promos).filter(p=>p.start&&p.start<=m&&(!p.end||p.end>=m)).reduce((t,p)=>t+num(p.monthly),0)}
@@ -704,9 +723,9 @@ function renderPromo(){
       <td class="r num">${yen(num(p.monthly))}</td><td class="num">${p.start?mLabel(p.start):''}〜${p.end?mLabel(p.end):'継続'}</td><td class="r num">${num(p.goal)?num(p.goal)+'人':''}</td><td class="r num">${num(p.goal)?yen(num(p.monthly)/num(p.goal)):''}</td>
       <td><div class="row" style="flex-wrap:nowrap;gap:4px"><button class="btn ghost sm" data-edit-promo="${id}">編集</button><button class="btn danger sm" data-del="promos:${id}">削除</button></div></td></tr>`}).join('')}</tbody></table>`
     :'<p class="empty">まだ施策がありません。上の「＋ホットペッパー掲載」などを押すと名前が入ります。</p>';
-  const ms=Array.from({length:12},(_,k)=>addMonths(now,k)),lgAd=m=>{const it=state.ledger[m]?.items;return it?num(it['広告宣伝費'])+num(it['販売促進費']):null};
+  const ms=Array.from({length:12},(_,k)=>addMonths(now,k)),lgAd=m=>{const it=LI('all',m);return it?num(it['広告宣伝費'])+num(it['販売促進費']):null};
   $('promo-months').innerHTML=P.length?`<table><thead><tr><th>月</th><th class="r">予算の合計</th></tr></thead><tbody>${ms.map(m=>`<tr><td>${mLabel(m)}</td><td class="r num">${yen(promoMonth(m))}</td></tr>`).join('')}</tbody></table>`
-    +(Object.keys(state.ledger).length?`<p class="note">参考：試算表の広告宣伝費＋販売促進費は ${Object.keys(state.ledger).sort().map(m=>`${Number(m.slice(5))}月 ${man(lgAd(m))}`).join('・')}</p>`:''):'';
+    +(Object.keys(state.ledger).length?`<p class="note">参考：試算表（会社全体）の広告宣伝費＋販売促進費は ${fyMonths(thisMonth()).filter(m=>LI('all',m)).map(m=>`${Number(m.slice(5))}月 ${man(lgAd(m))}`).join('・')}</p>`:''):'';
 }
 function resetPromo(){promoEdit=null;['promo-title','promo-monthly','promo-end','promo-goal','promo-memo'].forEach(id=>$(id).value='');$('promo-start').value=thisMonth();$('promo-store').value='all';
   $('promo-form-title').textContent='広告・販促の施策を追加';$('promo-cancel').hidden=true}
@@ -800,8 +819,9 @@ $('home-month').addEventListener('change',renderHome);
 $('lg-month').addEventListener('change',renderLedger);
 $('lg-save').addEventListener('click',async()=>{const m=$('lg-month').value;if(!m){toast('月を選んでください');return}
   const items={};document.querySelectorAll('#lg-form input').forEach(i=>items[i.dataset.acc]=num(i.value));
-  if(!items['売上高']){toast('売上高を入れてください');return}
-  document.activeElement.blur();await put('ledger',m,{month:m,items});toast(mLabel(m)+'の試算表を保存しました')});
+  const d=$('lg-dept').value||'all';document.activeElement.blur();await put('ledger',`${d}_${m}`,{dept:d,month:m,items});toast(`${deptName(d)} ${mLabel(m)}の試算表を保存しました`)});
+$('lg-dept').addEventListener('change',renderLedger);
+document.addEventListener('click',e=>{const r=e.target.closest('[data-lgdept]');if(r){$('lg-dept').value=r.dataset.lgdept;renderLedger();$('lg-kpi').scrollIntoView({behavior:'smooth'})}});
 $('st-month').addEventListener('change',renderStore);
 document.addEventListener('click',e=>{const t=e.target.closest('[data-store]');if(t)openStore(t.dataset.store)});
 document.addEventListener('keydown',e=>{const t=e.target.closest&&e.target.closest('[data-store]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openStore(t.dataset.store)}});
