@@ -7,7 +7,7 @@
 :root{
   --bg:#f6f5f2; --surface:#ffffff; --ink:#22242a; --muted:#6b6e78; --line:#e3e1dc;
   --accent:#3d4a7a; --accent-ink:#ffffff;
-  --s-honten:#3d4a7a; --s-chaya:#2f6b5b; --s-eye:#a84d6a;
+  --s-honten:#3d4a7a; --s-chaya:#2f6b5b; --s-eye:#a84d6a; --s-muko:#8a5a1e; --s-ritsu:#5b4a8a;
   --good:#2f7a4f; --warn:#b07414; --bad:#b23a3a; --chip:#eeece7;
   --f-display:"Zen Maru Gothic","Hiragino Maru Gothic ProN",system-ui,sans-serif;
   --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
@@ -16,12 +16,12 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#17181c; --surface:#202228; --ink:#e9e8e4; --muted:#9a9ca5; --line:#33353d;
   --accent:#8f9de0; --accent-ink:#141522;
-  --s-honten:#8f9de0; --s-chaya:#6cc2a8; --s-eye:#e48aa6;
+  --s-honten:#8f9de0; --s-chaya:#6cc2a8; --s-eye:#e48aa6; --s-muko:#e0b06c; --s-ritsu:#b9a6ec;
   --good:#6cc28f; --warn:#e0a94a; --bad:#ec7a7a; --chip:#2a2c33; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#17181c; --surface:#202228; --ink:#e9e8e4; --muted:#9a9ca5; --line:#33353d;
   --accent:#8f9de0; --accent-ink:#141522;
-  --s-honten:#8f9de0; --s-chaya:#6cc2a8; --s-eye:#e48aa6;
+  --s-honten:#8f9de0; --s-chaya:#6cc2a8; --s-eye:#e48aa6; --s-muko:#e0b06c; --s-ritsu:#b9a6ec;
   --good:#6cc28f; --warn:#e0a94a; --bad:#ec7a7a; --chip:#2a2c33; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -46,7 +46,7 @@ section.view{display:flex;flex-direction:column;gap:18px}
 .store{border-top:4px solid var(--sc)}
 .store h3{color:var(--sc)}
 .tap{cursor:pointer;transition:transform .12s}.tap:hover{transform:translateY(-2px)}.tap:focus-visible{outline:2px solid var(--sc);outline-offset:2px}
-.sc-honten{--sc:var(--s-honten)} .sc-chayamachi{--sc:var(--s-chaya)} .sc-eyelash{--sc:var(--s-eye)}
+.sc-honten{--sc:var(--s-honten)} .sc-chayamachi{--sc:var(--s-chaya)} .sc-eyelash{--sc:var(--s-eye)} .sc-muko{--sc:var(--s-muko)} .sc-ritsu{--sc:var(--s-ritsu)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--sc);margin-right:6px;vertical-align:middle}
 dl.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
 dl.kv dt{color:var(--muted);font-size:.85rem}
@@ -89,7 +89,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 
 <div class="wrap">
   <header>
-    <h1>enu 経営ノート<small>本店・茶屋町・アイラッシュ</small></h1>
+    <h1>enu 経営ノート<small>本店・茶屋町・アイラッシュ・武庫之荘・律</small></h1>
     <span class="mode" id="mode">読み込み中…</span>
   </header>
   <nav id="tabs">
@@ -183,9 +183,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
         <label>支払期限<input type="date" id="inv-due"></label>
       </div>
       <div class="row">
-        <label><span><span class="dot sc-honten"></span>enu hair 本店</span><input class="amt" id="inv-a-honten" inputmode="numeric" placeholder="0"></label>
-        <label><span><span class="dot sc-chayamachi"></span>enu hair 茶屋町</span><input class="amt" id="inv-a-chayamachi" inputmode="numeric" placeholder="0"></label>
-        <label><span><span class="dot sc-eyelash"></span>アイラッシュ enu</span><input class="amt" id="inv-a-eyelash" inputmode="numeric" placeholder="0"></label>
+        <span id="inv-allocs" class="row"></span>
         <div><div class="lbl">合計</div><div class="big" id="inv-total">¥0</div></div>
       </div>
       <p class="note">同じ会社の請求書に複数店舗の分が入っている場合は、店舗ごとの金額に分けて入れてください。</p>
@@ -373,7 +371,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 
 <script>
 const PLAN_KINDS={store:'出店',product:'商品づくり',event:'慰安旅行・イベント',other:'その他'};
-const STORES=[{id:'honten',name:'enu hair 本店'},{id:'chayamachi',name:'enu hair 茶屋町'},{id:'eyelash',name:'アイラッシュ enu'}];
+const STORES=[{id:'honten',name:'enu hair 本店',sub:'梅田'},{id:'chayamachi',name:'enu hair 茶屋町',sub:'2026年8月オープン'},{id:'eyelash',name:'enu アイラッシュ',sub:'梅田'},{id:'muko',name:'enu 武庫之荘',sub:'ヘア＋アイラッシュ'},{id:'ritsu',name:'律',sub:'ヘッドスパ・心斎橋'}];
+const zeroStores=()=>Object.fromEntries(STORES.map(x=>[x.id,0])),sumStores=o=>STORES.reduce((t,x)=>t+num(o[x.id]),0);
 const COLS=['checks','promos','cashm','ledger','monthly','invoices','schedules','plans','settings'];
 const state={checks:{},promos:{},cashm:{},ledger:{},monthly:{},invoices:{},schedules:{},plans:{},settings:{}};
 let db=null, mode='local';
@@ -420,7 +419,7 @@ const rents=()=>Object.entries(state.schedules).filter(([,s])=>s.kind==='rent');
 function calc(ym,store){
   const L=!state.monthly[`${ym}_${store}`]&&STORE_DEPT[store]?lg(STORE_DEPT[store],ym):null;
   if(L){const cat={'仕入':L.cogs,'光熱費':L.util,'広告費':L.ad,'雑費':L.otherSga,'その他経費':L.nonop+L.tax};const expense=L.util+L.ad+L.otherSga+L.nonop+L.tax;
-    return {src:'試算表',sales:L.sales,labor:L.labor,other:0,purchase:L.cogs,expense,rent:L.rent,cost:L.sales-L.net,profit:L.net,cat,sup:{},has:true,
+    return {src:'試算表',items:L.items,sales:L.sales,labor:L.labor,other:0,purchase:L.cogs,expense,rent:L.rent,cost:L.sales-L.net,profit:L.net,cat,sup:{},has:true,
       margin:L.margin,laborR:L.laborR,purR:L.sales?L.cogs/L.sales:null}}
   const mo=state.monthly[`${ym}_${store}`]||{};
   const cat=Object.fromEntries(CATS.map(c=>[c,0])),sup={};
@@ -465,17 +464,17 @@ function renderHome(){
   const target=num(state.settings.main?.target);
   const lgHave=fyMonths(ym).filter(m=>m<=ym&&LI('all',m)).map(m=>lg('all',m));
   const lgS=lgHave.reduce((t,x)=>t+x.sales,0),lgN=lgHave.reduce((t,x)=>t+x.net,0);
-  $('home-fy').innerHTML=(lgHave.length?`<div class="panel tap" data-goto="ledger" role="button" tabindex="0"><span class="lbl">会社全体・試算表の今期累計（${lgHave.length}か月）</span><span class="big">${man(lgS)}</span>
+  $('home-fy').innerHTML=(lgHave.length?`<div class="panel tap" data-goto="ledger" role="button" tabindex="0"><span class="lbl">今期の年商（会社全体・${lgHave.length}か月）</span><span class="big">${man(lgS)}</span>
       <span class="note">当期純利益 <b class="num ${lgN<0?'bad':'good'}">${man(lgN)}</b>・年間ペース <b class="num">${man(lgS/lgHave.length*12)}</b>・くわしく見る →</span></div>`:'')+`
-    <div class="panel"><span class="lbl">梅田3店の年商（${mLabel(months[0])}〜${mLabel(ym)}）</span><span class="big">${man(fyAll.sales)}</span>
-      <span class="note">入力済み${entered.length}か月・この調子なら年間 <b class="num">${man(forecast)}</b></span></div>
-    <div class="panel"><span class="lbl">梅田3店の利益（共通経費を引く前）</span><span class="big ${mClass(fyAll.margin)}">${man(fyAll.profit)}</span>
+    ${lgHave.length?'':`<div class="panel"><span class="lbl">全店の年商（${mLabel(months[0])}〜${mLabel(ym)}）</span><span class="big">${man(fyAll.sales)}</span>
+      <span class="note">入力済み${entered.length}か月・この調子なら年間 <b class="num">${man(forecast)}</b></span></div>`}
+    <div class="panel"><span class="lbl">全店の利益（共通経費を引く前）</span><span class="big ${mClass(fyAll.margin)}">${man(fyAll.profit)}</span>
       <span class="note">利益率 <b class="num">${pct(fyAll.margin)}</b>・役員報酬など店に分けていない経費は「試算表」の共通経費にあります</span></div>
-    <div class="panel"><span class="lbl">${mLabel(ym)}の売上（梅田3店）</span><span class="big">${man(sumCalc(STORES.map(s=>calc(ym,s.id))).sales)}</span>
+    <div class="panel"><span class="lbl">${mLabel(ym)}の売上（全店）</span><span class="big">${man(sumCalc(STORES.map(s=>calc(ym,s.id))).sales)}</span>
       <span class="note">${target?`目標 ${man(target)} まで あと <b class="num">${man(Math.max(0,target-sumCalc(STORES.map(s=>calc(ym,s.id))).sales))}</b>`:'目標は「設定」で入れられます'}</span></div>`;
   $('home-stores').innerHTML=STORES.map(s=>{const c=calc(ym,s.id);return `
     <div class="panel store tap sc-${s.id}" data-store="${s.id}" role="button" tabindex="0" aria-label="${s.name}の詳細を開く">
-      <div class="row between"><h3>${s.name}</h3>${c.has?`<span class="pill ${mClass(c.margin)}">利益率 ${pct(c.margin)}</span>`:'<span class="pill">売上未入力</span>'}</div>
+      <div class="row between"><h3>${s.name}<span class="note" style="font-weight:400;margin-left:6px">${s.sub||''}</span></h3>${c.has?`<span class="pill ${mClass(c.margin)}">利益率 ${pct(c.margin)}</span>`:'<span class="pill">売上未入力</span>'}</div>
       <dl class="kv">
         <dt>売上</dt><dd class="num">${yen(c.sales)}</dd>
         <dt>仕入</dt><dd class="num">${yen(c.purchase)} <span class="note">${pct(c.purR)}</span></dd>
@@ -508,10 +507,10 @@ const ACC=[['売上高','売上'],['売上（武庫之荘eye）','売上'],['仕
   ['採用教育費','販管'],['広告宣伝費','広告'],['交際費','販管'],['会議費','販管'],['旅費交通費','販管'],['通信費','販管'],['販売促進費','広告'],
   ['消耗品費','販管'],['水道光熱費','光熱'],['諸会費','販管'],['支払手数料','販管'],['地代家賃','家賃'],['賃借料','家賃'],['租税公課','販管'],
   ['支払報酬料','販管'],['減価償却費','販管'],['長期前払費用償却','販管'],['雑費','販管'],['受取利息','外収'],['雑収入','外収'],['支払利息','外費'],['法人税等','税']];
-const DEPTS=[['all','会社全体（全事業所）'],['enu','enu 合計（梅田3店＋共通）'],['umeda','enu梅田（本店）'],['chayamachi','enu梅田茶屋町'],['matsuek','enu梅田マツエク（アイラッシュ）'],['enu_common','enu 共通経費'],
-  ['muko_total','武庫之荘 合計'],['muko','enu武庫之荘'],['muko_common','武庫之荘 共通'],['ritsu_total','律 合計'],['ritsu','律（リツ）'],['ritsu_common','律 共通'],['office_common','事業所 共通']];
+const DEPTS=[['all','会社全体（全事業所）'],['enu','enu 合計（梅田3店＋共通）'],['umeda','enu hair 本店（梅田）'],['chayamachi','enu hair 茶屋町'],['matsuek','enu アイラッシュ（梅田）'],['enu_common','enu 共通経費'],
+  ['muko_total','武庫之荘 合計'],['muko','enu 武庫之荘（ヘア＋アイラッシュ）'],['muko_common','武庫之荘 共通'],['ritsu_total','律 合計'],['ritsu','律（ヘッドスパ・心斎橋）'],['ritsu_common','律 共通'],['office_common','事業所 共通']];
 const COMPARE=['umeda','chayamachi','matsuek','muko','ritsu','enu_common','office_common'];
-const STORE_DEPT={honten:'umeda',chayamachi:'chayamachi',eyelash:'matsuek'};
+const STORE_DEPT={honten:'umeda',chayamachi:'chayamachi',eyelash:'matsuek',muko:'muko',ritsu:'ritsu'};
 const deptName=d=>(DEPTS.find(x=>x[0]===d)||[d,d])[1];
 const ACC_CAT=Object.fromEntries(ACC);
 const accCat=k=>ACC_CAT[k]||(k.startsWith('売上')?'売上':'販管');
@@ -556,7 +555,7 @@ function renderStore(){
     <div class="panel"><span class="lbl">経費を引いた利益</span><span class="big ${mClass(c.margin)}">${yen(c.profit)}</span><span class="note">利益率 <b class="num">${pct(c.margin)}</b></span></div>
     <div class="panel"><span class="lbl">今期の年商（この店）</span><span class="big">${man(fy.sales)}</span><span class="note">今期の利益 <b class="num">${man(fy.profit)}</b></span></div>`;
   const rowsB=[['仕入',c.purchase],['人件費',c.labor],['家賃',c.rent],['光熱費',c.cat['光熱費']],['広告費（HPB等）',c.cat['広告費']],[c.src?'その他の経費（消耗品・手数料・減価償却など）':'雑費',c.cat['雑費']],[c.src?'利息・税金など':'その他経費',c.cat['その他経費']+c.other]];
-  $('st-break').innerHTML=`<table><tbody><tr><td><b>売上</b></td><td class="r num"><b>${yen(c.sales)}</b></td><td class="r note">100%</td></tr>
+  $('st-break').innerHTML=`<table><tbody><tr><td><b>売上</b></td><td class="r num"><b>${yen(c.sales)}</b></td><td class="r note">100%</td></tr>${c.items&&c.items['売上（武庫之荘eye）']?`<tr><td class="note">　うちヘア</td><td class="r num note">${yen(num(c.items['売上高']))}</td><td class="r note num">${pct(num(c.items['売上高'])/c.sales)}</td></tr><tr><td class="note">　うちアイラッシュ</td><td class="r num note">${yen(num(c.items['売上（武庫之荘eye）']))}</td><td class="r note num">${pct(num(c.items['売上（武庫之荘eye）'])/c.sales)}</td></tr>`:''}
     ${rowsB.map(([k,v])=>`<tr><td>− ${k}</td><td class="r num">${yen(v)}</td><td class="r note num">${c.sales?pct(v/c.sales):''}</td></tr>`).join('')}
     </tbody><tfoot><tr><td>経費合計</td><td class="r num">${yen(c.cost)}</td><td class="r note num">${c.sales?pct(c.cost/c.sales):''}</td></tr>
     <tr><td>利益</td><td class="r num ${mClass(c.margin)}">${yen(c.profit)}</td><td class="r num ${mClass(c.margin)}">${pct(c.margin)}</td></tr></tfoot></table>`;
@@ -597,20 +596,20 @@ function renderInvoices(){
   const fm=$('inv-filter-month').value,fp=$('inv-filter-paid').value,today=todayStr();
   const list=Object.entries(state.invoices).filter(([,i])=>(!fm||(i.date||'').startsWith(fm))&&(fp==='all'||!i.paid))
     .sort((a,b)=>(b[1].date||'').localeCompare(a[1].date||''));
-  const tot={honten:0,chayamachi:0,eyelash:0};list.forEach(([,i])=>STORES.forEach(s=>tot[s.id]+=num(i.alloc?.[s.id])));
+  const tot=zeroStores();list.forEach(([,i])=>STORES.forEach(s=>tot[s.id]+=num(i.alloc?.[s.id])));
   $('inv-list').innerHTML=list.length?`<table><thead><tr><th>請求日</th><th>取引先</th><th>区分</th>${STORES.map(s=>`<th class="r sc-${s.id}"><span class="dot"></span>${s.name}</th>`).join('')}<th class="r">合計</th><th>支払期限</th><th>状態</th><th></th></tr></thead><tbody>
     ${list.map(([id,i])=>`<tr><td class="num">${esc(i.date)}</td><td>${esc(i.supplier)}${i.example?'<span class="example">例</span>':''}${i.memo?`<br><span class="note">${esc(i.memo)}</span>`:''}</td><td>${esc(i.cat)}</td>
       ${STORES.map(s=>`<td class="r num">${num(i.alloc?.[s.id])?yen(num(i.alloc[s.id])):''}</td>`).join('')}<td class="r num"><b>${yen(invTotal(i))}</b></td>
       <td class="num">${esc(i.due||'')}</td><td>${i.paid?'<span class="pill good">支払済</span>':i.due&&i.due<today?'<span class="pill bad">期限切れ</span>':'<span class="pill warn">未払い</span>'}</td>
       <td><div class="row" style="flex-wrap:nowrap;gap:4px"><button class="btn ghost sm" data-paid="${id}">${i.paid?'未払いに戻す':'支払済みにする'}</button><button class="btn ghost sm" data-edit-inv="${id}">編集</button><button class="btn danger sm" data-del="invoices:${id}">削除</button></div></td></tr>`).join('')}
-    </tbody><tfoot><tr><td colspan="3">表示中の合計</td>${STORES.map(s=>`<td class="r num">${yen(tot[s.id])}</td>`).join('')}<td class="r num">${yen(tot.honten+tot.chayamachi+tot.eyelash)}</td><td colspan="3"></td></tr></tfoot></table>`
+    </tbody><tfoot><tr><td colspan="3">表示中の合計</td>${STORES.map(s=>`<td class="r num">${yen(tot[s.id])}</td>`).join('')}<td class="r num">${yen(sumStores(tot))}</td><td colspan="3"></td></tr></tfoot></table>`
     :'<p class="empty">この条件の請求書はありません。上のフォームから登録してください。</p>';
   const months=fyMonths(thisMonth());const agg={};
   for(const i of Object.values(state.invoices)){if(!months.includes((i.date||'').slice(0,7)))continue;
-    const a=agg[i.supplier||'（取引先なし）']??={honten:0,chayamachi:0,eyelash:0,n:0};a.n++;STORES.forEach(s=>a[s.id]+=num(i.alloc?.[s.id]))}
-  const ents=Object.entries(agg).sort((a,b)=>(b[1].honten+b[1].chayamachi+b[1].eyelash)-(a[1].honten+a[1].chayamachi+a[1].eyelash));
+    const a=agg[i.supplier||'（取引先なし）']??={...zeroStores(),n:0};a.n++;STORES.forEach(s=>a[s.id]+=num(i.alloc?.[s.id]))}
+  const ents=Object.entries(agg).sort((a,b)=>sumStores(b[1])-sumStores(a[1]));
   $('inv-suppliers').innerHTML=ents.length?`<table><thead><tr><th>取引先</th><th class="r">件数</th>${STORES.map(s=>`<th class="r sc-${s.id}"><span class="dot"></span>${s.name}</th>`).join('')}<th class="r">合計</th></tr></thead><tbody>
-    ${ents.map(([n,a])=>`<tr><td>${esc(n)}</td><td class="r num">${a.n}</td>${STORES.map(s=>`<td class="r num">${a[s.id]?yen(a[s.id]):''}</td>`).join('')}<td class="r num"><b>${yen(a.honten+a.chayamachi+a.eyelash)}</b></td></tr>`).join('')}</tbody></table>`
+    ${ents.map(([n,a])=>`<tr><td>${esc(n)}</td><td class="r num">${a.n}</td>${STORES.map(s=>`<td class="r num">${a[s.id]?yen(a[s.id]):''}</td>`).join('')}<td class="r num"><b>${yen(sumStores(a))}</b></td></tr>`).join('')}</tbody></table>`
     :'<p class="empty">今期の請求書はまだありません。</p>';
 }
 
@@ -748,7 +747,7 @@ const SEO=[
   ['siteq','Googleで「site:（ホームページのアドレス）」と検索して、自分のページが出てくるか確かめる','出てこないページはGoogleにまだ知られていません。'],
   ['gsc','Google Search Consoleにホームページを登録する（無料）','どんな言葉で検索されて何回表示されたか、問題がないかがわかります。ホームページを作った会社に頼めばすぐできます。']]],
  ['ホームページの中身',[
-  ['pages','本店・茶屋町・アイラッシュで、それぞれ別のページを作る','1ページにまとめるより、店ごとのページの方が「地名＋美容室」で見つけてもらいやすくなります。'],
+  ['pages','本店・茶屋町・アイラッシュ・武庫之荘・律で、それぞれ別のページを作る','1ページにまとめるより、店ごとのページの方が「地名＋美容室」「心斎橋 ヘッドスパ」などで見つけてもらいやすくなります。'],
   ['title','ページのタイトルを「地名＋何の店か＋店名」にする。例：茶屋町の美容室｜enu hair 茶屋町','タイトルは検索結果に大きく出る部分です。ページごとに違うタイトルにします。'],
   ['desc','ページの説明文（メタディスクリプション）に、お店の特徴を1〜2文で書く','検索結果でタイトルの下に出ることがあります。「駅から何分」「得意なメニュー」など選ぶ理由を入れます。'],
   ['words','お客様が実際に検索する言葉で書く。例：「梅田 縮毛矯正」「茶屋町 まつ毛パーマ」','専門用語だけでなく、お客様の言い方も入れます。'],
@@ -833,6 +832,7 @@ $('m-save').addEventListener('click',async()=>{const ym=$('m-month').value||this
     await put('monthly',`${ym}_${s.id}`,{month:ym,store:s.id,sales:num(v.sales),labor:num(v.labor),other:num(v.other)})}
   mDraftKey=null;renderMonthly();toast(mLabel(ym)+'を保存しました')});
 
+$('inv-allocs').innerHTML=STORES.map(x=>`<label><span><span class="dot sc-${x.id}"></span>${x.name}</span><input class="amt" id="inv-a-${x.id}" inputmode="numeric" placeholder="0"></label>`).join('');
 const invAmtIds=STORES.map(s=>'inv-a-'+s.id);
 const updInvTotal=()=>$('inv-total').textContent=yen(invAmtIds.reduce((t,id)=>t+num($(id).value),0));
 invAmtIds.forEach(id=>$(id).addEventListener('input',updInvTotal));

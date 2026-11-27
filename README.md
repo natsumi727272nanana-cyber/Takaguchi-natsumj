@@ -137,7 +137,7 @@ python -m unittest                                   # KPI定義のテスト
 
 ## 経営ノート（keiei_app/）
 
-`keiei_app/index.html` は、enu hair 本店・enu hair 茶屋町・アイラッシュ enu の3店舗の
+`keiei_app/index.html` は、enu hair 本店・enu hair 茶屋町・enu アイラッシュ・enu 武庫之荘・律（ヘッドスパ）の5店舗の
 売上・仕入（会社別）・人件費・家賃・光熱費・広告費・雑費・利益率、家賃の振込日、予定納税の期日、
 今期の年商、今後の計画（出店・商品づくり・慰安旅行など）を1画面で見るためのアプリです。
 
