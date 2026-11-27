@@ -87,9 +87,10 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
+<script type="application/json" id="enu-snapshot">{}</script>
 <div class="wrap">
   <header>
-    <h1>enu 経営ノート<small>本店・茶屋町・アイラッシュ・武庫之荘・律</small></h1>
+    <h1>enu 経営ノート<small>本店・茶屋町・アイラッシュ</small></h1>
     <span class="mode" id="mode">読み込み中…</span>
   </header>
   <nav id="tabs">
@@ -375,7 +376,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 
 <script>
 const PLAN_KINDS={store:'出店',product:'商品づくり',event:'慰安旅行・イベント',other:'その他'};
-const STORES=[{id:'honten',name:'enu hair 本店',sub:'梅田'},{id:'chayamachi',name:'enu hair 茶屋町',sub:'2026年8月オープン'},{id:'eyelash',name:'enu アイラッシュ',sub:'梅田'},{id:'muko',name:'enu 武庫之荘',sub:'ヘア＋アイラッシュ'},{id:'ritsu',name:'律',sub:'ヘッドスパ・心斎橋'}];
+const STORES=[{id:'honten',name:'enu hair 本店',sub:'梅田'},{id:'chayamachi',name:'enu hair 茶屋町',sub:'2026年8月オープン'},{id:'eyelash',name:'enu アイラッシュ',sub:'梅田'}];
 const zeroStores=()=>Object.fromEntries(STORES.map(x=>[x.id,0])),sumStores=o=>STORES.reduce((t,x)=>t+num(o[x.id]),0);
 const COLS=['salon','checks','promos','cashm','ledger','monthly','invoices','schedules','plans','settings'];
 const state={salon:{},checks:{},promos:{},cashm:{},ledger:{},monthly:{},invoices:{},schedules:{},plans:{},settings:{}};
@@ -402,16 +403,19 @@ async function put(col,id,data){state[col][id]=data;render();
   if(db){try{await db.collection(col).doc(id).set(data)}catch(e){toast('保存に失敗しました：'+(e.message||e.code))}} else saveLocal()}
 async function del(col,id){delete state[col][id];render();
   if(db){try{await db.collection(col).doc(id).delete()}catch(e){toast('削除に失敗しました')}} else saveLocal()}
+// 保存先に届かない画面（プレビューなど）でも数字が見えるよう、公開時に保存データのコピーを埋め込む
+let SNAP={};try{SNAP=JSON.parse(document.getElementById('enu-snapshot')?.textContent||'{}')}catch(e){}
+function useSnapshot(){let n=0;COLS.forEach(c=>{if(!Object.keys(state[c]).length&&SNAP[c]){state[c]={...SNAP[c]};n+=Object.keys(SNAP[c]).length}});if(n)mode='snap';return n}
 async function initStore(){
-  if(!window.claude){loadLocal();setMode();render();return}
+  if(!window.claude){loadLocal();useSnapshot();setMode();render();return}
   render();
   try{db=await window.claude.use('db')}catch(e){db=null}
-  if(!db){loadLocal();setMode();render();return}
-  mode='db';setMode();
+  if(!db){loadLocal();useSnapshot();setMode();render();return}
+  mode='db';setMode();let failed=false;
   COLS.forEach(c=>db.collection(c).onSnapshot(s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());state[c]=o;render()},
-    e=>toast('読み込みエラー：'+(e.message||e.code))));
+    e=>{if(!failed){failed=true;if(useSnapshot()){setMode();render()}toast('クラウドの保存データを読み込めませんでした。'+(SNAP.asOf||'')+'時点のコピーを表示しています')}}));
 }
-function setMode(){$('mode').textContent=mode==='db'?'クラウドに保存中（どの端末からでも同じデータ）':'このブラウザに保存中（バックアップ推奨）'}
+function setMode(){$('mode').textContent=mode==='snap'?`${SNAP.asOf||''}時点のデータを表示中（この画面での変更はこの端末だけに残ります）`:mode==='db'?'クラウドに保存中（どの端末からでも同じデータ）':'このブラウザに保存中（バックアップ推奨）'}
 
 /* ---------- 期・集計 ---------- */
 const fyEnd=()=>Number(state.settings.main?.fyEnd||12);
@@ -459,16 +463,20 @@ const dLabel=d=>{const [y,m,dd]=d.split('-').map(Number);const w='日月火水�
 /* ---------- 描画 ---------- */
 function render(){renderCash();renderPromo();renderSeo();renderGuide();renderHome();renderLedger();renderStore();renderMonthly();renderInvoices();renderSchedule();renderPlans();renderSettings()}
 
+let homeTouched=false;
+function latestDataMonth(){const ms=[...new Set([...Object.values(state.ledger).filter(x=>x.dept===MAIN).map(x=>x.month),...Object.values(state.monthly).map(x=>x.month)])].filter(Boolean).sort();return ms[ms.length-1]||null}
 function renderHome(){
+  // 今月の試算表がまだなら、数字がある一番新しい月を開く（自分で月を選んだらそのまま）
+  if(!homeTouched){const lm=latestDataMonth(),cur=thisMonth();const want=(lm&&!STORES.some(x=>calc(cur,x.id).has))?lm:cur;if($('home-month').value!==want)$('home-month').value=want}
   const ym=$('home-month').value||thisMonth();
   const months=fyMonths(ym),past=months.filter(m=>m<=ym);
   const fyAll=sumCalc(past.flatMap(m=>STORES.map(s=>calc(m,s.id))));
   const entered=past.filter(m=>STORES.some(s=>calc(m,s.id).has));
   const forecast=entered.length?fyAll.sales/entered.length*12:0;
   const target=num(state.settings.main?.target);
-  const lgHave=fyMonths(ym).filter(m=>m<=ym&&LI('all',m)).map(m=>lg('all',m));
+  const lgHave=fyMonths(ym).filter(m=>m<=ym&&LI(MAIN,m)).map(m=>lg(MAIN,m));
   const lgS=lgHave.reduce((t,x)=>t+x.sales,0),lgN=lgHave.reduce((t,x)=>t+x.net,0);
-  $('home-fy').innerHTML=(lgHave.length?`<div class="panel tap" data-goto="ledger" role="button" tabindex="0"><span class="lbl">今期の年商（会社全体・${lgHave.length}か月）</span><span class="big">${man(lgS)}</span>
+  $('home-fy').innerHTML=(lgHave.length?`<div class="panel tap" data-goto="ledger" role="button" tabindex="0"><span class="lbl">今期の年商（enu 梅田3店・${lgHave.length}か月）</span><span class="big">${man(lgS)}</span>
       <span class="note">当期純利益 <b class="num ${lgN<0?'bad':'good'}">${man(lgN)}</b>・年間ペース <b class="num">${man(lgS/lgHave.length*12)}</b>・くわしく見る →</span></div>`:'')+`
     ${lgHave.length?'':`<div class="panel"><span class="lbl">全店の年商（${mLabel(months[0])}〜${mLabel(ym)}）</span><span class="big">${man(fyAll.sales)}</span>
       <span class="note">入力済み${entered.length}か月・この調子なら年間 <b class="num">${man(forecast)}</b></span></div>`}
@@ -489,7 +497,7 @@ function renderHome(){
         <dt>雑費・その他</dt><dd class="num">${yen(c.cat['雑費']+c.cat['その他経費']+c.other)}</dd>
         <dt><b>経費を引いた利益</b></dt><dd class="num ${mClass(c.margin)}"><b>${yen(c.profit)}</b></dd>
       </dl>${(()=>{const sb=state.salon[`${s.id}_${ym}`];return sb?`<div class="note" style="border-top:1px dashed var(--line);padding-top:8px">サロンボード${ym===thisMonth()?'（途中まで）':''}：売上 <b class="num">${yen(num(sb.net))}</b>（税込）・お客様 <b class="num">${num(sb.cust)}人</b>（新規${num(sb.newc)}・再来${num(sb.rep)}）・客単価 <b class="num">${yen(num(sb.avg))}</b>・指名率 <b class="num">${pct(num(sb.nomCount)/num(sb.cust))}</b></div>`:''})()}<span class="note" style="text-align:right">くわしく見る →</span></div>`}).join('');
-  $('home-title').textContent=ym===thisMonth()?'今月のまとめ（'+mLabel(ym)+'）':mLabel(ym)+'のまとめ';
+  $('home-title').textContent=ym===thisMonth()?'今月のまとめ（'+mLabel(ym)+'）':mLabel(ym)+'のまとめ'+(!homeTouched&&ym<thisMonth()?`（${Number(thisMonth().slice(5))}月の試算表はまだ）`:'');
   const soon=Object.values(state.plans).filter(x=>x.month&&x.month>=thisMonth()&&x.month<=addMonths(thisMonth(),3)&&x.status!=='見送り'&&x.status!=='完了').sort((a,b)=>a.month.localeCompare(b.month));
   const spend=soon.reduce((t,x)=>t+num(x.budget),0);
   $('home-plans').innerHTML=soon.length?soon.map(x=>`<div class="ev"><span class="d">${mLabel(x.month).slice(5)}</span><span class="t"><span class="pill">${PLAN_KINDS[x.kind]||''}</span> ${esc(x.title)} <span class="note">${esc(x.status)}</span></span><span class="num">${num(x.budget)?yen(num(x.budget)):''}</span></div>`).join('')+`<p class="note">3か月以内に予定している出費の合計 <b class="num">${yen(spend)}</b></p>`
@@ -513,7 +521,8 @@ const ACC=[['売上高','売上'],['売上（武庫之荘eye）','売上'],['仕
   ['支払報酬料','販管'],['減価償却費','販管'],['長期前払費用償却','販管'],['雑費','販管'],['受取利息','外収'],['雑収入','外収'],['支払利息','外費'],['法人税等','税']];
 const DEPTS=[['all','会社全体（全事業所）'],['enu','enu 合計（梅田3店＋共通）'],['umeda','enu hair 本店（梅田）'],['chayamachi','enu hair 茶屋町'],['matsuek','enu アイラッシュ（梅田）'],['enu_common','enu 共通経費'],
   ['muko_total','武庫之荘 合計'],['muko','enu 武庫之荘（ヘア＋アイラッシュ）'],['muko_common','武庫之荘 共通'],['ritsu_total','律 合計'],['ritsu','律（ヘッドスパ・心斎橋）'],['ritsu_common','律 共通'],['office_common','事業所 共通']];
-const COMPARE=['umeda','chayamachi','matsuek','muko','ritsu','enu_common','office_common'];
+const COMPARE=['umeda','chayamachi','matsuek','enu_common'];
+const MAIN='enu'; // 梅田3店＋enu共通。武庫之荘・律は別管理
 const STORE_DEPT={honten:'umeda',chayamachi:'chayamachi',eyelash:'matsuek',muko:'muko',ritsu:'ritsu'};
 const deptName=d=>(DEPTS.find(x=>x[0]===d)||[d,d])[1];
 const ACC_CAT=Object.fromEntries(ACC);
@@ -524,8 +533,8 @@ function lg(d,m){const it=LI(d,m);if(!it)return null;const g={'売上':0,'原価
   const sales=g['売上'],gross=sales-g['原価'],sga=g['人件費']+g['販管']+g['広告']+g['光熱']+g['家賃'],op=gross-sga,ord=op+g['外収']-g['外費'],net=ord-g['税'];
   return {sales,cogs:g['原価'],gross,labor:g['人件費'],rent:g['家賃'],ad:g['広告'],util:g['光熱'],otherSga:g['販管'],sga,op,ord,net,nonop:g['外費']-g['外収'],tax:g['税'],margin:sales?net/sales:null,laborR:sales?g['人件費']/sales:null,items:it}}
 function renderLedger(){
-  const sel=$('lg-dept');if(!sel.options.length){sel.innerHTML=DEPTS.map(([k,n])=>`<option value="${k}">${n}</option>`).join('');sel.value='all'}
-  const dept=sel.value||'all',ms=fyMonths(thisMonth()),have=ms.filter(m=>LI(dept,m));
+  const sel=$('lg-dept');if(!sel.options.length){sel.innerHTML=DEPTS.map(([k,n])=>`<option value="${k}">${n}</option>`).join('');sel.value=MAIN}
+  const dept=sel.value||MAIN,ms=fyMonths(thisMonth()),have=ms.filter(m=>LI(dept,m));
   const L=have.map(m=>[m,lg(dept,m)]),T={};L.forEach(([,x])=>['sales','cogs','gross','labor','rent','ad','util','otherSga','sga','op','ord','net'].forEach(k=>T[k]=(T[k]||0)+x[k]));
   $('lg-src').textContent=have.length?`入力済み：${have.map(m=>Number(m.slice(5))+'月').join('・')}`:'';
   $('lg-kpi').innerHTML=have.length?`
@@ -678,8 +687,8 @@ document.addEventListener('change',async e=>{const id=e.target.dataset&&e.target
 /* ---------- お金の残り ---------- */
 const NONCASH=['減価償却費','長期前払費用償却'],ADACC=['広告宣伝費','販売促進費'];
 function cashBase(){
-  const have=fyMonths(thisMonth()).concat(fyMonths(addMonths(thisMonth(),-12))).filter(m=>LI('all',m)).sort().slice(-6);
-  const act=m=>{const it=LI('all',m);if(!it)return null;let out=0,inc=Object.keys(it).filter(k=>accCat(k)==='売上').reduce((t,k)=>t+num(it[k]),0),ad=0,oth=num(it['受取利息'])+num(it['雑収入']);
+  const have=fyMonths(thisMonth()).concat(fyMonths(addMonths(thisMonth(),-12))).filter(m=>LI(MAIN,m)).sort().slice(-6);
+  const act=m=>{const it=LI(MAIN,m);if(!it)return null;let out=0,inc=Object.keys(it).filter(k=>accCat(k)==='売上').reduce((t,k)=>t+num(it[k]),0),ad=0,oth=num(it['受取利息'])+num(it['雑収入']);
     Object.keys(it).forEach(k=>{const c=accCat(k);if(['売上','外収','税'].includes(c)||NONCASH.includes(k))return;out+=num(it[k]);if(ADACC.includes(k))ad+=num(it[k])});return {inc,out,ad,oth}};
   const A=have.map(act);const avg=k=>A.length?A.reduce((t,x)=>t+x[k],0)/A.length:0;
   return {act,avgInc:avg('inc'),avgOut:avg('out'),avgAd:avg('ad'),avgOth:avg('oth'),n:A.length}}
@@ -735,9 +744,9 @@ function renderPromo(){
       <td class="r num">${yen(num(p.monthly))}</td><td class="num">${p.start?mLabel(p.start):''}〜${p.end?mLabel(p.end):'継続'}</td><td class="r num">${num(p.goal)?num(p.goal)+'人':''}</td><td class="r num">${num(p.goal)?yen(num(p.monthly)/num(p.goal)):''}</td>
       <td><div class="row" style="flex-wrap:nowrap;gap:4px"><button class="btn ghost sm" data-edit-promo="${id}">編集</button><button class="btn danger sm" data-del="promos:${id}">削除</button></div></td></tr>`}).join('')}</tbody></table>`
     :'<p class="empty">まだ施策がありません。上の「＋ホットペッパー掲載」などを押すと名前が入ります。</p>';
-  const ms=Array.from({length:12},(_,k)=>addMonths(now,k)),lgAd=m=>{const it=LI('all',m);return it?num(it['広告宣伝費'])+num(it['販売促進費']):null};
+  const ms=Array.from({length:12},(_,k)=>addMonths(now,k)),lgAd=m=>{const it=LI(MAIN,m);return it?num(it['広告宣伝費'])+num(it['販売促進費']):null};
   $('promo-months').innerHTML=P.length?`<table><thead><tr><th>月</th><th class="r">予算の合計</th></tr></thead><tbody>${ms.map(m=>`<tr><td>${mLabel(m)}</td><td class="r num">${yen(promoMonth(m))}</td></tr>`).join('')}</tbody></table>`
-    +(Object.keys(state.ledger).length?`<p class="note">参考：試算表（会社全体）の広告宣伝費＋販売促進費は ${fyMonths(thisMonth()).filter(m=>LI('all',m)).map(m=>`${Number(m.slice(5))}月 ${man(lgAd(m))}`).join('・')}</p>`:''):'';
+    +(Object.keys(state.ledger).length?`<p class="note">参考：試算表（enu 梅田3店）の広告宣伝費＋販売促進費は ${fyMonths(thisMonth()).filter(m=>LI(MAIN,m)).map(m=>`${Number(m.slice(5))}月 ${man(lgAd(m))}`).join('・')}</p>`:''):'';
 }
 function resetPromo(){promoEdit=null;['promo-title','promo-monthly','promo-end','promo-goal','promo-memo'].forEach(id=>$(id).value='');$('promo-start').value=thisMonth();$('promo-store').value='all';
   $('promo-form-title').textContent='広告・販促の施策を追加';$('promo-cancel').hidden=true}
@@ -827,11 +836,11 @@ function showTab(t){document.querySelectorAll('nav button').forEach(b=>b.setAttr
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)showTab(b.dataset.tab)});
 document.addEventListener('click',e=>{const g=e.target.closest('[data-goto]');if(g){showTab(g.dataset.goto);scrollTo(0,0)}});
 
-$('home-month').addEventListener('change',renderHome);
+$('home-month').addEventListener('change',()=>{homeTouched=true;renderHome()});
 $('lg-month').addEventListener('change',renderLedger);
 $('lg-save').addEventListener('click',async()=>{const m=$('lg-month').value;if(!m){toast('月を選んでください');return}
   const items={};document.querySelectorAll('#lg-form input').forEach(i=>items[i.dataset.acc]=num(i.value));
-  const d=$('lg-dept').value||'all';document.activeElement.blur();await put('ledger',`${d}_${m}`,{dept:d,month:m,items});toast(`${deptName(d)} ${mLabel(m)}の試算表を保存しました`)});
+  const d=$('lg-dept').value||MAIN;document.activeElement.blur();await put('ledger',`${d}_${m}`,{dept:d,month:m,items});toast(`${deptName(d)} ${mLabel(m)}の試算表を保存しました`)});
 $('lg-dept').addEventListener('change',renderLedger);
 document.addEventListener('click',e=>{const r=e.target.closest('[data-lgdept]');if(r){$('lg-dept').value=r.dataset.lgdept;renderLedger();$('lg-kpi').scrollIntoView({behavior:'smooth'})}});
 $('st-month').addEventListener('change',renderStore);
